@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<launchConfiguration type="com.zylin.embeddedcdt.idleNative">
+<booleanAttribute key="com.zylin.embeddedcdt.debugger_app_console" value="false"/>
+<stringAttribute key="com.zylin.embeddedcdt.debugger_init_commands" value="target remote localhost:3333"/>
+<stringAttribute key="com.zylin.embeddedcdt.debugger_run_commands" value="gdb_breakpoint_override&#10;monitor reset&#10;monitor halt&#10;monitor flash write_image erase unlock FLASH_RUN/project.elf&#10;monitor reset&#10;monitor halt"/>
+<stringAttribute key="org.eclipse.cdt.debug.mi.core.DEBUG_NAME" value="/home/cas/arm/toolchain/code_sourcery-arm-2010q1/bin/arm-none-eabi-gdb"/>
+<stringAttribute key="org.eclipse.cdt.debug.mi.core.GDB_INIT" value="cortex_m3.gdbinit"/>
+<booleanAttribute key="org.eclipse.cdt.debug.mi.core.breakpointsFullPath" value="false"/>
+<stringAttribute key="org.eclipse.cdt.debug.mi.core.commandFactory" value="org.eclipse.cdt.debug.mi.core.standardCommandFactory"/>
+<stringAttribute key="org.eclipse.cdt.debug.mi.core.protocol" value="mi"/>
+<booleanAttribute key="org.eclipse.cdt.debug.mi.core.verboseMode" value="false"/>
+<stringAttribute key="org.eclipse.cdt.launch.DEBUGGER_ID" value="com.zylin.embeddedcdt.EmbeddedCDebugger"/>
+<stringAttribute key="org.eclipse.cdt.launch.DEBUGGER_REGISTER_GROUPS" value=""/>
+<stringAttribute key="org.eclipse.cdt.launch.DEBUGGER_START_MODE" value="run"/>
+<booleanAttribute key="org.eclipse.cdt.launch.DEBUGGER_STOP_AT_MAIN" value="false"/>
+<booleanAttribute key="org.eclipse.cdt.launch.ENABLE_REGISTER_BOOKKEEPING" value="false"/>
+<booleanAttribute key="org.eclipse.cdt.launch.ENABLE_VARIABLE_BOOKKEEPING" value="false"/>
+<stringAttribute key="org.eclipse.cdt.launch.FORMAT" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&lt;contentList&gt;&lt;content id=&quot;offset-BlockDevWrite-(format)&quot; val=&quot;4&quot;/&gt;&lt;content id=&quot;*pbCDB-pbCDB-SCSIHandleCmd-(format)&quot; val=&quot;4&quot;/&gt;&lt;content id=&quot;*firmware-firmware-BlockDevWrite-(format)&quot; val=&quot;4&quot;/&gt;&lt;content id=&quot;*p-p-execute_user_code-(format)&quot; val=&quot;4&quot;/&gt;&lt;content id=&quot;BootSect--(cast_to_array)&quot; val=&quot;0:10&quot;/&gt;&lt;content id=&quot;abc4-check_isp_entry_pin-(format)&quot; val=&quot;0&quot;/&gt;&lt;/contentList&gt;"/>
+<stringAttribute key="org.eclipse.cdt.launch.GLOBAL_VARIABLES" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#10;&lt;globalVariableList&gt;&#10;&lt;globalVariable name=&quot;offset_address_flag&quot; path=&quot;&quot;/&gt;&#10;&lt;globalVariable name=&quot;offset_address&quot; path=&quot;&quot;/&gt;&#10;&lt;/globalVariableList&gt;&#10;"/>
+<stringAttribute key="org.eclipse.cdt.launch.MEMORY_BLOCKS" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#10;&lt;memoryBlockExpressionList&gt;&#10;&lt;memoryBlockExpressionItem&gt;&#10;&lt;expression text=&quot;0x10000&quot;/&gt;&#10;&lt;/memoryBlockExpressionItem&gt;&#10;&lt;/memoryBlockExpressionList&gt;&#10;"/>
+<stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="FLASH_RUN/project.elf"/>
+<stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="LPC17xx_USB_bootloader"/>
+<stringAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_ID_ATTR" value="cdt.managedbuild.config.gnu.exe.debug.1825824548"/>
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
+<listEntry value="/LPC17xx_USB_bootloader"/>
+</listAttribute>
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
+<listEntry value="4"/>
+</listAttribute>
+<stringAttribute key="org.eclipse.debug.core.source_locator_id" value="org.eclipse.cdt.debug.core.sourceLocator"/>
+<stringAttribute key="org.eclipse.debug.core.source_locator_memento" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#10;&lt;sourceLookupDirector&gt;&#10;&lt;sourceContainers duplicates=&quot;true&quot;&gt;&#10;&lt;container memento=&quot;&amp;lt;?xml version=&amp;quot;1.0&amp;quot; encoding=&amp;quot;UTF-8&amp;quot; standalone=&amp;quot;no&amp;quot;?&amp;gt;&amp;#10;&amp;lt;default/&amp;gt;&amp;#10;&quot; typeId=&quot;org.eclipse.debug.core.containerType.default&quot;/&gt;&#10;&lt;/sourceContainers&gt;&#10;&lt;/sourceLookupDirector&gt;&#10;"/>
+<listAttribute key="org.eclipse.debug.ui.favoriteGroups">
+<listEntry value="org.eclipse.debug.ui.launchGroup.debug"/>
+</listAttribute>
+</launchConfiguration>

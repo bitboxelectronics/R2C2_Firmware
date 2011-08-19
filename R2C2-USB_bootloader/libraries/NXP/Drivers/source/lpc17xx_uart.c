@@ -36,6 +36,7 @@
 #include "lpc17xx_libcfg_default.h"
 #endif /* __BUILD_WITH_EXAMPLE__ */
 
+#define _UART
 
 #ifdef _UART
 

@@ -147,8 +147,7 @@ SRC = main.c	\
 	msc_scsi.c \
 	msc_usb_start.c \
 	sbl_iap.c \
-	serial_fifo.c \
-	serial.c \
+	uart.c \
 	sermsg.c \
 	sersendf.c \
 	$(APPLIBDIR)/LPCUSB/src/usbcontrol.c \
@@ -160,6 +159,8 @@ SRC = main.c	\
 	$(APPLIBDIR)/NXP/Drivers/source/lpc17xx_nvic.c \
 	$(APPLIBDIR)/NXP/Drivers/source/lpc17xx_pinsel.c \
 	$(APPLIBDIR)/NXP/Drivers/source/lpc17xx_gpio.c \
+	$(APPLIBDIR)/NXP/Drivers/source/lpc17xx_uart.c \
+	$(APPLIBDIR)/NXP/Drivers/source/lpc17xx_clkpwr.c \
 	
 # List C source files here which must be compiled in ARM-Mode (no -mthumb).
 # use file-extension c for "c-only"-files

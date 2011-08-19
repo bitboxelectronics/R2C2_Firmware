@@ -27,13 +27,13 @@ void check_isp_entry_pin(void);
 typedef enum
 {
 PREPARE_SECTOR_FOR_WRITE	=50,
-COPY_RAM_TO_FLASH			=51,
-ERASE_SECTOR				=52,
-BLANK_CHECK_SECTOR			=53,
-READ_PART_ID				=54,
-READ_BOOT_VER				=55,
-COMPARE						=56,
-REINVOKE_ISP				=57
+COPY_RAM_TO_FLASH		=51,
+ERASE_SECTOR			=52,
+BLANK_CHECK_SECTOR		=53,
+READ_PART_ID			=54,
+READ_BOOT_VER			=55,
+COMPARE                         =56,
+REINVOKE_ISP			=57
 }IAP_Command_Code;
 
 #define CMD_SUCCESS 0

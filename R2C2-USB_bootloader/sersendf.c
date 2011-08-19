@@ -30,8 +30,10 @@
 
 #include        "sersendf.h"
 #include        <stdarg.h>
-#include        "serial.h"
 #include        "sermsg.h"
+#include        "uart.h"
+
+#define serial_writechar(x) uart_send(x)
 
 char   str_ox[] = "0x";
 

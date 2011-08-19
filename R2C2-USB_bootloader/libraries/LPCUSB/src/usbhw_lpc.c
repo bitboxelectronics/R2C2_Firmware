@@ -470,6 +470,16 @@ void USBHwISR(void)
 	int i;
 	U16	wFrame;
 
+#if 0
+	/* Look for the command to dump the flash application space (512k - 64k) */
+	unsigned long int counter = 0;
+	if (uart_data_available())
+        {
+	    count
+	    uart_send(*0x00010000);
+        }
+#endif
+
 	// LED9 monitors total time in interrupt routine
 	DEBUG_LED_ON(6);
 

@@ -2,12 +2,12 @@
 #include "sbl_iap.h"
 #include "lpcusb_type.h"
 #include "disk.h"
+#include "sersendf.h"
 
 extern uint32_t user_flash_erased; /* from main_bootloader.c */
 
-uint8_t offset_address_flag = FALSE;
-uint32_t offset_address;
-
+static uint8_t offset_address_flag = FALSE;
+static uint32_t offset_address;
 
 int BlockDevGetSize(uint32_t *pdwDriveSize)
 {
@@ -26,19 +26,19 @@ int BlockDevWrite(uint32_t dwSector, uint8_t * pbBuf)
 
   address = 512 * dwSector;
 
-  if (( address >= BOOT_SECT_SIZE) && \
-      ( address < (BOOT_SECT_SIZE + FAT_SIZE + ROOT_DIR_SIZE)))
+  if ((address >= BOOT_SECT_SIZE) && \
+      (address < (BOOT_SECT_SIZE + FAT_SIZE + ROOT_DIR_SIZE)))
   {
-    for ( i = 0; i<length; i++)
+    for (i = 0; i<length; i++)
     {
       Fat_RootDir[(address+i) - BOOT_SECT_SIZE] = pbBuf[i];
 
-      if ( pbBuf[i] == 0xe5 )
+      if (pbBuf[i] == 0xe5)
       {
-        if ( (address+i) == BOOT_SECT_SIZE + FAT_SIZE + 32 )
+        if ((address+i) == BOOT_SECT_SIZE + FAT_SIZE + 32)
         {
           /* Delete user flash when firmware.bin is erased */
-          if( user_flash_erased == FALSE )
+          if(user_flash_erased == FALSE)
           {
             erase_user_flash();
             user_flash_erased = TRUE;
@@ -58,7 +58,10 @@ int BlockDevWrite(uint32_t dwSector, uint8_t * pbBuf)
       offset_address_flag = FALSE;
     }
 
-    write_flash((unsigned *)(firmware + (address - offset_address)),(char *)pbBuf,length);
+sersendf("* dwSector: %d\n", dwSector);
+
+    write_flash((unsigned *)(firmware + (address - offset_address)),
+                                                        (char *)pbBuf, length);
   }
 
   return 0;
@@ -72,11 +75,11 @@ int BlockDevRead(uint32_t dwSector, uint8_t * pbBuf)
   uint8_t * firmware;
   firmware = (uint8_t *)USER_FLASH_START;
 
-  uint32_t length =512;
+  uint32_t length = 512;
 
   address = 512 * dwSector;
 
-  for ( i = 0; i<length; i++)
+  for (i = 0; i < length; i++)
   {
     if (address < BOOT_SECT_SIZE)
     {
@@ -103,7 +106,7 @@ int BlockDevRead(uint32_t dwSector, uint8_t * pbBuf)
         break;
 
         default:
-        if ( address > 29 )
+        if (address > 29)
         {
             data = 0x0;
         }

@@ -29,9 +29,9 @@
 */
 
 #include	"sermsg.h"
-#include	"serial.h"
+#include	"uart.h"
 
-void serwrite_hex4(uint8_t v) {
+void serwrite_hex4(unsigned char v) {
 	v &= 0xF;
 	if (v < 10)
 		serial_writechar('0' + v);
@@ -39,23 +39,23 @@ void serwrite_hex4(uint8_t v) {
 		serial_writechar('A' - 10 + v);
 }
 
-void serwrite_hex8(uint8_t v) {
+void serwrite_hex8(unsigned char v) {
 	serwrite_hex4(v >> 4);
 	serwrite_hex4(v & 0x0F);
 }
 
-void serwrite_hex16(uint16_t v) {
+void serwrite_hex16(unsigned short int v) {
 	serwrite_hex8(v >> 8);
 	serwrite_hex8(v & 0xFF);
 }
 
-void serwrite_hex32(uint32_t v) {
+void serwrite_hex32(unsigned int v) {
 	serwrite_hex8(v >> 16);
 	serwrite_hex8(v & 0xFFFF);
 }
 
-void serwrite_uint32(uint32_t v) {
-	uint8_t t = 0;
+void serwrite_uint32(unsigned int v) {
+	unsigned char t = 0;
 	if (v >= 1000000000) {
 		for (t = 0; v >= 1000000000; v -= 1000000000, t++);
 		serial_writechar(t + '0');
@@ -123,7 +123,7 @@ void serwrite_uint32(uint32_t v) {
 	serial_writechar(v + '0');
 }
 
-void serwrite_int32(int32_t v) {
+void serwrite_int32(int v) {
 	if (v < 0) {
 		serial_writechar('-');
 		v = -v;
@@ -135,14 +135,13 @@ void serwrite_int32(int32_t v) {
 void serwrite_double(double v)
 {
   /* print first part before '.' */
-  serwrite_uint32((int32_t) v);
+  serwrite_uint32((int) v);
 
   /* print the '.' */
   serial_writechar('.');
 
   /* print last part before '.' */
-  v = (double) (v - ((int32_t) v));
+  v = (double) (v - ((int) v));
 
-  serwrite_uint32((int32_t) (v * 100));
+  serwrite_uint32((int) (v * 100));
 }
-

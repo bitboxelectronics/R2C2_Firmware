@@ -6,6 +6,8 @@
 #include "sbl_iap.h"
 #include "sbl_config.h"
 #include "type.h"
+#include "uart.h"
+#include "sersendf.h"
 
 uint32_t  user_flash_erased;
 
@@ -25,7 +27,7 @@ void enter_usb_isp(void)
   user_flash_erased = FALSE;
 
   // Generate File Allocation Table to save Flash space
-  // First Two FAT entries are reserved
+  // First Two FAT entries are reservedsersendf
   Fat_RootDir[0]= 0xF8;
   Fat_RootDir[1]= 0xFF;
   Fat_RootDir[2]= 0xFF;
@@ -84,6 +86,8 @@ int main(void)
 
   NVIC_SetVTOR(0x00000000);
 
+  uart_init();
+
   // Check to see if there is a user application in the LPC1768's flash memory.
   if(user_code_present())
   {
@@ -91,6 +95,8 @@ int main(void)
     // to indicate they want to upload a new application.
     check_isp_entry_pin();
   }
+
+  sersendf("Starting R2C2 USB bootloader...\n");
 
   // User code not present or isp entry requested
   enter_usb_isp();

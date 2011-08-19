@@ -4,7 +4,7 @@
 <stringAttribute key="com.zylin.embeddedcdt.debugger_init_commands" value="target remote localhost:3333"/>
 <stringAttribute key="com.zylin.embeddedcdt.debugger_run_commands" value="gdb_breakpoint_override&#10;monitor reset&#10;monitor halt"/>
 <stringAttribute key="org.eclipse.cdt.debug.mi.core.DEBUG_NAME" value="/home/cas/arm/toolchain/code_sourcery-arm-2010q1/bin/arm-none-eabi-gdb"/>
-<stringAttribute key="org.eclipse.cdt.debug.mi.core.GDB_INIT" value="cortex_m3.gdbinit"/>
+<stringAttribute key="org.eclipse.cdt.debug.mi.core.GDB_INIT" value="/home/cas/Dropbox/bitBOX/PROJECTOS/R2C2/firmware/R2C2-USB_bootloader_V1.0/cortex_m3.gdbinit"/>
 <booleanAttribute key="org.eclipse.cdt.debug.mi.core.breakpointsFullPath" value="false"/>
 <stringAttribute key="org.eclipse.cdt.debug.mi.core.commandFactory" value="org.eclipse.cdt.debug.mi.core.standardCommandFactory"/>
 <stringAttribute key="org.eclipse.cdt.debug.mi.core.protocol" value="mi"/>
@@ -19,10 +19,10 @@
 <stringAttribute key="org.eclipse.cdt.launch.GLOBAL_VARIABLES" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#10;&lt;globalVariableList&gt;&#10;&lt;globalVariable name=&quot;BootSect&quot; path=&quot;&quot;/&gt;&#10;&lt;/globalVariableList&gt;&#10;"/>
 <stringAttribute key="org.eclipse.cdt.launch.MEMORY_BLOCKS" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#10;&lt;memoryBlockExpressionList/&gt;&#10;"/>
 <stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="FLASH_RUN/project.elf"/>
-<stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="LPC17xx_USB_bootloader"/>
+<stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="R2C2-USB_bootloader_V1.0"/>
 <stringAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_ID_ATTR" value="cdt.managedbuild.config.gnu.exe.debug.1825824548"/>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
-<listEntry value="/LPC17xx_USB_bootloader"/>
+<listEntry value="/R2C2-USB_bootloader_V1.0"/>
 </listAttribute>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
 <listEntry value="4"/>

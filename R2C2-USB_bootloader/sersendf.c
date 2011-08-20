@@ -87,6 +87,10 @@ void sersendf(char *format, ...) {
                                         serial_writestr(va_arg(args, unsigned char *));
                                         j = 0;
                                         break;
+                                case '%':
+                                        serial_writechar('%');
+                                        j = 0;
+                                        break;
                                 default:
                                         j = 0;
                                         break;

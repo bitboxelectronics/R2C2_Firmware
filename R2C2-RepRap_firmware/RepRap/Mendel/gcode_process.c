@@ -374,6 +374,11 @@ void process_gcode_command()
       }
 
       break;
+      
+      // M115- report firmware version
+		case 115:
+			sersendf("FIRMWARE_NAME:Teacup_R2C2 FIRMWARE_URL:http%%3A//github.com/bitboxelectronics/R2C2 PROTOCOL_VERSION:1.0 MACHINE_TYPE:Mendel");
+		break;
 
       // M130- heater P factor
       case 130:

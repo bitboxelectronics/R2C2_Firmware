@@ -11,7 +11,7 @@ static uint32_t offset_address;
 
 int BlockDevGetSize(uint32_t *pdwDriveSize)
 {
-  *pdwDriveSize = (512 * 1024)- sector_start_map[USER_START_SECTOR];
+  *pdwDriveSize = MSC_MemorySize;;
 
   return 0;
 }

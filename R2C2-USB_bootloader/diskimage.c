@@ -34,7 +34,7 @@ BLOCKS_PER_CLUSTER, /* Sectors/cluster (64) -- 64*512bytes = 32kbytes each clust
 0x01,0x00, /* Size of reserved area (1 sector) */
 0x01, /* Number of FATs (1) */
 0x10,0x00, /* Max. number of root directory entries (0x0010 = 16) */
-0x80,0x43, /* Total number of sectors (0x0384 = 900) */
+0x84,0x03, /* Total number of sectors (0x0384 = 900) */
 0xF8, /* Media type (Any Hard Drive) */
 0x02,0x00, /*  FAT size (0x0002 = 2 sectors) */
 0x01,0x00, /* Sectors/track (0x0001 = 1) */

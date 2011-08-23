@@ -16,7 +16,7 @@
 #include "lpc17xx_pinsel.h"
 #include "lpc17xx_gpio.h"
 #include "LPC17xx.h"
-#include "usbdebug.h"
+#include "debug.h"
 #include "type.h"
 
 
@@ -47,12 +47,12 @@ char flash_buf[FLASH_BUF_SIZE];
 
 static unsigned byte_ctr = 0;
 
-void write_data(unsigned cclk,unsigned dst,unsigned * flash_data_buf, unsigned count);
+void write_data(unsigned cclk,unsigned dst,void * flash_data_buf, unsigned count);
 void find_erase_prepare_sector(unsigned cclk, unsigned dst);
 void erase_sector(unsigned start_sector,unsigned end_sector,unsigned cclk);
 void prepare_sector(unsigned start_sector,unsigned end_sector,unsigned cclk);
 void iap_entry(unsigned param_tab[],unsigned result_tab[]);
-void compare_data(unsigned cclk, unsigned dst, unsigned * flash_data_buf, unsigned count);
+void compare_data(unsigned cclk, unsigned dst, void * flash_data_buf, unsigned count);
 
 unsigned write_flash(unsigned * dst, char * src, unsigned no_of_bytes)
 {
@@ -75,7 +75,7 @@ unsigned write_flash(unsigned * dst, char * src, unsigned no_of_bytes)
     }
     write_data( SystemCoreClock/1000,
                 (unsigned)dst,
-                (unsigned *)flash_buf,
+                (void *)flash_buf,
                 FLASH_BUF_SIZE);
     if(result_table[0] != CMD_SUCCESS)
     {
@@ -85,7 +85,7 @@ unsigned write_flash(unsigned * dst, char * src, unsigned no_of_bytes)
 
     compare_data( SystemCoreClock/1000,
                 (unsigned)dst,
-                (unsigned *)flash_buf,
+                (void *)flash_buf,
                 FLASH_BUF_SIZE);
     if(result_table[0] != CMD_SUCCESS)
     {
@@ -121,7 +121,7 @@ void find_erase_prepare_sector(unsigned cclk, unsigned dst)
   __enable_irq();
 }
 
-void write_data(unsigned cclk, unsigned dst, unsigned * flash_data_buf, unsigned count)
+void write_data(unsigned cclk, unsigned dst, void * flash_data_buf, unsigned count)
 {
   __disable_irq();
   param_table[0] = COPY_RAM_TO_FLASH;
@@ -138,7 +138,7 @@ void write_data(unsigned cclk, unsigned dst, unsigned * flash_data_buf, unsigned
   __enable_irq();
 }
 
-void compare_data(unsigned cclk, unsigned dst, unsigned * flash_data_buf, unsigned count)
+void compare_data(unsigned cclk, unsigned dst, void * flash_data_buf, unsigned count)
 {
   __disable_irq();
   param_table[0] = COMPARE;
@@ -206,8 +206,6 @@ void execute_user_code(void)
 
 int user_code_present(void)
 {
-  unsigned *pmem, checksum,i;
-
   param_table[0] = BLANK_CHECK_SECTOR;
   param_table[1] = USER_START_SECTOR;
   param_table[2] = USER_START_SECTOR;
@@ -216,6 +214,7 @@ int user_code_present(void)
     return (FALSE);
 
 #ifdef COMPUTE_BINARY_CHECKSUM
+	unsigned *pmem, checksum,i;
 /*
  * The reserved Cortex-M3 exception vector location 7 (offset 0x001C
  * in the vector table) should contain the 2’s complement of the

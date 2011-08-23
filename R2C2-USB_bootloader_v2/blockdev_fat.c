@@ -60,5 +60,3 @@ DRESULT disk_ioctl (BYTE Drive, BYTE Command, void* buffer) {
 	}
 	return 0;
 }
-
-void disk_timerproc( void );

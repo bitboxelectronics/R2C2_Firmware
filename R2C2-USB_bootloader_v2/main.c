@@ -19,9 +19,16 @@
 #include	"sbl_config.h"
 #include	"msc_scsi.h"
 #include	"spi.h"
+#include	"uart.h"
+#include	"debug.h"
+
+#ifndef	DBG
+	#define	DBG(...) do {} while (0)
+#endif
 
 FATFS fatfs;
 FIL f;
+FRESULT r;
 
 // in msc_usb_start.c
 void init_usb_msc_device(void);
@@ -67,54 +74,82 @@ int main() {
 
 	NVIC_SetVTOR(0x00000000);
 
+	uart_init();
+
 	BlockDevInit();
 
 	if (bootloader_button_pressed() || (user_code_present() == 0)) {
+		DBG("entering bootloader");
 		init_usb_msc_device();
 
 		for (;usb_msc_not_ejected();)
 			USBHwISR();
 
+		DBG("usb ejected, rebooting");
+
 		USBHwConnect(FALSE);
 		spi_close();
 	}
 	else {
-		f_mount(0, &fatfs);
-		if (f_open(&f, "/firmware.bin", FA_READ | FA_OPEN_EXISTING) == FR_OK) {
-			unsigned int fs = f_size(&f);
-			if ((fs > 0) && (fs <= USER_FLASH_SIZE)) {
-				U8 buffer[512];
-				for (unsigned int i = 0; i < fs; i += 512) {
-					unsigned int j = 512;
-					if (i + j > fs)
-						j = fs - i;
-					f_read(&f, buffer, 512, NULL);
-					write_flash((unsigned int *) (USER_FLASH_START + i), (char *) &buffer, 512);
+		if ((r = f_mount(0, &fatfs)) == FR_OK) {
+			if ((r = f_open(&f, "/firmware.bin", FA_READ | FA_OPEN_EXISTING)) == FR_OK) {
+				unsigned int fs = f_size(&f);
+				DBG("found firmware.bin with %u bytes", fs);
+				if ((fs > 0) && (fs <= USER_FLASH_SIZE)) {
+					U8 buffer[FLASH_BUF_SIZE];
+					for (unsigned int i = 0; i < fs; i += FLASH_BUF_SIZE) {
+						unsigned int j = FLASH_BUF_SIZE;
+						if (i + j > fs)
+							j = fs - i;
+						DBG("writing %d-%d", i, i+j);
+						if ((r = f_read(&f, buffer, j, &j)) == FR_OK) {
+							// pad last block to a full sector size
+							while (j < FLASH_BUF_SIZE) {
+								buffer[j++] = 0xFF;
+							}
+							write_flash((unsigned int *) (USER_FLASH_START + i), (char *) &buffer, j);
+						}
+						else {
+							DBG("read failed: %d", r);
+							i = fs;
+						}
+					}
+					r = f_close(&f);
+					r = f_unlink("/firmware.cur");
+					r = f_rename("/firmware.bin", "/firmware.cur");
 				}
-				f_close(&f);
-				f_unlink("/firmware.cur");
-				f_rename("/firmware.bin", "/firmware.cur");
-			}
-		}
-		#ifdef	GENERATE_FIRMWARE_CUR
-			if (f_open(&f, "/firmware.cur", FA_READ | FA_OPEN_EXISTING)) {
-				f_close(&f);
 			}
 			else {
-				// no firmware.cur, generate one!
-				if (f_open(&f, "/firmware.cur", FA_WRITE | FA_CREATE_NEW) == FR_OK) {
-					U8 *flash = (U8 *) USER_FLASH_START;
-
+				DBG("open \"/firmware.bin\" failed: %d", r);
+			}
+			#ifdef	GENERATE_FIRMWARE_CUR
+				if (f_open(&f, "/firmware.cur", FA_READ | FA_OPEN_EXISTING)) {
 					f_close(&f);
 				}
-			}
-		#endif
-		// elm-chan's fatfs doesn't have an unmount function
-		// f_umount(&fatfs);
+				else {
+					// no firmware.cur, generate one!
+					if (f_open(&f, "/firmware.cur", FA_WRITE | FA_CREATE_NEW) == FR_OK) {
+						U8 *flash = (U8 *) USER_FLASH_START;
+
+						f_close(&f);
+					}
+				}
+			#endif
+			// elm-chan's fatfs doesn't have an unmount function
+			// f_umount(&fatfs);
+		}
+		else {
+			DBG("mount failed: %d", r);
+		}
 		spi_close();
 
-		if (user_code_present())
+		if (user_code_present()) {
+			DBG("starting user code...");
 			execute_user_code();
+		}
+		else {
+			DBG("user code invalid, rebooting");
+		}
 	}
 	NVIC_SystemReset();
 }

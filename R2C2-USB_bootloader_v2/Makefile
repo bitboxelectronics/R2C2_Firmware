@@ -148,6 +148,7 @@ SRC = main.c	\
 	msc_scsi.c \
 	msc_usb_start.c \
 	sbl_iap.c \
+	spi.c \
 	$(APPLIBDIR)/LPCUSB/src/usbcontrol.c \
 	$(APPLIBDIR)/LPCUSB/src/usbhw_lpc.c \
 	$(APPLIBDIR)/LPCUSB/src/usbinit.c \
@@ -159,8 +160,9 @@ SRC = main.c	\
 	$(APPLIBDIR)/NXP/Drivers/source/lpc17xx_gpio.c \
 	$(APPLIBDIR)/NXP/Drivers/source/lpc17xx_uart.c \
 	$(APPLIBDIR)/NXP/Drivers/source/lpc17xx_clkpwr.c \
-	$(APPLIBDIR)/FatFs/ff.c \
-	$(APPLIBDIR)/FatFs/fattime.c \
+	$(APPLIBDIR)/NXP/Drivers/source/lpc17xx_ssp.c \
+	$(APPLIBDIR)/FatFs/src/ff.c \
+	$(APPLIBDIR)/FatFs/src/fattime.c \
 
 # List C source files here which must be compiled in ARM-Mode (no -mthumb).
 # use file-extension c for "c-only"-files

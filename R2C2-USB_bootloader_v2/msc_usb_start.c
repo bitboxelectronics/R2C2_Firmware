@@ -35,7 +35,6 @@
 #include "usbapi.h"
 #include "usbdebug.h"
 #include "msc_bot.h"
-#include "disk.h"
 
 /*
  * The LPCUSB stack can be configured to print debug messages - for

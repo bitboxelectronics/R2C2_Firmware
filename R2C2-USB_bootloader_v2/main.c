@@ -18,6 +18,7 @@
 #include	"sbl_iap.h"
 #include	"sbl_config.h"
 #include	"msc_scsi.h"
+#include	"spi.h"
 
 FATFS fatfs;
 FIL f;
@@ -76,8 +77,6 @@ int main() {
 
 	NVIC_SetVTOR(0x00000000);
 
-	//init_lpc();
-
 	BlockDevInit();
 
 	if (bootloader_button_pressed() || (user_code_present() == 0)) {
@@ -87,6 +86,7 @@ int main() {
 			USBHwISR();
 
 		USBHwConnect(FALSE);
+		spi_close();
 
 		NVIC_SystemReset();
 	}
@@ -113,6 +113,7 @@ int main() {
 		}
 		// elm-chan's fatfs doesn't have an unmount function
 		// f_umount(&fatfs);
+		spi_close();
 
 		if (user_code_present())
 			execute_user_code();

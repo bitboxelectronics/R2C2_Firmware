@@ -29,11 +29,8 @@
 #include "type.h"
 #include "usbdebug.h"
 
-
 #include "blockdev.h"
 #include "spi.h"
-
-
 
 #define CMD_GOIDLESTATE		0
 #define CMD_SENDOPCOND		1
@@ -44,8 +41,31 @@
 #define	CMD_WRITE			24
 #define CMD_WRITE_MULTIPLE	25
 
+#define SPIInit()				spi_init()
+#define	SPISend(d)			spi_rw(d)
+#define	SPISetSpeed(s)	spi_set_speed(s)
+#define	SPI_PRESCALE_MIN	INTERFACE_SLOW
 
-static void Command(U8 cmd, U32 param)
+void SPIRecvN(U8 *b, int l) {
+	if ((l & 3) == 0) {
+		spi_rcvr_block(b, l);
+	}
+	else {
+		int i;
+		for (i = 0; i < l; i++) {
+			b[i] = spi_rw(0xFF);
+		}
+	}
+}
+
+void SPISendN(U8 *buffer, int len) {
+	int i;
+	for (i = 0; i < len; i++) {
+		SPISend(buffer[i]);
+	}
+}
+
+void Command(U8 cmd, U32 param)
 {
 	U8	abCmd[8];
 
@@ -65,7 +85,7 @@ static void Command(U8 cmd, U32 param)
 
 /*****************************************************************************/
 
-static U8 Resp8b(void)
+U8 Resp8b(void)
 {
 	U8 i;
 	U8 resp;
@@ -83,7 +103,7 @@ static U8 Resp8b(void)
 
 /*****************************************************************************/
 
-static void Resp8bError(U8 value)
+void Resp8bError(U8 value)
 {
 	switch (value) {
 	case 0x40:	DBG("Argument out of bounds.\n"); 				break;
@@ -147,7 +167,7 @@ int BlockDevGetSize(U32 *pdwDriveSize)
 
 /*****************************************************************************/
 
-static U16 Resp16b(void)
+U16 Resp16b(void)
 {
 	U16 resp;
 
@@ -160,7 +180,7 @@ static U16 Resp16b(void)
 
 /*****************************************************************************/
 
-static int State(void)
+int State(void)
 {
 	U16 value;
 

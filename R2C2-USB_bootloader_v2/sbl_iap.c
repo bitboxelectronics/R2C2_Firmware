@@ -11,13 +11,14 @@
 // use without further testing or modification.
 //-----------------------------------------------------------------------------
 
-#include "type.h"
 #include "sbl_iap.h"
 #include "sbl_config.h"
 #include "lpc17xx_pinsel.h"
 #include "lpc17xx_gpio.h"
 #include "LPC17xx.h"
-#include "sersendf.h"
+#include "usbdebug.h"
+#include "type.h"
+
 
 // If COMPUTE_BINARY_CHECKSUM is defined, then code will check that checksum
 // contained within binary image is valid.
@@ -44,7 +45,7 @@ static unsigned result_table[5];
 
 char flash_buf[FLASH_BUF_SIZE];
 
-unsigned static byte_ctr = 0;
+static unsigned byte_ctr = 0;
 
 void write_data(unsigned cclk,unsigned dst,unsigned * flash_data_buf, unsigned count);
 void find_erase_prepare_sector(unsigned cclk, unsigned dst);
@@ -69,7 +70,7 @@ unsigned write_flash(unsigned * dst, char * src, unsigned no_of_bytes)
     find_erase_prepare_sector(SystemCoreClock/1000, (unsigned)dst);
     if(result_table[0] != CMD_SUCCESS)
     {
-      sersendf("Error: prepare sectors\n");
+      DBG("Error: prepare sectors\n");
       while(1); /* No way to recover. Just let OS report a write failure */
     }
     write_data( SystemCoreClock/1000,
@@ -78,7 +79,7 @@ unsigned write_flash(unsigned * dst, char * src, unsigned no_of_bytes)
                 FLASH_BUF_SIZE);
     if(result_table[0] != CMD_SUCCESS)
     {
-      sersendf("Error: writing data\n");
+      DBG("Error: writing data\n");
       while(1); /* No way to recover. Just let OS report a write failure */
     }
 
@@ -88,7 +89,7 @@ unsigned write_flash(unsigned * dst, char * src, unsigned no_of_bytes)
                 FLASH_BUF_SIZE);
     if(result_table[0] != CMD_SUCCESS)
     {
-      sersendf("Error: verifying data\n");
+      DBG("Error: verifying data\n");
       while(1); /* No way to recover. Just let OS report a write failure */
     }
 
@@ -130,8 +131,8 @@ void write_data(unsigned cclk, unsigned dst, unsigned * flash_data_buf, unsigned
   param_table[4] = cclk;
 
   // for debug, print the address and number of bytes
-  sersendf("Writting address: %d -- ", param_table[1]);
-  sersendf("Nr bytes: %d\n", param_table[3]);
+  DBG("Writting address: %d -- ", param_table[1]);
+  DBG("Nr bytes: %d\n", param_table[3]);
 
   iap_entry(param_table,result_table);
   __enable_irq();

@@ -194,6 +194,7 @@ ASRCARM  =
 
 # Place project-specific -D (define) and/or -U options for C here.
 CDEFS =
+CDEFS += -DUARTDEBUG
 # enables parameter-checking in NXP's library
 #CDEFS += -DDEBUG
 #CDEFS += -DWITH_USB_MS=1
@@ -242,11 +243,11 @@ EXTRA_LIBDIRS =
 # s = -Os enables all -O2 optimizations that do not typically increase code
 #     size.
 # (See gcc manual for further information)
-OPT = 0
+#OPT = 0
 #OPT = 1
 #OPT = 2
 #OPT = 3
-#OPT = s
+OPT = s
 
 # Debugging format.
 #DEBUG = stabs

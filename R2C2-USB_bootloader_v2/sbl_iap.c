@@ -19,7 +19,6 @@
 #include "debug.h"
 #include "type.h"
 
-
 // If COMPUTE_BINARY_CHECKSUM is defined, then code will check that checksum
 // contained within binary image is valid.
 //#define COMPUTE_BINARY_CHECKSUM

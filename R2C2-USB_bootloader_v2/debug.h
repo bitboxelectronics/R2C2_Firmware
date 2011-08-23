@@ -1,6 +1,7 @@
 #ifndef	_DEBUG_H
 #define	_DEBUG_H
 
+#ifdef	UARTDEBUG
 #include	<stdint.h>
 
 // functions for sending hexadecimal
@@ -24,5 +25,11 @@ void serwrite_int32_vf(int32_t v, uint8_t fp);
 void sersendf(char *format, ...)		__attribute__ ((format (printf, 1, 2)));
 
 #define DBG(format, ...) sersendf(format "\n", ##__VA_ARGS__)
+
+#else	/* ifdef DEBUG */
+
+	#define	DBG(...) do {} while(0)
+
+#endif	/* ifdef UARTDEBUG */
 
 #endif	/* _DEBUG_H */

@@ -1,5 +1,7 @@
 #include	"debug.h"
 
+#ifdef	UARTDEBUG
+
 #include	<stdarg.h>
 #include	<math.h>
 
@@ -110,19 +112,19 @@ void serwrite_int32_vf(int32_t v, uint8_t fp) {
 	serwrite_uint32_vf(v, fp);
 }
 
-void serwrite_double(double f) {
-	int precision = 6;
-	serwrite_int32(floor(f));
-	f -= floor(f);
-	if (f != 0) {
-		serial_writechar('.');
-		while ((f != 0) && (precision-- != 0)) {
-			f *= 10;
-			serial_writechar('0' + floor(f));
-			f -= floor(f);
-		}
-	}
-}
+// void serwrite_double(double f) {
+// 	int precision = 6;
+// 	serwrite_int32(floor(f));
+// 	f -= floor(f);
+// 	if (f != 0) {
+// 		serial_writechar('.');
+// 		while ((f != 0) && (precision-- != 0)) {
+// 			f *= 10;
+// 			serial_writechar('0' + floor(f));
+// 			f -= floor(f);
+// 		}
+// 	}
+// }
 
 void sersendf(char * format, ...) {
 	va_list args;
@@ -178,10 +180,10 @@ void sersendf(char * format, ...) {
 					serial_writechar('%');
 					j = 0;
 					break;
-				case 'g':
-					serwrite_double(va_arg(args, double));
-					j = 0;
-					break;
+// 				case 'g':
+// 					serwrite_double(va_arg(args, double));
+// 					j = 0;
+// 					break;
 				default:
 					serial_writechar(c);
 					j = 0;
@@ -199,3 +201,5 @@ void sersendf(char * format, ...) {
 	}
 	va_end(args);
 }
+
+#endif	/* ifdef UARTDEBUG */

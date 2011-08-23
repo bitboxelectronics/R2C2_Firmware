@@ -22,10 +22,6 @@
 #include	"uart.h"
 #include	"debug.h"
 
-#ifndef	DBG
-	#define	DBG(...) do {} while (0)
-#endif
-
 FATFS fatfs;
 FIL f;
 FRESULT r;

@@ -23,16 +23,6 @@
 FATFS fatfs;
 FIL f;
 
-typedef U16 CHECKSUM;
-
-CHECKSUM checksum_file(FIL *file) {
-	return 0;
-}
-
-CHECKSUM checksum_flash(void *addr, U32 length) {
-	return 0;
-}
-
 // in msc_usb_start.c
 void init_usb_msc_device(void);
 
@@ -87,37 +77,44 @@ int main() {
 
 		USBHwConnect(FALSE);
 		spi_close();
-
-		NVIC_SystemReset();
 	}
 	else {
 		f_mount(0, &fatfs);
-		if (f_open(&f, "/firmware.bin", FA_READ | FA_OPEN_EXISTING)) {
+		if (f_open(&f, "/firmware.bin", FA_READ | FA_OPEN_EXISTING) == FR_OK) {
 			unsigned int fs = f_size(&f);
 			if ((fs > 0) && (fs <= USER_FLASH_SIZE)) {
-				U16 cs_sd = checksum_file(&f);
-				U16 cs_flash = checksum_flash((void *)USER_FLASH_START, USER_FLASH_START + fs);
-				if (cs_sd != cs_flash) {
-					f_lseek(&f, 0);
-					U8 buffer[512];
-					for (unsigned int i = 0; i < fs; i += 512) {
-						unsigned int j = 512;
-						if (i + j > fs)
-							j = fs - i;
-						f_read(&f, buffer, 512, NULL);
-						write_flash((unsigned int *) (USER_FLASH_START + i), (char *) &buffer, 512);
-					}
+				U8 buffer[512];
+				for (unsigned int i = 0; i < fs; i += 512) {
+					unsigned int j = 512;
+					if (i + j > fs)
+						j = fs - i;
+					f_read(&f, buffer, 512, NULL);
+					write_flash((unsigned int *) (USER_FLASH_START + i), (char *) &buffer, 512);
 				}
 				f_close(&f);
+				f_unlink("/firmware.cur");
+				f_rename("/firmware.bin", "/firmware.cur");
 			}
 		}
+		#ifdef	GENERATE_FIRMWARE_CUR
+			if (f_open(&f, "/firmware.cur", FA_READ | FA_OPEN_EXISTING)) {
+				f_close(&f);
+			}
+			else {
+				// no firmware.cur, generate one!
+				if (f_open(&f, "/firmware.cur", FA_WRITE | FA_CREATE_NEW) == FR_OK) {
+					U8 *flash = (U8 *) USER_FLASH_START;
+
+					f_close(&f);
+				}
+			}
+		#endif
 		// elm-chan's fatfs doesn't have an unmount function
 		// f_umount(&fatfs);
 		spi_close();
 
 		if (user_code_present())
 			execute_user_code();
-
-		NVIC_SystemReset();
 	}
+	NVIC_SystemReset();
 }

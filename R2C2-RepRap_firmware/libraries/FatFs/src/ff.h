@@ -543,4 +543,4 @@ void ff_rel_grant (_SYNC_t);		/* Unlock sync object */
 
 #endif /* _FATFS */
 
-#endif FF_H_
+#endif /* FF_H_ */

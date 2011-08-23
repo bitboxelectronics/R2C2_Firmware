@@ -43,13 +43,13 @@ DWORD get_fattime (void)
 
 DWORD get_fattime (void)
 {
-	/* If no RTC support. Return a fixed value 2010/4/26 0:00:00 */
-	return	  ((DWORD)(2010 - 1980) << 25)	/* Y */
-			| ((DWORD)4  << 21)				/* M */
-			| ((DWORD)26 << 16)				/* D */
-			| ((DWORD)0  << 11)				/* H */
-			| ((DWORD)0  << 5)				/* M */
-			| ((DWORD)0  >> 1);				/* S */
+	/* If no RTC support. Return a fixed value 2011/8/23 12:34:56 */
+	return	  ((DWORD)(2011 - 1980) << 25)	/* Y */
+			| ((DWORD)8  << 21)				/* M */
+			| ((DWORD)23 << 16)				/* D */
+			| ((DWORD)12  << 11)				/* H */
+			| ((DWORD)34  << 5)				/* M */
+			| ((DWORD)56  >> 1);				/* S */
 }
 
 #endif

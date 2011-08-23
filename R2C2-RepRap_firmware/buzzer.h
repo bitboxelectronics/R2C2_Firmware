@@ -30,6 +30,8 @@
 #ifndef _BUZZER_
 #define _BUZZER_
 
+extern uint8_t buzzer_state;
+
 void buzzer_init (void);
 void buzzer_pwm_stop (void);
 

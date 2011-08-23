@@ -39,7 +39,7 @@ unsigned char clock_counter_250ms = 0;
 unsigned char clock_counter_1s = 0;
 volatile unsigned char clock_flag = 0;
 long millis_ticks;
-uint8_t buzzer_state = 0;
+volatile uint8_t buzzer_state = 0;
 uint16_t duration;
 
 void TIMER0_IRQHandler(void)

@@ -123,7 +123,7 @@ static const U8 abDescriptors[] = {
 
 	4,
 	DESC_STRING,
-	'1', 0,
+	'2', 0,
 
 // terminating zero
 	0

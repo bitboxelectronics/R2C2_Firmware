@@ -123,20 +123,20 @@ int main() {
 						}
 					}
 					r = f_close(&f);
-					r = f_unlink("/firmware.cur");
-					r = f_rename("/firmware.bin", "/firmware.cur");
+					r = f_unlink("/firmware.bck");
+					r = f_rename("/firmware.bin", "/firmware.bck");
 				}
 			}
 			else {
 				DBG("open \"/firmware.bin\" failed: %d", r);
 			}
 			#ifdef	GENERATE_FIRMWARE_CUR
-				if (f_open(&f, "/firmware.cur", FA_READ | FA_OPEN_EXISTING)) {
+				if (f_open(&f, "/firmware.bck", FA_READ | FA_OPEN_EXISTING)) {
 					f_close(&f);
 				}
 				else {
-					// no firmware.cur, generate one!
-					if (f_open(&f, "/firmware.cur", FA_WRITE | FA_CREATE_NEW) == FR_OK) {
+					// no firmware.bck, generate one!
+					if (f_open(&f, "/firmware.bck", FA_WRITE | FA_CREATE_NEW) == FR_OK) {
 						U8 *flash = (U8 *) USER_FLASH_START;
 
 						f_close(&f);

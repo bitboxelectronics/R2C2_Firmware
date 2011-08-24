@@ -27,7 +27,7 @@
 
 
 #include "type.h"
-#include "usbdebug.h"
+#include "debug.h"
 
 #include "blockdev.h"
 #include "spi.h"
@@ -119,6 +119,33 @@ void Resp8bError(U8 value)
 	}
 }
 
+int BlockDevGetBlockLength(U32 *pdwBlockLength) {
+	U8 cardresp, i, by;
+	U8 iob[16];
+	U16 read_bl_len;
+
+	Command(CMD_READCSD, 0);
+	do {
+		cardresp = Resp8b();
+	} while (cardresp != 0xFE);
+
+// 	DBG("CSD:");
+	for (i = 0; i < 16; i++) {
+		iob[i] = SPISend(0xFF);
+// 		DBG(" %02x", iob[i]);
+	}
+// 	DBG("\n");
+
+	SPISend(0xff);
+	SPISend(0xff);
+
+	by = iob[5] & 0x0F;
+	read_bl_len = 1 << by;
+
+	*pdwBlockLength = (U32) read_bl_len;
+
+	return 0;
+}
 
 /* ****************************************************************************
  calculates size of card from CSD
@@ -135,12 +162,12 @@ int BlockDevGetSize(U32 *pdwDriveSize)
 		cardresp = Resp8b();
 	} while (cardresp != 0xFE);
 
-	DBG("CSD:");
+// 	DBG("CSD:");
 	for (i = 0; i < 16; i++) {
 		iob[i] = SPISend(0xFF);
-		DBG(" %02x", iob[i]);
+// 		DBG(" %02x", iob[i]);
 	}
-	DBG("\n");
+// 	DBG("\n");
 
 	SPISend(0xff);
 	SPISend(0xff);

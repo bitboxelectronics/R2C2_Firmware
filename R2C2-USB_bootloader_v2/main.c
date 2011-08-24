@@ -70,9 +70,21 @@ int main() {
 
 	NVIC_SetVTOR(0x00000000);
 
-	uart_init();
+	#ifdef	UARTDEBUG
+		uart_init();
+	#endif
 
 	BlockDevInit();
+
+#ifdef	UARTDEBUG
+	if (1) {
+		U32 size;
+		BlockDevGetSize(&size);
+		DBG("Found SD card of size %d", size);
+		BlockDevGetBlockLength(&size);
+		DBG("block length %d", size);
+	}
+#endif
 
 	if (bootloader_button_pressed() || (user_code_present() == 0)) {
 		DBG("entering bootloader");

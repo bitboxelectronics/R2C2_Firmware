@@ -34,4 +34,5 @@ int BlockDevWrite(U32 dwAddress, U8* pbBuf);
 int BlockDevRead(U32 dwAddress, U8* pbBuf);
 
 int BlockDevGetSize(U32 *pdwDriveSize);
+int BlockDevGetBlockLength(U32 *pdwBlockLength);
 int BlockDevGetStatus(void);

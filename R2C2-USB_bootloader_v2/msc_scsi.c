@@ -46,8 +46,10 @@
 
 #include <string.h>		// memcpy
 
+#undef UARTDEBUG
+
 #include "lpc_types.h"
-#include "usbdebug.h"
+#include "debug.h"
 
 #include "blockdev.h"
 #include "msc_scsi.h"

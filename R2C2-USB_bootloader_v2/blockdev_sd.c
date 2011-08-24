@@ -25,6 +25,7 @@
 	2006, Bertrik Sikken, modified for LPCUSB
 */
 
+#include	"lpc17xx_gpdma.h"
 
 #include "type.h"
 #include "debug.h"
@@ -32,19 +33,25 @@
 #include "blockdev.h"
 #include "spi.h"
 
-#define CMD_GOIDLESTATE		0
-#define CMD_SENDOPCOND		1
-#define	CMD_READCSD       	9
-#define CMD_READCID			10
-#define CMD_SENDSTATUS		13
+#define CMD_GOIDLESTATE			0
+#define CMD_SENDOPCOND			1
+#define	CMD_READCSD					9
+#define CMD_READCID					10
+#define	CMD_STOP						12
+#define CMD_SENDSTATUS			13
 #define	CMD_READSINGLEBLOCK	17
-#define	CMD_WRITE			24
+#define	CMD_READ_MULTIPLE		18
+#define	CMD_SET_BLOCK_COUNT	23
+#define	CMD_WRITE						24
 #define CMD_WRITE_MULTIPLE	25
 
 #define SPIInit()				spi_init()
 #define	SPISend(d)			spi_rw(d)
 #define	SPISetSpeed(s)	spi_set_speed(s)
 #define	SPI_PRESCALE_MIN	INTERFACE_SLOW
+
+GPDMA_Channel_CFG_Type write_cfg;
+GPDMA_Channel_CFG_Type read_cfg;
 
 void SPIRecvN(U8 *b, int l) {
 	if ((l & 3) == 0) {
@@ -59,6 +66,23 @@ void SPIRecvN(U8 *b, int l) {
 }
 
 void SPISendN(U8 *buffer, int len) {
+	if (len == 512) {
+		DBG("attempting DMA transfer to SD");
+		write_cfg.SrcMemAddr = buffer;
+		if (GPDMA_Setup(&write_cfg) == SUCCESS) {
+			GPDMA_ChannelCmd(write_cfg.ChannelNum, ENABLE);
+			SSP_DMACmd(&LPC_SSP0, SSP_DMA_TX, ENABLE);
+			DBG("DMA running, waiting for completion");
+			while (GPDMA_IntGetStatus(GPDMA_STAT_INT, write_cfg.ChannelNum) == SET);
+			DBG("Complete!");
+			SSP_DMACmd(&LPC_SSP0, SSP_DMA_TX, DISABLE);
+			GPDMA_ChannelCmd(write_cfg.ChannelNum, DISABLE);
+			return;
+		}
+		else {
+			DBG("DMA setup fail!");
+		}
+	}
 	int i;
 	for (i = 0; i < len; i++) {
 		SPISend(buffer[i]);
@@ -291,6 +315,27 @@ int BlockDevInit(void)
 	}
 
 	DBG("Init done...\n");
+
+	GPDMA_Init();
+	write_cfg.ChannelNum = 0;
+	write_cfg.TransferSize = 512;
+	write_cfg.TransferWidth = 0;
+	// write_cfg.SrcMemAddr = ; // fill out later
+	write_cfg.DstMemAddr = 0;
+	write_cfg.TransferType = GPDMA_TRANSFERTYPE_M2P;
+	write_cfg.SrcConn = 0;
+	write_cfg.DstConn = GPDMA_CONN_SSP0_Tx;
+	write_cfg.DMALLI = 0;
+
+	read_cfg.ChannelNum = 1;
+	read_cfg.TransferSize = 512;
+	read_cfg.TransferWidth = 0;
+	read_cfg.SrcMemAddr = 0;
+	// read_cfg.DstMemAddr = 0; // fill out later
+	read_cfg.TransferType = GPDMA_TRANSFERTYPE_P2M;
+	read_cfg.SrcConn = GPDMA_CONN_SSP0_Rx;
+	read_cfg.DstConn = 0;
+	read_cfg.DMALLI = 0;
 
 	return 0;
 }

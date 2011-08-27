@@ -2,12 +2,17 @@
 
 #include	<math.h>
 
+#include	"lpc17xx_pinsel.h"
+
 axis_config axes[NUM_AXES] = {
 	// X
 	{
 		80.0f,		// steps_per_mm
 		10.0f,		// accel
 		200.0f,		// length
+		0,				// nanometers
+		0,				// steps
+		0.0f,			// millimeters
 		P1_20,		// step pin
 		P1_23,		// dir pin
 		P1_24,		// enable pin
@@ -19,6 +24,9 @@ axis_config axes[NUM_AXES] = {
 		80.0f,		// steps_per_mm
 		10.0f,		// accel
 		200.0f,		// length
+		0,				// nanometers
+		0,				// steps
+		0.0f,			// millimeters
 		P1_25,		// step pin
 		P1_26,		// dir pin
 		P1_28,		// enable pin
@@ -30,6 +38,9 @@ axis_config axes[NUM_AXES] = {
 		400.0f,		// steps_per_mm
 		1.0f,			// accel
 		140.0f,		// length
+		0,				// nanometers
+		0,				// steps
+		0.0f,			// millimeters
 		P1_29,		// step pin
 		P0_0,			// dir pin
 		P0_1,			// enable pin
@@ -41,6 +52,9 @@ axis_config axes[NUM_AXES] = {
 		643.0f,		// steps_per_mm
 		40.0f,		// accel
 		INFINITY,	// length
+		0,				// nanometers
+		0,				// steps
+		0.0f,			// millimeters
 		P0_10,		// step pin
 		P0_11,		// dir pin
 		P2_10,		// enable pin
@@ -132,6 +146,8 @@ sensor_heater_pair heaters[NUM_HEATERS] = {
 
 void pins_init() {
 	int i;
+	PINSEL_CFG_Type p;
+
 	for (i = 0; i < NUM_AXES; i++) {
 		axis_config *axis = &axes[i];
 		set_output(axis->enable); write(axis->enable, AXIS_DISABLED);
@@ -144,16 +160,27 @@ void pins_init() {
 	for (i = 0; i < NUM_HEATERS; i++) {
 		sensor_heater_pair *pair = &heaters[i];
 		set_output(pair->heater); write(pair->heater, 0);
+
+		p.Portnum = port_from_pin(pair->sensor);
+		p.Pinnum = pair->sensor & 0x1F;
+		p.Pinmode = PINSEL_PINMODE_TRISTATE;
+		p.OpenDrain = PINSEL_PINMODE_NORMAL;
 		switch(pair->sensor) {
 			case P0_23:	// AD0.0
 			case P0_24:	// AD0.1
 			case P0_25:	// AD0.2
 			case P0_26:	// AD0.3
-
+				p.Funcnum = 1;
+				break;
 			case P1_30:	// AD0.4
 			case P1_31:	// AD0.5
+				p.Funcnum = 3;
+				break;
 			case P0_3:	// AD0.6
 			case P0_2:	// AD0.7
+				p.Funcnum = 2;
+				break;
 		}
+		PINSEL_ConfigPin(&p);
 	}
 }

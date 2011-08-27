@@ -23,6 +23,9 @@ typedef struct {
 	UNIT	steps_per_mm;
 	UNIT	accel;
 	UNIT	length;
+	int		nm;
+	int		st;
+	float	mm;
 	PIN		step;
 	PIN		dir;
 	PIN		enable;

@@ -167,6 +167,7 @@ SRC =	$(APPLIBDIR)/LPCUSB/src/usbcontrol.c \
 	config.c \
 	io.c \
 	fs.c \
+	position.c \
 
 # List C source files here which must be compiled in ARM-Mode (no -mthumb).
 # use file-extension c for "c-only"-files

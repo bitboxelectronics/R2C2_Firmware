@@ -27,10 +27,4 @@
 */
 
 /* Initialize serial port */
-void serial_init(void);
-
-/* Send char */
-char serial_write(char c);
-char serial_read(void);
-char serial_available(void);
-void serial_flush(void);
+void USBSerial_Init(void);

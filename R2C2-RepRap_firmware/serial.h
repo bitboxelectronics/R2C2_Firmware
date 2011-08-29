@@ -48,12 +48,12 @@ uint8_t serial_txchars(void);
 // read one character
 uint8_t serial_popchar(void);
 // send one character
-void serial_writechar(uint8_t data);
+void serial_writechar(char data);
 
 // read/write many characters
 // uint8_t serial_recvblock(uint8_t *block, int blocksize);
 void serial_writeblock(void *data, int datalen);
 
-void serial_writestr(uint8_t *data);
+void serial_writestr(char *data);
 
 #endif	/* _SERIAL_H */

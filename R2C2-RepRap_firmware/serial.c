@@ -62,7 +62,7 @@ uint8_t serial_txchars()
   return fifo_avail(&txfifo);
 }
 
-void serial_writechar(uint8_t data)
+void serial_writechar(char data)
 {
   fifo_put(&txfifo, data);
 }
@@ -75,7 +75,7 @@ void serial_writeblock(void *data, int datalen)
     serial_writechar(((uint8_t *) data)[i]);
 }
 
-void serial_writestr(uint8_t *data)
+void serial_writestr(char *data)
 {
   uint8_t i = 0, r;
 

@@ -290,7 +290,7 @@ void process_gcode_command()
       default:
               serial_writestr("E: Bad G-code ");
               serwrite_uint8(next_target.G);
-              serial_writechar("\r\n");
+              serial_writestr("\r\n");
     }
   }
   else if (next_target.seen_M)
@@ -444,7 +444,7 @@ void process_gcode_command()
       default:
       serial_writestr("E: Bad M-code ");
       serwrite_uint8(next_target.M);
-      serial_writechar("\r\n");
+      serial_writestr("\r\n");
     }
   }
 }

@@ -358,14 +358,14 @@ void gcode_parse_char(uint8_t c) {
 			else {
 				serial_writestr("Expected checksum ");
 				serwrite_uint8(next_target.checksum_calculated);
-				serial_writechar('\r\n');
+				serial_writestr("\r\n");
 				request_resend();
 			}
 		}
 		else {
 			serial_writestr("Expected line number ");
 			serwrite_uint32(next_target.N_expected);
-			serial_writechar('\r\n');
+			serial_writestr("\r\n");
 			request_resend();
 		}
 
@@ -401,5 +401,5 @@ void gcode_parse_char(uint8_t c) {
 void request_resend(void) {
 	serial_writestr("rs ");
 	serwrite_uint8(next_target.N);
-	serial_writechar('\r\n');
+	serial_writestr("\r\n");
 }

@@ -31,6 +31,7 @@
 #include	"gcode_parse.h"
 
 #include	<string.h>
+#include <stdbool.h>
 
 #include	"serial.h"
 #include	"sermsg.h"
@@ -63,6 +64,11 @@ double steps_per_in_x;
 double steps_per_in_y;
 double steps_per_in_z;
 double steps_per_in_e;
+
+// for SD functions
+#define MAX_LINE 120
+char gcode_line [MAX_LINE];
+int gcode_len;
 
 void gcode_parse_init(void)
 {
@@ -126,6 +132,16 @@ int32_t	decfloat_to_int(decfloat *df, int32_t multiplicand, int32_t denominator)
 	return r;
 }
 
+static bool write_to_file(void)
+{
+  UINT bytes_written;
+  FRESULT result;
+
+  result = f_write (&file, gcode_line, gcode_len, &bytes_written);
+
+  return result == FR_OK;
+}
+
 /*
 	public functions
 */
@@ -162,6 +178,8 @@ void SpecialMoveE(int32_t e, uint32_t f) {
 ****************************************************************************/
 
 void gcode_parse_char(uint8_t c) {
+  bool send_reply = true;
+
 	#ifdef ASTERISK_IN_CHECKSUM_INCLUDED
 	if (next_target.seen_checksum == 0)
 		next_target.checksum_calculated = crc(next_target.checksum_calculated, c);
@@ -170,6 +188,8 @@ void gcode_parse_char(uint8_t c) {
 	// uppercase
 	if (c >= 'a' && c <= 'z')
 		c &= ~32;
+
+	gcode_line [gcode_len++] = c;
 
 	// process previous field
 	if (last_field) {
@@ -182,6 +202,13 @@ void gcode_parse_char(uint8_t c) {
 					break;
 				case 'M':
 					next_target.M = read_digit.mantissa;
+					// this is a bit hacky since string parameters don't fit in general G code syntax
+					// NB: filename MUST start with a letter and MUST NOT contain spaces
+					// letters will also be converted to uppercase
+					if ( (next_target.M == 23) || (next_target.M == 28) )
+					{
+					    next_target.getting_string = 1;
+					}
 					break;
 				case 'X':
 					if (next_target.option_inches)
@@ -215,8 +242,8 @@ void gcode_parse_char(uint8_t c) {
 						next_target.target.F = decfloat_to_int(&read_digit, 1, 1);
 					break;
 				case 'S':
-                                        next_target.S = decfloat_to_int(&read_digit, 1, 1);
-
+          next_target.S = decfloat_to_int(&read_digit, 1, 1);
+          break;
 				case 'P':
 					// if this is dwell, multiply by 1000 to convert seconds to milliseconds
 					if (next_target.G == 4)
@@ -237,8 +264,22 @@ void gcode_parse_char(uint8_t c) {
 		}
 	}
 
-	// skip comments
-	if (next_target.seen_semi_comment == 0 && next_target.seen_parens_comment == 0) {
+  if (next_target.getting_string)
+  {
+    if ((c == 10) || (c == 13) || ( c == ' '))
+      next_target.getting_string = 0;
+    else
+    {
+      if (next_target.chpos < sizeof(next_target.filename))
+      {
+        next_target.filename [next_target.chpos++] = c;
+        next_target.filename [next_target.chpos] = 0;
+      }
+    }      
+  }
+
+	// skip comments, filenames
+	if (next_target.seen_semi_comment == 0 && next_target.seen_parens_comment == 0 && next_target.getting_string == 0) {
 		// new field?
 		if ((c >= 'A' && c <= 'Z') || c == '*') {
 			last_field = c;
@@ -341,12 +382,30 @@ void gcode_parse_char(uint8_t c) {
 				((next_target.checksum_calculated == next_target.checksum_read) || (next_target.seen_checksum == 0))
 				#endif
 				) {
-
+            if (sd_writing_file)
+            {
+              if (next_target.seen_M && ( (next_target.M >= 20) || (next_target.M <= 29) ) )
+              {
+                if (next_target.seen_M && next_target.M == 29)
+                { 
+                  // M29 - stop writing
+                  sd_writing_file = false;
+                  sd_close (&file);
+                }
+                // else - do not write SD M-codes to file
+              }
+              else
+              {
+                write_to_file();
+              }
+            }
+            else
+            {
                             // process
-                            process_gcode_command();
+                            send_reply = process_gcode_command();
 
-                            /* do not reply the "ok" when M105 and M114 commands are done */
-                            if (!(next_target.seen_M == 1 && ((next_target.M == 105) || (next_target.M == 114))))
+                            /* do not reply the "ok" for some commands which generate own reply */
+                            if (send_reply)
                             {
                               serial_writestr("ok\r\n");
                             }
@@ -354,6 +413,7 @@ void gcode_parse_char(uint8_t c) {
                             // expect next line number
                             if (next_target.seen_N == 1)
                                     next_target.N_expected = next_target.N + 1;
+			      }
 			}
 			else {
 				serial_writestr("Expected checksum ");
@@ -376,6 +436,8 @@ void gcode_parse_char(uint8_t c) {
                 next_target.seen_checksum = next_target.seen_semi_comment = \
                 next_target.seen_parens_comment = next_target.checksum_read = \
                 next_target.checksum_calculated = 0;
+		next_target.chpos = 0;
+    gcode_len = 0;
 		last_field = 0;
 		read_digit.sign = read_digit.mantissa = read_digit.exponent = 0;
 

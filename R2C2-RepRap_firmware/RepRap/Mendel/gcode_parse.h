@@ -69,6 +69,7 @@ typedef struct {
 	uint8_t					seen_checksum				:1;
 	uint8_t					seen_semi_comment		:1;
 	uint8_t					seen_parens_comment	:1;
+	uint8_t					getting_string				:1;
 
 	uint8_t					option_relative			:1;
 	uint8_t					option_inches				:1;
@@ -85,6 +86,10 @@ typedef struct {
 
 	uint8_t						checksum_read;
 	uint8_t						checksum_calculated;
+
+  // for SD functions
+	uint8_t						chpos;
+	char              			filename [13];
 } GCODE_COMMAND;
 
 // the command being processed

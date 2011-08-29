@@ -39,6 +39,15 @@
 #include "timer.h"
 #include "pinout.h"
 #include "config.h"
+#include "ff.h"
+
+FIL       file;
+uint32_t  filesize = 0;
+uint32_t  sd_pos = 0;
+bool      sd_printing = false;     // printing from SD file
+bool      sd_active = false;   // SD card active
+bool      sd_writing_file = false;   // writing to SD file
+
 
 void zero_x(void)
 {
@@ -124,16 +133,101 @@ void zero_e(void)
   startpoint.E = current_position.E = 0;
 }
 
+void sd_initialise(void)
+{
+  sd_active = true;
+}
+
+void sd_list_dir (void)
+{
+    FRESULT res;
+    FILINFO fno;
+    DIR dir;
+    int i;
+    char *fn;
+#if _USE_LFN
+    static char lfn[_MAX_LFN * (_DF1S ? 2 : 1) + 1];
+    fno.lfname = lfn;
+    fno.lfsize = sizeof(lfn);
+#endif
+    char path[80];
+
+    strcpy (path, "/");
+
+    res = f_opendir(&dir, path);
+    if (res == FR_OK) 
+    {
+      i = strlen(path);
+      for (;;) 
+      {
+            res = f_readdir(&dir, &fno);
+            if (res != FR_OK || fno.fname[0] == 0) break;
+            if (fno.fname[0] == '.') continue;
+#if _USE_LFN
+            fn = *fno.lfname ? fno.lfname : fno.fname;
+#else
+            fn = fno.fname;
+#endif
+            if (fno.fattrib & AM_DIR) 
+            {
+                sersendf("%s/%s/\r\n", path, fn);
+//                sprintf(&path[i], "/%s", fn);
+//recursive                res = scan_files(path);
+                if (res != FR_OK) break;
+                path[i] = 0;
+            } else 
+            {
+                sersendf("%s/%s\r\n", path, fn);
+            }
+        }
+    }
+
+    //return res;
+    
+}
+
+unsigned sd_open(FIL *pFile, char *path, uint8_t flags)
+{
+  FRESULT res;
+
+  res = f_open (pFile, path, flags);
+
+  if (res == FR_OK)
+    return 1;
+  else
+  {
+    //debug
+    sersendf ("sd_open:%d", res);
+    return 0;
+  }
+}
+
+void sd_close(FIL *pFile)
+{
+  f_close (pFile);
+}
+
+unsigned sd_filesize (FIL *pFile)
+{
+  return f_size(pFile);
+}
+
+void sd_seek(FIL *pFile, unsigned pos)
+{
+  f_lseek (pFile, pos);
+}
+
 /****************************************************************************
 *                                                                           *
 * Command Received - process it                                             *
 *                                                                           *
 ****************************************************************************/
 
-void process_gcode_command()
+bool process_gcode_command()
 {
   uint32_t backup_f;
   uint8_t axisSelected = 0;
+  bool result = true;
 
   // convert relative to absolute
   if (next_target.option_relative)
@@ -297,6 +391,103 @@ void process_gcode_command()
   {
     switch (next_target.M)
     {
+
+      // SD File functions
+      case 20: // M20 - list SD Card files
+      serial_writestr("Begin file list\r\n");
+      // list files in root folder
+      sd_list_dir();
+      serial_writestr("End file list\r\n");
+      break;
+
+      case 21: // M21 - init SD card
+      sd_printing = false;
+      sd_initialise();
+      // NB : assume that the disk has been mounted in config.c
+      // TODO: mount volume here and change config.c
+      break;
+
+      case 22: // M22 - release SD card
+      sd_printing = false;
+      sd_active = false;
+      // TODO: should unmount volume
+      break;
+    
+      case 23: // M23 <filename> - Select file
+      if(sd_active)
+      {
+        sd_printing = false;
+        sd_close(&file);
+        if (sd_open(&file, next_target.filename, FA_READ)) 
+        {
+          filesize = sd_filesize(&file);
+          sersendf("File opened: %s Size: %d\r\n", next_target.filename, filesize);
+          sd_pos = 0;
+          sersendf("File selected\r\n");
+        }
+        else
+        {
+          sersendf("E: file open failed\r\n");
+        }
+      }
+      break;
+
+      case 24: //M24 - Start SD print
+      if(sd_active)
+      {
+        sd_printing = true;
+      }
+      break;
+
+      case 25: //M25 - Pause SD print
+      if(sd_printing)
+      {
+        sd_printing = false;
+      }
+      break;
+    
+      case 26: //M26 - Set SD file pos
+      if(sd_active && next_target.seen_S)
+      {
+        sd_pos = next_target.S;  // 16 bit
+        sd_seek(&file, sd_pos);
+      }
+      break;
+    
+      case 27: //M27 - Get SD status
+      if(sd_active)
+      {
+        sersendf("SD printing byte %d/%d\r\n", sd_pos, filesize);
+      }
+      else
+      {
+    	  serial_writestr("E: not SD printing\r\n");
+      }
+      break;
+    
+      case 28: //M28 <filename> - Start SD write
+      if(sd_active)
+      {
+        sd_close(&file);
+        sd_printing = false;
+
+        if (!sd_open(&file, next_target.filename, FA_CREATE_ALWAYS | FA_WRITE))
+        {
+          sersendf("E: open failed, File: %s\r\n", next_target.filename);
+        }
+        else
+        {
+          sd_writing_file = true;
+          sersendf("Writing to file: %s\r\n", next_target.filename);
+        }
+      }
+      break;
+    
+      case 29: //M29 - Stop SD write
+      // processed in gcode_parse_char()
+      break;
+    
+    
       // M101- extruder on
       case 101:
       break;
@@ -315,6 +506,7 @@ void process_gcode_command()
       // M105- get temperature
       case 105:
       temp_print();
+      result = false;
       break;
 
       // M106- fan on
@@ -372,12 +564,12 @@ void process_gcode_command()
           (((double) current_position.Z) / ((double) config.steps_per_mm_z)), \
           (((double) current_position.E) / ((double) config.steps_per_mm_e)));
       }
-
+      result = false;
       break;
       
       // M115- report firmware version
 		case 115:
-			sersendf("FIRMWARE_NAME:Teacup_R2C2 FIRMWARE_URL:http%%3A//github.com/bitboxelectronics/R2C2 PROTOCOL_VERSION:1.0 MACHINE_TYPE:Mendel");
+			sersendf("FIRMWARE_NAME:Teacup_R2C2 FIRMWARE_URL:http%%3A//github.com/bitboxelectronics/R2C2 PROTOCOL_VERSION:1.0 MACHINE_TYPE:Mendel\r\n");
 		break;
 
       // M130- heater P factor
@@ -447,4 +639,6 @@ void process_gcode_command()
       serial_writestr("\r\n");
     }
   }
+
+  return result;
 }

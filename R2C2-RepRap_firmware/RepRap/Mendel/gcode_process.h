@@ -31,9 +31,22 @@
 #ifndef	_GCODE_PROCESS_H
 #define	_GCODE_PROCESS_H
 
+#include <stdbool.h>
 #include	"gcode_parse.h"
+#include "ff.h"
+
+
+// for SD functions
+extern FIL       file;
+extern uint32_t  filesize;
+extern uint32_t  sd_pos;
+extern bool      sd_printing;     // printing from SD file
+extern bool      sd_active;       // SD card active
+extern bool      sd_writing_file; // writing to SD file
+
+extern void sd_close (FIL *pFile);
 
 // when we have a whole line, feed it to this
-void process_gcode_command(void);
+bool process_gcode_command(void);
 
 #endif	/* _GCODE_PROCESS_H */

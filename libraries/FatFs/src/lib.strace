@@ -1,0 +1,492 @@
+11649 execve("/home/triffid/Projects/arm-2010q1/bin/arm-none-eabi-gcc", ["arm-none-eabi-gcc", "-o", "fatfs.elf", "-L../../NXP", "-llpc17xx", "diskio.o", "fattime.o", "ff.o", "sdcard.o", "spi.o"], [/* 46 vars */]) = 0
+11649 brk(0)                            = 0x9945000
+11649 mmap2(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xb7754000
+11649 access("/etc/ld.so.preload", R_OK) = -1 ENOENT (No such file or directory)
+11649 open("/etc/ld.so.cache", O_RDONLY) = 3
+11649 fstat64(3, {st_mode=S_IFREG|0644, st_size=114050, ...}) = 0
+11649 mmap2(NULL, 114050, PROT_READ, MAP_PRIVATE, 3, 0) = 0xb7738000
+11649 close(3)                          = 0
+11649 open("/lib/libc.so.6", O_RDONLY)  = 3
+11649 read(3, "\177ELF\1\1\1\0\0\0\0\0\0\0\0\0\3\0\3\0\1\0\0\0 n\1\0004\0\0\0$w\25\0\0\0\0\0004\0 \0\v\0(\0C\0B\0\6\0\0\0004\0\0\0004\0\0\0004\0\0\0`\1\0\0`\1\0\0\5\0\0\0\4\0\0\0\3\0\0\0\210\307\23\0\210\307\23\0\210\307\23\0\23\0\0\0\23\0\0\0\4\0\0\0\1\0\0\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\10=\25\0\10=\25\0\5\0\0\0\0\20\0\0\1\0\0\0\330A\25\0\330A\25\0\330A\25\0\304'\0\0\260W\0\0\6\0\0\0\0\20\0\0\2\0\0\0|]\25\0|]\25\0|]\25\0\370\0\0\0\370\0\0\0\6\0\0\0\4\0\0\0\4\0\0\0\224\1\0\0\224\1\0\0\224\1\0\0 \0\0\0 \0\0\0\4\0\0\0\4\0\0\0\7\0\0\0\330A\25\0\330A\25\0\330A\25\0\10\0\0\0@\0\0\0\4\0\0\0\4\0\0\0P\345td\234\307\23\0\234\307\23\0\234\307\23\0T3\0\0T3\0\0\4\0\0\0\4\0\0\0Q\345td\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\6\0\0\0\4\0\0\0R\345td\330A\25\0\330A\25\0\330A\25\0(\36\0\0(\36\0\0\4\0\0\0\1\0\0\0\200\25\4e\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0(\0\0\4\0\0\0\4\0\0\0\20\0\0\0\1\0\0\0GNU\0\0\0\0\0\2\0\0\0\6\0\0\0\t\0\0\0\363\3\0\0\t\0\0\0\0\2\0\0\16\0\0\0\2400\20D\200 \2\1\214\3\346\220AE\210\0\204\0\10\0E\200\0`\300\200\0\f\212\f\0\0010\0\10@2\10\256\4\210H6l\240\0260\0&\204\200\216\4\10B$\2\f\246\244", 512) = 512
+11649 fstat64(3, {st_mode=S_IFREG|0755, st_size=1409436, ...}) = 0
+11649 mmap2(NULL, 1415560, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0xb75de000
+11649 mmap2(0xb7732000, 12288, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x154) = 0xb7732000
+11649 mmap2(0xb7735000, 10632, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0xb7735000
+11649 close(3)                          = 0
+11649 mmap2(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xb75dd000
+11649 set_thread_area({entry_number:-1 -> 6, base_addr:0xb75dd6c0, limit:1048575, seg_32bit:1, contents:0, read_exec_only:0, limit_in_pages:1, seg_not_present:0, useable:1}) = 0
+11649 mprotect(0xb7732000, 8192, PROT_READ) = 0
+11649 mprotect(0xb7772000, 4096, PROT_READ) = 0
+11649 munmap(0xb7738000, 114050)        = 0
+11649 brk(0)                            = 0x9945000
+11649 brk(0x9966000)                    = 0x9966000
+11649 rt_sigaction(SIGINT, {SIG_IGN, [INT], SA_RESTART}, {SIG_DFL, [], 0}, 8) = 0
+11649 rt_sigaction(SIGINT, {0x80535e0, [INT], SA_RESTART}, {SIG_IGN, [INT], SA_RESTART}, 8) = 0
+11649 rt_sigaction(SIGHUP, {SIG_IGN, [HUP], SA_RESTART}, {SIG_DFL, [], 0}, 8) = 0
+11649 rt_sigaction(SIGHUP, {0x80535e0, [HUP], SA_RESTART}, {SIG_IGN, [HUP], SA_RESTART}, 8) = 0
+11649 rt_sigaction(SIGTERM, {SIG_IGN, [TERM], SA_RESTART}, {SIG_DFL, [], 0}, 8) = 0
+11649 rt_sigaction(SIGTERM, {0x80535e0, [TERM], SA_RESTART}, {SIG_IGN, [TERM], SA_RESTART}, 8) = 0
+11649 rt_sigaction(SIGPIPE, {SIG_IGN, [PIPE], SA_RESTART}, {SIG_DFL, [], 0}, 8) = 0
+11649 rt_sigaction(SIGPIPE, {0x80535e0, [PIPE], SA_RESTART}, {SIG_IGN, [PIPE], SA_RESTART}, 8) = 0
+11649 rt_sigaction(SIGCHLD, {SIG_DFL, [CHLD], SA_RESTART}, {SIG_DFL, [], 0}, 8) = 0
+11649 access("/usr/local/bin/arm-none-eabi-gcc", X_OK) = -1 ENOENT (No such file or directory)
+11649 access("/usr/bin/arm-none-eabi-gcc", X_OK) = -1 ENOENT (No such file or directory)
+11649 access("/bin/arm-none-eabi-gcc", X_OK) = -1 ENOENT (No such file or directory)
+11649 access("/opt/bin/arm-none-eabi-gcc", X_OK) = -1 ENOENT (No such file or directory)
+11649 access("/usr/i686-pc-linux-gnu/avr/gcc-bin/4.5.3/arm-none-eabi-gcc", X_OK) = -1 ENOENT (No such file or directory)
+11649 access("/usr/i686-pc-linux-gnu/gcc-bin/4.4.5/arm-none-eabi-gcc", X_OK) = -1 ENOENT (No such file or directory)
+11649 access("/usr/games/bin/arm-none-eabi-gcc", X_OK) = -1 ENOENT (No such file or directory)
+11649 access("/home/triffid/bin/arm-none-eabi-gcc", X_OK) = -1 ENOENT (No such file or directory)
+11649 access("/home/triffid/Projects/arm-2010q1/bin/arm-none-eabi-gcc", X_OK) = 0
+11649 lstat64("/home", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11649 lstat64("/home/triffid", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11649 lstat64("/home/triffid/Projects", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11649 lstat64("/home/triffid/Projects/arm-2010q1", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11649 lstat64("/home/triffid/Projects/arm-2010q1/bin", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11649 lstat64("/home/triffid/Projects/arm-2010q1/bin/arm-none-eabi-gcc", {st_mode=S_IFREG|0755, st_size=205488, ...}) = 0
+11649 access("/usr/local/bin/arm-none-eabi-gcc", X_OK) = -1 ENOENT (No such file or directory)
+11649 access("/usr/bin/arm-none-eabi-gcc", X_OK) = -1 ENOENT (No such file or directory)
+11649 access("/bin/arm-none-eabi-gcc", X_OK) = -1 ENOENT (No such file or directory)
+11649 access("/opt/bin/arm-none-eabi-gcc", X_OK) = -1 ENOENT (No such file or directory)
+11649 access("/usr/i686-pc-linux-gnu/avr/gcc-bin/4.5.3/arm-none-eabi-gcc", X_OK) = -1 ENOENT (No such file or directory)
+11649 access("/usr/i686-pc-linux-gnu/gcc-bin/4.4.5/arm-none-eabi-gcc", X_OK) = -1 ENOENT (No such file or directory)
+11649 access("/usr/games/bin/arm-none-eabi-gcc", X_OK) = -1 ENOENT (No such file or directory)
+11649 access("/home/triffid/bin/arm-none-eabi-gcc", X_OK) = -1 ENOENT (No such file or directory)
+11649 access("/home/triffid/Projects/arm-2010q1/bin/arm-none-eabi-gcc", X_OK) = 0
+11649 lstat64("/home", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11649 lstat64("/home/triffid", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11649 lstat64("/home/triffid/Projects", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11649 lstat64("/home/triffid/Projects/arm-2010q1", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11649 lstat64("/home/triffid/Projects/arm-2010q1/bin", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11649 lstat64("/home/triffid/Projects/arm-2010q1/bin/arm-none-eabi-gcc", {st_mode=S_IFREG|0755, st_size=205488, ...}) = 0
+11649 access("/home/triffid/Projects/arm-2010q1/bin/", X_OK) = 0
+11649 access("/home/triffid/Projects/arm-2010q1/bin/", X_OK) = 0
+11649 access("/home/triffid/Projects/arm-2010q1/bin/", X_OK) = 0
+11649 access("/home/triffid/Projects/arm-2010q1/bin/", X_OK) = 0
+11649 access("/usr/local/bin/arm-none-eabi-gcc", X_OK) = -1 ENOENT (No such file or directory)
+11649 access("/usr/bin/arm-none-eabi-gcc", X_OK) = -1 ENOENT (No such file or directory)
+11649 access("/bin/arm-none-eabi-gcc", X_OK) = -1 ENOENT (No such file or directory)
+11649 access("/opt/bin/arm-none-eabi-gcc", X_OK) = -1 ENOENT (No such file or directory)
+11649 access("/usr/i686-pc-linux-gnu/avr/gcc-bin/4.5.3/arm-none-eabi-gcc", X_OK) = -1 ENOENT (No such file or directory)
+11649 access("/usr/i686-pc-linux-gnu/gcc-bin/4.4.5/arm-none-eabi-gcc", X_OK) = -1 ENOENT (No such file or directory)
+11649 access("/usr/games/bin/arm-none-eabi-gcc", X_OK) = -1 ENOENT (No such file or directory)
+11649 access("/home/triffid/bin/arm-none-eabi-gcc", X_OK) = -1 ENOENT (No such file or directory)
+11649 access("/home/triffid/Projects/arm-2010q1/bin/arm-none-eabi-gcc", X_OK) = 0
+11649 lstat64("/home", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11649 lstat64("/home/triffid", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11649 lstat64("/home/triffid/Projects", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11649 lstat64("/home/triffid/Projects/arm-2010q1", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11649 lstat64("/home/triffid/Projects/arm-2010q1/bin", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11649 lstat64("/home/triffid/Projects/arm-2010q1/bin/arm-none-eabi-gcc", {st_mode=S_IFREG|0755, st_size=205488, ...}) = 0
+11649 access("/home/triffid/Projects/arm-2010q1/bin/../arm-none-eabi", F_OK) = 0
+11649 access("diskio.o", F_OK)          = 0
+11649 access("fattime.o", F_OK)         = 0
+11649 access("ff.o", F_OK)              = 0
+11649 access("sdcard.o", F_OK)          = 0
+11649 access("spi.o", F_OK)             = 0
+11649 access("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/specs", R_OK) = -1 ENOENT (No such file or directory)
+11649 access("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/specs", R_OK) = -1 ENOENT (No such file or directory)
+11649 access("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/arm-none-eabi/4.4.1/specs", R_OK) = -1 ENOENT (No such file or directory)
+11649 access("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/specs", R_OK) = -1 ENOENT (No such file or directory)
+11649 access("/opt/codesourcery/lib/gcc/arm-none-eabi/specs", R_OK) = -1 ENOENT (No such file or directory)
+11649 access("/home/triffid/Projects/arm-2010q1/bin/", X_OK) = 0
+11649 access("/home/triffid/Projects/arm-2010q1/bin/", X_OK) = 0
+11649 stat64("/home/triffid/Projects/arm-2010q1/bin/../libexec/gcc/arm-none-eabi/4.4.1/collect2", {st_mode=S_IFREG|0755, st_size=98884, ...}) = 0
+11649 access("/home/triffid/Projects/arm-2010q1/bin/../libexec/gcc/arm-none-eabi/4.4.1/collect2", X_OK) = 0
+11649 stat64("/home/triffid/Projects/arm-2010q1/bin/../libexec/gcc/arm-none-eabi/4.4.1/.", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11649 stat64("/home/triffid/Projects/arm-2010q1/bin/../libexec/gcc/.", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11649 stat64("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/bin/arm-none-eabi/4.4.1/.", 0xbfb042bc) = -1 ENOENT (No such file or directory)
+11649 stat64("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/bin/.", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11649 stat64("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/.", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11649 stat64("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/.", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11649 stat64("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/arm-none-eabi/4.4.1/.", 0xbfb042bc) = -1 ENOENT (No such file or directory)
+11649 stat64("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/.", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11649 stat64("/home/triffid/Projects/arm-2010q1/bin/../arm-none-eabi/lib/arm-none-eabi/4.4.1/.", 0xbfb042dc) = -1 ENOENT (No such file or directory)
+11649 stat64("/home/triffid/Projects/arm-2010q1/bin/../arm-none-eabi/lib/.", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11649 stat64("/home/triffid/Projects/arm-2010q1/bin/../arm-none-eabi/usr/lib/arm-none-eabi/4.4.1/.", 0xbfb042dc) = -1 ENOENT (No such file or directory)
+11649 stat64("/home/triffid/Projects/arm-2010q1/bin/../arm-none-eabi/usr/lib/.", 0xbfb042ec) = -1 ENOENT (No such file or directory)
+11649 access("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/crti.o", R_OK) = 0
+11649 access("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/crtbegin.o", R_OK) = 0
+11649 stat64("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/.", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11649 stat64("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/.", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11649 stat64("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/arm-none-eabi/4.4.1/.", 0xbfb0369c) = -1 ENOENT (No such file or directory)
+11649 stat64("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/.", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11649 stat64("/home/triffid/Projects/arm-2010q1/bin/../arm-none-eabi/lib/arm-none-eabi/4.4.1/.", 0xbfb036bc) = -1 ENOENT (No such file or directory)
+11649 stat64("/home/triffid/Projects/arm-2010q1/bin/../arm-none-eabi/lib/.", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11649 stat64("/home/triffid/Projects/arm-2010q1/bin/../arm-none-eabi/usr/lib/arm-none-eabi/4.4.1/.", 0xbfb036bc) = -1 ENOENT (No such file or directory)
+11649 stat64("/home/triffid/Projects/arm-2010q1/bin/../arm-none-eabi/usr/lib/.", 0xbfb036cc) = -1 ENOENT (No such file or directory)
+11649 access("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/crtend.o", R_OK) = 0
+11649 access("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/crtn.o", R_OK) = 0
+11649 access("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/libgcc.a", R_OK) = 0
+11649 stat64("/home/triffid/Projects/arm-2010q1/bin/../libexec/gcc/arm-none-eabi/4.4.1/collect2", {st_mode=S_IFREG|0755, st_size=98884, ...}) = 0
+11649 access("/home/triffid/Projects/arm-2010q1/bin/../libexec/gcc/arm-none-eabi/4.4.1/collect2", X_OK) = 0
+11649 vfork()                           = 11650
+11649 waitpid(11650,  <unfinished ...>
+11650 execve("/home/triffid/Projects/arm-2010q1/bin/../libexec/gcc/arm-none-eabi/4.4.1/collect2", ["/home/triffid/Projects/arm-2010q1/bin/../libexec/gcc/arm-none-eabi/4.4.1/collect2", "--sysroot=/home/triffid/Projects/arm-2010q1/bin/../arm-none-eabi", "-X", "-o", "fatfs.elf", "/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/crti.o", "/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/crtbegin.o", "-L../../NXP", "-L/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1", "-L/home/triffid/Projects/arm-2010q1/bin/../lib/gcc", "-L/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib", "-L/home/triffid/Projects/arm-2010q1/bin/../arm-none-eabi/lib", "-llpc17xx", "diskio.o", "fattime.o", "ff.o", "sdcard.o", "spi.o", "--start-group", "-lgcc", "-lc", "--end-group", "/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/crtend.o", "/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/crtn.o"], [/* 51 vars */]) = 0
+11650 brk(0)                            = 0x9664000
+11650 mmap2(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xb770d000
+11650 access("/etc/ld.so.preload", R_OK) = -1 ENOENT (No such file or directory)
+11650 open("/etc/ld.so.cache", O_RDONLY) = 3
+11650 fstat64(3, {st_mode=S_IFREG|0644, st_size=114050, ...}) = 0
+11650 mmap2(NULL, 114050, PROT_READ, MAP_PRIVATE, 3, 0) = 0xb76f1000
+11650 close(3)                          = 0
+11650 open("/lib/libc.so.6", O_RDONLY)  = 3
+11650 read(3, "\177ELF\1\1\1\0\0\0\0\0\0\0\0\0\3\0\3\0\1\0\0\0 n\1\0004\0\0\0$w\25\0\0\0\0\0004\0 \0\v\0(\0C\0B\0\6\0\0\0004\0\0\0004\0\0\0004\0\0\0`\1\0\0`\1\0\0\5\0\0\0\4\0\0\0\3\0\0\0\210\307\23\0\210\307\23\0\210\307\23\0\23\0\0\0\23\0\0\0\4\0\0\0\1\0\0\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\10=\25\0\10=\25\0\5\0\0\0\0\20\0\0\1\0\0\0\330A\25\0\330A\25\0\330A\25\0\304'\0\0\260W\0\0\6\0\0\0\0\20\0\0\2\0\0\0|]\25\0|]\25\0|]\25\0\370\0\0\0\370\0\0\0\6\0\0\0\4\0\0\0\4\0\0\0\224\1\0\0\224\1\0\0\224\1\0\0 \0\0\0 \0\0\0\4\0\0\0\4\0\0\0\7\0\0\0\330A\25\0\330A\25\0\330A\25\0\10\0\0\0@\0\0\0\4\0\0\0\4\0\0\0P\345td\234\307\23\0\234\307\23\0\234\307\23\0T3\0\0T3\0\0\4\0\0\0\4\0\0\0Q\345td\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\6\0\0\0\4\0\0\0R\345td\330A\25\0\330A\25\0\330A\25\0(\36\0\0(\36\0\0\4\0\0\0\1\0\0\0\200\25\4e\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0(\0\0\4\0\0\0\4\0\0\0\20\0\0\0\1\0\0\0GNU\0\0\0\0\0\2\0\0\0\6\0\0\0\t\0\0\0\363\3\0\0\t\0\0\0\0\2\0\0\16\0\0\0\2400\20D\200 \2\1\214\3\346\220AE\210\0\204\0\10\0E\200\0`\300\200\0\f\212\f\0\0010\0\10@2\10\256\4\210H6l\240\0260\0&\204\200\216\4\10B$\2\f\246\244", 512) = 512
+11650 fstat64(3, {st_mode=S_IFREG|0755, st_size=1409436, ...}) = 0
+11650 mmap2(NULL, 1415560, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0xb7597000
+11650 mmap2(0xb76eb000, 12288, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x154) = 0xb76eb000
+11650 mmap2(0xb76ee000, 10632, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0xb76ee000
+11650 close(3)                          = 0
+11650 mmap2(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xb7596000
+11650 set_thread_area({entry_number:-1 -> 6, base_addr:0xb75966c0, limit:1048575, seg_32bit:1, contents:0, read_exec_only:0, limit_in_pages:1, seg_not_present:0, useable:1}) = 0
+11650 mprotect(0xb76eb000, 8192, PROT_READ) = 0
+11650 mprotect(0xb772b000, 4096, PROT_READ) = 0
+11650 munmap(0xb76f1000, 114050)        = 0
+11650 brk(0)                            = 0x9664000
+11650 brk(0x9685000)                    = 0x9685000
+11650 rt_sigaction(SIGCHLD, {SIG_DFL, [CHLD], SA_RESTART}, {SIG_DFL, [], 0}, 8) = 0
+11650 rt_sigaction(SIGQUIT, {SIG_IGN, [QUIT], SA_RESTART}, {SIG_DFL, [], 0}, 8) = 0
+11650 rt_sigaction(SIGQUIT, {0x804afc0, [QUIT], SA_RESTART}, {SIG_IGN, [QUIT], SA_RESTART}, 8) = 0
+11650 rt_sigaction(SIGINT, {SIG_IGN, [INT], SA_RESTART}, {SIG_DFL, [], 0}, 8) = 0
+11650 rt_sigaction(SIGINT, {0x804afc0, [INT], SA_RESTART}, {SIG_IGN, [INT], SA_RESTART}, 8) = 0
+11650 rt_sigaction(SIGALRM, {SIG_IGN, [ALRM], SA_RESTART}, {SIG_DFL, [], 0}, 8) = 0
+11650 rt_sigaction(SIGALRM, {0x804afc0, [ALRM], SA_RESTART}, {SIG_IGN, [ALRM], SA_RESTART}, 8) = 0
+11650 rt_sigaction(SIGHUP, {SIG_IGN, [HUP], SA_RESTART}, {SIG_DFL, [], 0}, 8) = 0
+11650 rt_sigaction(SIGHUP, {0x804afc0, [HUP], SA_RESTART}, {SIG_IGN, [HUP], SA_RESTART}, 8) = 0
+11650 rt_sigaction(SIGSEGV, {SIG_IGN, [SEGV], SA_RESTART}, {SIG_DFL, [], 0}, 8) = 0
+11650 rt_sigaction(SIGSEGV, {0x804afc0, [SEGV], SA_RESTART}, {SIG_IGN, [SEGV], SA_RESTART}, 8) = 0
+11650 rt_sigaction(SIGBUS, {SIG_IGN, [BUS], SA_RESTART}, {SIG_DFL, [], 0}, 8) = 0
+11650 rt_sigaction(SIGBUS, {0x804afc0, [BUS], SA_RESTART}, {SIG_IGN, [BUS], SA_RESTART}, 8) = 0
+11650 stat64("/home/triffid/Projects/arm-2010q1/bin/../libexec/gcc/arm-none-eabi/4.4.1/real-ld", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/home/triffid/Projects/arm-2010q1/bin/../libexec/gcc/real-ld", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/bin/real-ld", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/home/triffid/Projects/arm-2010q1/bin/../libexec/gcc/arm-none-eabi/4.4.1/collect-ld", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/home/triffid/Projects/arm-2010q1/bin/../libexec/gcc/collect-ld", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/bin/collect-ld", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/home/triffid/Projects/arm-2010q1/bin/../libexec/gcc/arm-none-eabi/4.4.1/ld", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/home/triffid/Projects/arm-2010q1/bin/../libexec/gcc/ld", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/bin/ld", {st_mode=S_IFREG|0755, st_size=818784, ...}) = 0
+11650 access("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/bin/ld", X_OK) = 0
+11650 stat64("/home/triffid/Projects/arm-2010q1/bin/../libexec/gcc/arm-none-eabi/4.4.1/gnm", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/home/triffid/Projects/arm-2010q1/bin/../libexec/gcc/gnm", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/bin/gnm", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/usr/local/bin/arm-none-eabi-gnm", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/usr/bin/arm-none-eabi-gnm", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/bin/arm-none-eabi-gnm", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/opt/bin/arm-none-eabi-gnm", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/usr/i686-pc-linux-gnu/avr/gcc-bin/4.5.3/arm-none-eabi-gnm", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/usr/i686-pc-linux-gnu/gcc-bin/4.4.5/arm-none-eabi-gnm", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/usr/games/bin/arm-none-eabi-gnm", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/home/triffid/bin/arm-none-eabi-gnm", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/home/triffid/Projects/arm-2010q1/bin/arm-none-eabi-gnm", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/home/triffid/Projects/arm-2010q1/bin/../libexec/gcc/arm-none-eabi/4.4.1/nm", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/home/triffid/Projects/arm-2010q1/bin/../libexec/gcc/nm", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/bin/nm", {st_mode=S_IFREG|0755, st_size=555612, ...}) = 0
+11650 access("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/bin/nm", X_OK) = 0
+11650 stat64("/home/triffid/Projects/arm-2010q1/bin/../libexec/gcc/arm-none-eabi/4.4.1/gstrip", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/home/triffid/Projects/arm-2010q1/bin/../libexec/gcc/gstrip", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/bin/gstrip", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/usr/local/bin/arm-none-eabi-gstrip", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/usr/bin/arm-none-eabi-gstrip", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/bin/arm-none-eabi-gstrip", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/opt/bin/arm-none-eabi-gstrip", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/usr/i686-pc-linux-gnu/avr/gcc-bin/4.5.3/arm-none-eabi-gstrip", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/usr/i686-pc-linux-gnu/gcc-bin/4.4.5/arm-none-eabi-gstrip", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/usr/games/bin/arm-none-eabi-gstrip", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/home/triffid/bin/arm-none-eabi-gstrip", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/home/triffid/Projects/arm-2010q1/bin/arm-none-eabi-gstrip", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/home/triffid/Projects/arm-2010q1/bin/../libexec/gcc/arm-none-eabi/4.4.1/strip", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/home/triffid/Projects/arm-2010q1/bin/../libexec/gcc/strip", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/bin/strip", {st_mode=S_IFREG|0755, st_size=703284, ...}) = 0
+11650 access("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/bin/strip", X_OK) = 0
+11650 stat64("/home/triffid/Projects/arm-2010q1/bin/../libexec/gcc/arm-none-eabi/4.4.1/arm-none-eabi-gcc", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/home/triffid/Projects/arm-2010q1/bin/../libexec/gcc/arm-none-eabi-gcc", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/bin/arm-none-eabi-gcc", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/usr/local/bin/arm-none-eabi-gcc", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/usr/bin/arm-none-eabi-gcc", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/bin/arm-none-eabi-gcc", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/opt/bin/arm-none-eabi-gcc", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/usr/i686-pc-linux-gnu/avr/gcc-bin/4.5.3/arm-none-eabi-gcc", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/usr/i686-pc-linux-gnu/gcc-bin/4.4.5/arm-none-eabi-gcc", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/usr/games/bin/arm-none-eabi-gcc", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/home/triffid/bin/arm-none-eabi-gcc", 0xbfb4aa0c) = -1 ENOENT (No such file or directory)
+11650 stat64("/home/triffid/Projects/arm-2010q1/bin/arm-none-eabi-gcc", {st_mode=S_IFREG|0755, st_size=205488, ...}) = 0
+11650 access("/home/triffid/Projects/arm-2010q1/bin/arm-none-eabi-gcc", X_OK) = 0
+11650 access("/tmp/.private/triffid", R_OK|W_OK|X_OK) = 0
+11650 gettimeofday({1314673944, 710302}, NULL) = 0
+11650 getpid()                          = 11650
+11650 open("/tmp/.private/triffid/ccgIcgQX.c", O_RDWR|O_CREAT|O_EXCL|O_LARGEFILE, 0600) = 3
+11650 close(3)                          = 0
+11650 gettimeofday({1314673944, 710531}, NULL) = 0
+11650 open("/tmp/.private/triffid/ccycCCxL.o", O_RDWR|O_CREAT|O_EXCL|O_LARGEFILE, 0600) = 3
+11650 close(3)                          = 0
+11650 gettimeofday({1314673944, 710671}, NULL) = 0
+11650 open("/tmp/.private/triffid/ccyhlXaz.ld", O_RDWR|O_CREAT|O_EXCL|O_LARGEFILE, 0600) = 3
+11650 close(3)                          = 0
+11650 gettimeofday({1314673944, 710808}, NULL) = 0
+11650 open("/tmp/.private/triffid/cccT8MOm.le", O_RDWR|O_CREAT|O_EXCL|O_LARGEFILE, 0600) = 3
+11650 close(3)                          = 0
+11650 open("/tmp/.private/triffid/ccyhlXaz.ld", O_WRONLY|O_CREAT|O_TRUNC|O_LARGEFILE, 0666) = 3
+11650 open("/tmp/.private/triffid/cccT8MOm.le", O_WRONLY|O_CREAT|O_TRUNC|O_LARGEFILE, 0666) = 4
+11650 vfork()                           = 11651
+11650 close(3)                          = 0
+11650 close(4)                          = 0
+11650 waitpid(11651,  <unfinished ...>
+11651 dup2(3, 1)                        = 1
+11651 close(3)                          = 0
+11651 dup2(4, 2)                        = 2
+11651 close(4)                          = 0
+11651 execve("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/bin/ld", ["/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/bin/ld", "--sysroot=/home/triffid/Projects/arm-2010q1/bin/../arm-none-eabi", "-X", "-o", "fatfs.elf", "/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/crti.o", "/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/crtbegin.o", "-L../../NXP", "-L/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1", "-L/home/triffid/Projects/arm-2010q1/bin/../lib/gcc", "-L/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib", "-L/home/triffid/Projects/arm-2010q1/bin/../arm-none-eabi/lib", "-llpc17xx", "diskio.o", "fattime.o", "ff.o", "sdcard.o", "spi.o", "--start-group", "-lgcc", "-lc", "--end-group", "/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/crtend.o", "/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/crtn.o"], [/* 52 vars */]) = 0
+11651 brk(0)                            = 0x9b85000
+11651 mmap2(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xb7713000
+11651 access("/etc/ld.so.preload", R_OK) = -1 ENOENT (No such file or directory)
+11651 open("/etc/ld.so.cache", O_RDONLY) = 3
+11651 fstat64(3, {st_mode=S_IFREG|0644, st_size=114050, ...}) = 0
+11651 mmap2(NULL, 114050, PROT_READ, MAP_PRIVATE, 3, 0) = 0xb76f7000
+11651 close(3)                          = 0
+11651 open("/lib/libc.so.6", O_RDONLY)  = 3
+11651 read(3, "\177ELF\1\1\1\0\0\0\0\0\0\0\0\0\3\0\3\0\1\0\0\0 n\1\0004\0\0\0$w\25\0\0\0\0\0004\0 \0\v\0(\0C\0B\0\6\0\0\0004\0\0\0004\0\0\0004\0\0\0`\1\0\0`\1\0\0\5\0\0\0\4\0\0\0\3\0\0\0\210\307\23\0\210\307\23\0\210\307\23\0\23\0\0\0\23\0\0\0\4\0\0\0\1\0\0\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\10=\25\0\10=\25\0\5\0\0\0\0\20\0\0\1\0\0\0\330A\25\0\330A\25\0\330A\25\0\304'\0\0\260W\0\0\6\0\0\0\0\20\0\0\2\0\0\0|]\25\0|]\25\0|]\25\0\370\0\0\0\370\0\0\0\6\0\0\0\4\0\0\0\4\0\0\0\224\1\0\0\224\1\0\0\224\1\0\0 \0\0\0 \0\0\0\4\0\0\0\4\0\0\0\7\0\0\0\330A\25\0\330A\25\0\330A\25\0\10\0\0\0@\0\0\0\4\0\0\0\4\0\0\0P\345td\234\307\23\0\234\307\23\0\234\307\23\0T3\0\0T3\0\0\4\0\0\0\4\0\0\0Q\345td\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\6\0\0\0\4\0\0\0R\345td\330A\25\0\330A\25\0\330A\25\0(\36\0\0(\36\0\0\4\0\0\0\1\0\0\0\200\25\4e\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0(\0\0\4\0\0\0\4\0\0\0\20\0\0\0\1\0\0\0GNU\0\0\0\0\0\2\0\0\0\6\0\0\0\t\0\0\0\363\3\0\0\t\0\0\0\0\2\0\0\16\0\0\0\2400\20D\200 \2\1\214\3\346\220AE\210\0\204\0\10\0E\200\0`\300\200\0\f\212\f\0\0010\0\10@2\10\256\4\210H6l\240\0260\0&\204\200\216\4\10B$\2\f\246\244", 512) = 512
+11651 fstat64(3, {st_mode=S_IFREG|0755, st_size=1409436, ...}) = 0
+11651 mmap2(NULL, 1415560, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0xb759d000
+11651 mmap2(0xb76f1000, 12288, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x154) = 0xb76f1000
+11651 mmap2(0xb76f4000, 10632, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0xb76f4000
+11651 close(3)                          = 0
+11651 mmap2(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xb759c000
+11651 set_thread_area({entry_number:-1 -> 6, base_addr:0xb759c6c0, limit:1048575, seg_32bit:1, contents:0, read_exec_only:0, limit_in_pages:1, seg_not_present:0, useable:1}) = 0
+11651 mprotect(0xb76f1000, 8192, PROT_READ) = 0
+11651 mprotect(0xb7731000, 4096, PROT_READ) = 0
+11651 munmap(0xb76f7000, 114050)        = 0
+11651 getrusage(RUSAGE_SELF, {ru_utime={0, 0}, ru_stime={0, 0}, ...}) = 0
+11651 brk(0)                            = 0x9b85000
+11651 lstat64("/home", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 lstat64("/home/triffid", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 lstat64("/home/triffid/Projects", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 lstat64("/home/triffid/Projects/arm-2010q1", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 lstat64("/home/triffid/Projects/arm-2010q1/bin", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 lstat64("/home/triffid/Projects/arm-2010q1/arm-none-eabi", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 brk(0x9ba6000)                    = 0x9ba6000
+11651 getcwd("/home/triffid/Projects/R2C2/Firmware/libraries/FatFs/src", 4096) = 57
+11651 lstat64("/home/triffid/Projects/R2C2/Firmware/libraries/NXP", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 lstat64("/home", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 lstat64("/home/triffid", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 lstat64("/home/triffid/Projects", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 lstat64("/home/triffid/Projects/arm-2010q1", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 lstat64("/home/triffid/Projects/arm-2010q1/bin", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 lstat64("/home/triffid/Projects/arm-2010q1/lib", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 lstat64("/home/triffid/Projects/arm-2010q1/lib/gcc", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 lstat64("/home/triffid/Projects/arm-2010q1/lib/gcc/arm-none-eabi", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 lstat64("/home/triffid/Projects/arm-2010q1/lib/gcc/arm-none-eabi/4.4.1", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 lstat64("/home", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 lstat64("/home/triffid", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 lstat64("/home/triffid/Projects", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 lstat64("/home/triffid/Projects/arm-2010q1", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 lstat64("/home/triffid/Projects/arm-2010q1/bin", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 lstat64("/home/triffid/Projects/arm-2010q1/lib", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 lstat64("/home/triffid/Projects/arm-2010q1/lib/gcc", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 lstat64("/home", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 lstat64("/home/triffid", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 lstat64("/home/triffid/Projects", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 lstat64("/home/triffid/Projects/arm-2010q1", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 lstat64("/home/triffid/Projects/arm-2010q1/bin", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 lstat64("/home/triffid/Projects/arm-2010q1/lib", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 lstat64("/home/triffid/Projects/arm-2010q1/lib/gcc", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 lstat64("/home/triffid/Projects/arm-2010q1/lib/gcc/arm-none-eabi", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 lstat64("/home/triffid/Projects/arm-2010q1/lib/gcc/arm-none-eabi/4.4.1", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 lstat64("/home/triffid/Projects/arm-2010q1/arm-none-eabi", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 lstat64("/home/triffid/Projects/arm-2010q1/arm-none-eabi/lib", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 lstat64("/home", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 lstat64("/home/triffid", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 lstat64("/home/triffid/Projects", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 lstat64("/home/triffid/Projects/arm-2010q1", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 lstat64("/home/triffid/Projects/arm-2010q1/bin", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 lstat64("/home/triffid/Projects/arm-2010q1/arm-none-eabi", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 lstat64("/home/triffid/Projects/arm-2010q1/arm-none-eabi/lib", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11651 stat64("fatfs.elf", 0xbfed65c4)   = -1 ENOENT (No such file or directory)
+11651 open("fatfs.elf", O_RDWR|O_CREAT|O_TRUNC|O_LARGEFILE, 0666) = 3
+11651 fcntl64(3, F_GETFD)               = 0
+11651 fcntl64(3, F_SETFD, FD_CLOEXEC)   = 0
+11651 open("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/crti.o", O_RDONLY|O_LARGEFILE) = 4
+11651 fcntl64(4, F_GETFD)               = 0
+11651 fcntl64(4, F_SETFD, FD_CLOEXEC)   = 0
+11651 fstat64(4, {st_mode=S_IFREG|0644, st_size=764, ...}) = 0
+11651 mmap2(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xb7712000
+11651 _llseek(4, 0, [0], SEEK_SET)      = 0
+11651 read(4, "\177ELF\1\1\1\0\0\0\0\0\0\0\0\0\1\0(\0\1\0\0\0\0\0\0\0\0\0\0\0\254\0\0\0\0\0\0\0054\0\0\0\0\0(\0\n\0\7\0\r\300\240\341\370\337-\351\4\260L\342\r\300\240\341\370\337-\351\4\260L\342A\25\0\0\0aeabi\0\1\v\0\0\0\6\1\10\1,\1\0.symtab\0.strtab\0.shstrtab\0.text\0.data\0.bss\0.init\0.fini\0.ARM.attributes\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\33\0\0\0\1\0\0\0\6\0\0\0\0\0\0\0004\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\1\0\0\0\0\0\0\0!\0\0\0\1\0\0\0\3\0\0\0\0\0\0\0004\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\1\0\0\0\0\0\0\0'\0\0\0\10\0\0\0\3\0\0\0\0\0\0\0004\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\1\0\0\0\0\0\0\0,\0\0\0\1\0\0\0\6\0\0\0\0\0\0\0004\0\0\0\f\0\0\0\0\0\0\0\0\0\0\0\4\0\0\0\0\0\0\0002\0\0\0\1\0\0\0\6\0\0\0\0\0\0\0@\0\0\0\f\0\0\0\0\0\0\0\0\0\0\0\4\0\0\0\0\0\0\0008\0\0\0\3\0\0p\0\0\0\0\0\0\0\0L\0\0\0\26\0\0\0\0\0\0\0\0\0\0\0\1\0\0\0\0\0\0\0\21\0\0\0\3\0\0\0\0\0\0\0\0\0\0\0b\0\0\0H\0\0\0\0\0\0\0\0\0\0\0\1\0\0\0\0\0\0\0\1\0\0\0\2\0\0\0\0\0\0\0\0\0\0\0<\2\0\0\260\0\0\0\t\0\0\0\t\0\0\0\4\0\0\0\20\0\0\0\t\0\0\0\3\0\0\0\0\0\0\0\0\0\0\0\354\2\0\0\20\0\0\0\0\0\0\0\0\0\0\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\3\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\3\0\2\0\0\0\0\0\0\0\0\0\0\0\0\0\3\0\3\0\0\0\0\0\0\0\0\0\0\0\0\0\3\0\4\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\4\0\0\0\0\0\0\0\0\0\0\0\0\0\3\0\5\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\5\0\0\0\0\0\0\0\0\0\0\0\0\0\3\0\6\0\4\0\0\0\0\0\0\0\0\0\0\0\22\0\4\0\n\0\0\0\0\0\0\0\0\0\0\0\22\0\5\0\0$a\0_init\0_fini\0", 4096) = 764
+11651 _llseek(4, 764, [764], SEEK_SET)  = 0
+11651 _llseek(4, 764, [764], SEEK_SET)  = 0
+11651 _llseek(4, 764, [764], SEEK_SET)  = 0
+11651 _llseek(4, 764, [764], SEEK_SET)  = 0
+11651 _llseek(4, 764, [764], SEEK_SET)  = 0
+11651 _llseek(4, 764, [764], SEEK_SET)  = 0
+11651 _llseek(4, 764, [764], SEEK_SET)  = 0
+11651 _llseek(4, 764, [764], SEEK_SET)  = 0
+11651 brk(0x9bc8000)                    = 0x9bc8000
+11651 _llseek(4, 764, [764], SEEK_SET)  = 0
+11651 _llseek(4, 764, [764], SEEK_SET)  = 0
+11651 _llseek(4, 764, [764], SEEK_SET)  = 0
+11651 _llseek(4, 764, [764], SEEK_SET)  = 0
+11651 _llseek(4, 764, [764], SEEK_SET)  = 0
+11651 _llseek(4, 764, [764], SEEK_SET)  = 0
+11651 open("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/crtbegin.o", O_RDONLY|O_LARGEFILE) = 5
+11651 fcntl64(5, F_GETFD)               = 0
+11651 fcntl64(5, F_SETFD, FD_CLOEXEC)   = 0
+11651 fstat64(5, {st_mode=S_IFREG|0644, st_size=1504, ...}) = 0
+11651 mmap2(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xb7711000
+11651 _llseek(5, 0, [0], SEEK_SET)      = 0
+11651 read(5, "\177ELF\1\1\1\0\0\0\0\0\0\0\0\0\1\0(\0\1\0\0\0\0\0\0\0\0\0\0\0(\1\0\0\0\0\0\0054\0\0\0\0\0(\0\16\0\v\0\0200\237\345\0 \323\345\0\0R\343\1 \240\3\0 \303\5\36\377/\341\0\0\0\0$\0\237\345\10@-\351\0000\220\345\0\0S\343\3\0\0\n\0240\237\345\0\0S\343\17\340\240\21\23\377/\21\10@\275\350\36\377/\341\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0A1\0\0\0aeabi\0\1'\0\0\0\5ARM7TDMI\0\6\2\10\1\t\1\22\4\24\1\25\1\27\3\30\1\31\1\32\1\36\2,\1\0.symtab\0.strtab\0.shstrtab\0.rel.text\0.data\0.bss\0.rel.init_array\0.rel.fini_array\0.jcr\0.ARM.attributes\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\37\0\0\0\1\0\0\0\6\0\0\0\0\0\0\0004\0\0\0P\0\0\0\0\0\0\0\0\0\0\0\4\0\0\0\0\0\0\0\33\0\0\0\t\0\0\0\0\0\0\0\0\0\0\0\240\5\0\0000\0\0\0\f\0\0\0\1\0\0\0\4\0\0\0\10\0\0\0%\0\0\0\1\0\0\0\3\0\0\0\0\0\0\0\204\0\0\0\4\0\0\0\0\0\0\0\0\0\0\0\4\0\0\0\0\0\0\0+\0\0\0\10\0\0\0\3\0\0\0\0\0\0\0\210\0\0\0\1\0\0\0\0\0\0\0\0\0\0\0\1\0\0\0\0\0\0\0004\0\0\0\16\0\0\0\3\0\0\0\0\0\0\0\210\0\0\0\4\0\0\0\0\0\0\0\0\0\0\0\4\0\0\0\0\0\0\0000\0\0\0\t\0\0\0\0\0\0\0\0\0\0\0\320\5\0\0\10\0\0\0\f\0\0\0\5\0\0\0\4\0\0\0\10\0\0\0D\0\0\0\17\0\0\0\3\0\0\0\0\0\0\0\214\0\0\0\4\0\0\0\0\0\0\0\0\0\0\0\4\0\0\0\0\0\0\0@\0\0\0\t\0\0\0\0\0\0\0\0\0\0\0\330\5\0\0\10\0\0\0\f\0\0\0\7\0\0\0\4\0\0\0\10\0\0\0P\0\0\0\1\0\0\0\3\0\0\0\0\0\0\0\220\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\4\0\0\0\0\0\0\0U\0\0\0\3\0\0p\0\0\0\0\0\0\0\0\220\0\0\0002\0\0\0\0\0\0\0\0\0\0\0\1\0\0\0\0\0\0\0\21\0\0\0\3\0\0\0\0\0\0\0\0\0\0\0\302\0\0\0e\0\0\0\0\0\0\0\0\0\0\0\1\0\0\0\0\0\0\0\1\0\0\0\2\0\0\0\0\0\0\0\0\0\0\0X\3\0\0\220\1\0\0\r\0\0\0\27\0\0\0\4\0\0\0\20\0\0\0\t\0\0\0\3\0\0\0\0\0\0\0\0\0\0\0\350\4\0\0\267\0\0\0\0\0\0\0\0\0\0\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\1\0\0\0\0\0\0\0\0\0\0\0\4\0\361\377\0\0\0\0\0\0\0\0\0\0\0\0\3\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\3\0\3\0\0\0\0\0\0\0\0\0\0\0\0\0\3\0\4\0\0\0\0\0\0\0\0\0\0\0\0\0\3\0\5\0\0\0\0\0\0\0\0\0\0\0\0\0\3\0\7\0\0\0\0\0\0\0\0\0\0\0\0\0\3\0\t\0\f\0\0\0\0\0\0\0\0\0\0\0\1\0\t\0\31\0\0\0\0\0\0\0\0\0\0\0\0\0\3\0\34\0\0\0\0\0\0\0"..., 4096) = 1504
+11651 _llseek(5, 1504, [1504], SEEK_SET) = 0
+11651 _llseek(5, 1504, [1504], SEEK_SET) = 0
+11651 _llseek(5, 1504, [1504], SEEK_SET) = 0
+11651 _llseek(5, 1504, [1504], SEEK_SET) = 0
+11651 _llseek(5, 1504, [1504], SEEK_SET) = 0
+11651 _llseek(5, 1504, [1504], SEEK_SET) = 0
+11651 _llseek(5, 1504, [1504], SEEK_SET) = 0
+11651 _llseek(5, 1504, [1504], SEEK_SET) = 0
+11651 _llseek(5, 1504, [1504], SEEK_SET) = 0
+11651 _llseek(5, 1504, [1504], SEEK_SET) = 0
+11651 _llseek(5, 1504, [1504], SEEK_SET) = 0
+11651 _llseek(5, 1504, [1504], SEEK_SET) = 0
+11651 _llseek(5, 1504, [1504], SEEK_SET) = 0
+11651 _llseek(5, 1504, [1504], SEEK_SET) = 0
+11651 _llseek(5, 1504, [1504], SEEK_SET) = 0
+11651 open("../../NXP/liblpc17xx.so", O_RDONLY|O_LARGEFILE) = -1 ENOENT (No such file or directory)
+11651 open("../../NXP/liblpc17xx.a", O_RDONLY|O_LARGEFILE) = -1 ENOENT (No such file or directory)
+11651 open("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/liblpc17xx.so", O_RDONLY|O_LARGEFILE) = -1 ENOENT (No such file or directory)
+11651 open("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/liblpc17xx.a", O_RDONLY|O_LARGEFILE) = -1 ENOENT (No such file or directory)
+11651 open("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/liblpc17xx.so", O_RDONLY|O_LARGEFILE) = -1 ENOENT (No such file or directory)
+11651 open("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/liblpc17xx.a", O_RDONLY|O_LARGEFILE) = -1 ENOENT (No such file or directory)
+11651 open("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/liblpc17xx.so", O_RDONLY|O_LARGEFILE) = -1 ENOENT (No such file or directory)
+11651 open("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/lib/liblpc17xx.a", O_RDONLY|O_LARGEFILE) = -1 ENOENT (No such file or directory)
+11651 open("/home/triffid/Projects/arm-2010q1/bin/../arm-none-eabi/lib/liblpc17xx.so", O_RDONLY|O_LARGEFILE) = -1 ENOENT (No such file or directory)
+11651 open("/home/triffid/Projects/arm-2010q1/bin/../arm-none-eabi/lib/liblpc17xx.a", O_RDONLY|O_LARGEFILE) = -1 ENOENT (No such file or directory)
+11651 open("/home/triffid/Projects/arm-2010q1/bin/../arm-none-eabi/usr/local/lib/liblpc17xx.so", O_RDONLY|O_LARGEFILE) = -1 ENOENT (No such file or directory)
+11651 open("/home/triffid/Projects/arm-2010q1/bin/../arm-none-eabi/usr/local/lib/liblpc17xx.a", O_RDONLY|O_LARGEFILE) = -1 ENOENT (No such file or directory)
+11651 open("/home/triffid/Projects/arm-2010q1/bin/../arm-none-eabi/lib/liblpc17xx.so", O_RDONLY|O_LARGEFILE) = -1 ENOENT (No such file or directory)
+11651 open("/home/triffid/Projects/arm-2010q1/bin/../arm-none-eabi/lib/liblpc17xx.a", O_RDONLY|O_LARGEFILE) = -1 ENOENT (No such file or directory)
+11651 open("/home/triffid/Projects/arm-2010q1/bin/../arm-none-eabi/usr/lib/liblpc17xx.so", O_RDONLY|O_LARGEFILE) = -1 ENOENT (No such file or directory)
+11651 open("/home/triffid/Projects/arm-2010q1/bin/../arm-none-eabi/usr/lib/liblpc17xx.a", O_RDONLY|O_LARGEFILE) = -1 ENOENT (No such file or directory)
+11651 write(2, "/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/bin/ld", 101) = 101
+11651 write(2, ":", 1)                  = 1
+11651 write(2, " ", 1)                  = 1
+11651 write(2, "c", 1)                  = 1
+11651 write(2, "a", 1)                  = 1
+11651 write(2, "n", 1)                  = 1
+11651 write(2, "n", 1)                  = 1
+11651 write(2, "o", 1)                  = 1
+11651 write(2, "t", 1)                  = 1
+11651 write(2, " ", 1)                  = 1
+11651 write(2, "f", 1)                  = 1
+11651 write(2, "i", 1)                  = 1
+11651 write(2, "n", 1)                  = 1
+11651 write(2, "d", 1)                  = 1
+11651 write(2, " ", 1)                  = 1
+11651 write(2, "-llpc17xx", 9)          = 9
+11651 write(2, "\n", 1)                 = 1
+11651 close(3)                          = 0
+11651 lstat64("fatfs.elf", {st_mode=S_IFREG|0644, st_size=0, ...}) = 0
+11651 unlink("fatfs.elf")               = 0
+11651 exit_group(1)                     = ?
+11650 <... waitpid resumed> [{WIFEXITED(s) && WEXITSTATUS(s) == 1}], 0) = 11651
+11650 --- SIGCHLD (Child exited) @ 0 (0) ---
+11650 stat64("/home/triffid/Projects/R2C2/Firmware/libraries/FatFs/src", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11650 stat64(".", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+11650 access("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/bin/ld.rpo", R_OK) = -1 ENOENT (No such file or directory)
+11650 access("fatfs.rpo", R_OK)         = -1 ENOENT (No such file or directory)
+11650 access("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/crti.rpo", R_OK) = -1 ENOENT (No such file or directory)
+11650 access("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/crtbegin.rpo", R_OK) = -1 ENOENT (No such file or directory)
+11650 access("diskio.rpo", R_OK)        = -1 ENOENT (No such file or directory)
+11650 access("fattime.rpo", R_OK)       = -1 ENOENT (No such file or directory)
+11650 access("ff.rpo", R_OK)            = -1 ENOENT (No such file or directory)
+11650 access("sdcard.rpo", R_OK)        = -1 ENOENT (No such file or directory)
+11650 access("spi.rpo", R_OK)           = -1 ENOENT (No such file or directory)
+11650 access("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/crtend.rpo", R_OK) = -1 ENOENT (No such file or directory)
+11650 access("/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/crtn.rpo", R_OK) = -1 ENOENT (No such file or directory)
+11650 open("/tmp/.private/triffid/ccyhlXaz.ld", O_RDONLY|O_LARGEFILE) = 3
+11650 fstat64(3, {st_mode=S_IFREG|0600, st_size=0, ...}) = 0
+11650 mmap2(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xb770c000
+11650 read(3, "", 4096)                 = 0
+11650 close(3)                          = 0
+11650 munmap(0xb770c000, 4096)          = 0
+11650 unlink("/tmp/.private/triffid/ccyhlXaz.ld") = 0
+11650 open("/tmp/.private/triffid/cccT8MOm.le", O_RDONLY|O_LARGEFILE) = 3
+11650 fstat64(3, {st_mode=S_IFREG|0600, st_size=125, ...}) = 0
+11650 mmap2(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xb770c000
+11650 read(3, "/home/triffid/Projects/arm-2010q1/bin/../lib/gcc/arm-none-eabi/4.4.1/../../../../arm-none-eabi/bin/ld: cannot find -llpc17xx\n", 4096) = 125
+11650 write(2, "/", 1)                  = 1
+11650 write(2, "home", 4)               = 4
+11650 write(2, "/", 1)                  = 1
+11650 write(2, "triffid", 7)            = 7
+11650 write(2, "/", 1)                  = 1
+11650 write(2, "Projects", 8)           = 8
+11650 write(2, "/", 1)                  = 1
+11650 write(2, "arm", 3)                = 3
+11650 write(2, "-", 1)                  = 1
+11650 write(2, "2010q1", 6)             = 6
+11650 write(2, "/", 1)                  = 1
+11650 write(2, "bin", 3)                = 3
+11650 write(2, "/", 1)                  = 1
+11650 write(2, ".", 1)                  = 1
+11650 write(2, ".", 1)                  = 1
+11650 write(2, "/", 1)                  = 1
+11650 write(2, "lib", 3)                = 3
+11650 write(2, "/", 1)                  = 1
+11650 write(2, "gcc", 3)                = 3
+11650 write(2, "/", 1)                  = 1
+11650 write(2, "arm", 3)                = 3
+11650 write(2, "-", 1)                  = 1
+11650 write(2, "none", 4)               = 4
+11650 write(2, "-", 1)                  = 1
+11650 write(2, "eabi", 4)               = 4
+11650 write(2, "/", 1)                  = 1
+11650 write(2, "4.4.1", 5)              = 5
+11650 write(2, "/", 1)                  = 1
+11650 write(2, ".", 1)                  = 1
+11650 write(2, ".", 1)                  = 1
+11650 write(2, "/", 1)                  = 1
+11650 write(2, ".", 1)                  = 1
+11650 write(2, ".", 1)                  = 1
+11650 write(2, "/", 1)                  = 1
+11650 write(2, ".", 1)                  = 1
+11650 write(2, ".", 1)                  = 1
+11650 write(2, "/", 1)                  = 1
+11650 write(2, ".", 1)                  = 1
+11650 write(2, ".", 1)                  = 1
+11650 write(2, "/", 1)                  = 1
+11650 write(2, "arm", 3)                = 3
+11650 write(2, "-", 1)                  = 1
+11650 write(2, "none", 4)               = 4
+11650 write(2, "-", 1)                  = 1
+11650 write(2, "eabi", 4)               = 4
+11650 write(2, "/", 1)                  = 1
+11650 write(2, "bin", 3)                = 3
+11650 write(2, "/", 1)                  = 1
+11650 write(2, "ld", 2)                 = 2
+11650 write(2, ":", 1)                  = 1
+11650 write(2, " ", 1)                  = 1
+11650 write(2, "cannot", 6)             = 6
+11650 write(2, " ", 1)                  = 1
+11650 write(2, "find", 4)               = 4
+11650 write(2, " ", 1)                  = 1
+11650 write(2, "-", 1)                  = 1
+11650 write(2, "llpc17xx", 8)           = 8
+11650 write(2, "\n", 1)                 = 1
+11650 read(3, "", 4096)                 = 0
+11650 close(3)                          = 0
+11650 munmap(0xb770c000, 4096)          = 0
+11650 unlink("/tmp/.private/triffid/cccT8MOm.le") = 0
+11650 write(2, "collect2: ", 10)        = 10
+11650 write(2, "ld returned 1 exit status", 25) = 25
+11650 write(2, "\n", 1)                 = 1
+11650 lstat64("/tmp/.private/triffid/ccgIcgQX.c", {st_mode=S_IFREG|0600, st_size=0, ...}) = 0
+11650 unlink("/tmp/.private/triffid/ccgIcgQX.c") = 0
+11650 lstat64("/tmp/.private/triffid/ccycCCxL.o", {st_mode=S_IFREG|0600, st_size=0, ...}) = 0
+11650 unlink("/tmp/.private/triffid/ccycCCxL.o") = 0
+11650 open("/tmp/.private/triffid/ccyhlXaz.ld", O_RDONLY|O_LARGEFILE) = -1 ENOENT (No such file or directory)
+11650 lstat64("/tmp/.private/triffid/ccyhlXaz.ld", 0xbfb4aa34) = -1 ENOENT (No such file or directory)
+11650 open("/tmp/.private/triffid/cccT8MOm.le", O_RDONLY|O_LARGEFILE) = -1 ENOENT (No such file or directory)
+11650 lstat64("/tmp/.private/triffid/cccT8MOm.le", 0xbfb4aa34) = -1 ENOENT (No such file or directory)
+11650 lstat64("fatfs.elf", 0xbfb4aa34)  = -1 ENOENT (No such file or directory)
+11650 exit_group(1)                     = ?
+11649 <... waitpid resumed> [{WIFEXITED(s) && WEXITSTATUS(s) == 1}], 0) = 11650
+11649 --- SIGCHLD (Child exited) @ 0 (0) ---
+11649 exit_group(1)                     = ?

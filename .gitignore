@@ -1,1 +1,7 @@
 *~
+*.o
+*.al
+*.lst
+*.elf
+*.hex
+*.bin

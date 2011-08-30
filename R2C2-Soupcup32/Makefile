@@ -132,30 +132,20 @@ OUTDIR = $(RUN_MODE)
 TARGET = project
 
 # Utility variables
-APPLIBDIR    = libraries
-INCLUDES = $(APPLIBDIR)/CMSISv1p30_LPC17xx/inc \
-	 $(APPLIBDIR)/LPCUSB/inc \
-	 $(APPLIBDIR)/NXP/Drivers/include \
-	 $(APPLIBDIR)/FatFs/src \
-	 inc \
+APPLIBDIR    = ../libraries
+INCLUDES = \
+	$(APPLIBDIR)/LPCUSB \
+	$(APPLIBDIR)/NXP/Core/CM3 \
+	$(APPLIBDIR)/NXP/Drivers/include \
+	$(APPLIBDIR)/FatFs/src \
+	inc \
+
+#	$(APPLIBDIR)/CMSIS-CM3/CoreSupport \
+#	$(APPLIBDIR)/CMSIS-CM3/DeviceSupport/ARM/ARMCM3 \
 
 # List C source files here. (C dependencies are automatically generated.)
 # use file-extension c for "c-only"-files
-SRC =	$(APPLIBDIR)/LPCUSB/src/usbcontrol.c \
-	$(APPLIBDIR)/LPCUSB/src/usbhw_lpc.c \
-	$(APPLIBDIR)/LPCUSB/src/usbinit.c \
-	$(APPLIBDIR)/LPCUSB/src/usbstdreq.c \
-	$(APPLIBDIR)/CMSISv1p30_LPC17xx/src/system_LPC17xx.c \
-	$(APPLIBDIR)/CMSISv1p30_LPC17xx/src/core_cm3.c \
-	$(APPLIBDIR)/NXP/Drivers/source/lpc17xx_nvic.c \
-	$(APPLIBDIR)/NXP/Drivers/source/lpc17xx_pinsel.c \
-	$(APPLIBDIR)/NXP/Drivers/source/lpc17xx_gpio.c \
-	$(APPLIBDIR)/NXP/Drivers/source/lpc17xx_clkpwr.c \
-	$(APPLIBDIR)/NXP/Drivers/source/lpc17xx_ssp.c \
-	$(APPLIBDIR)/NXP/Drivers/source/lpc17xx_timer.c \
-	$(APPLIBDIR)/FatFs/src/ff.c \
-	$(APPLIBDIR)/FatFs/src/fattime.c \
-	main.c	\
+SRC =	main.c \
 	sbl_iap.c \
 	sdcard.c \
 	serial.c \
@@ -190,7 +180,7 @@ CPPSRCARM =
 # Even though the DOS/Win* filesystem matches both .s and .S the same,
 # it will preserve the spelling of the filenames, and gcc itself does
 # care about how the name is spelled on its command-line.
-ASRC = startup_LPC17xx.S
+ASRC =
 
 # List Assembler source files here which must be assembled in ARM-Mode.
 ASRCARM  =
@@ -216,7 +206,7 @@ EXTRAINCDIRS  = $(INCLUDES)
 #     EXTRA_LIBS = xyz abc efsl
 #    for newlib-lpc (file: libnewlibc-lpc.a):
 #     EXTRA_LIBS = newlib-lpc
-EXTRA_LIBS =
+EXTRA_LIBS = lpc17xx fatfs lpcusb
 
 # List non-source files which should trigger build here
 #    Typically the Makefile and selected header-files
@@ -224,7 +214,7 @@ EXTRA_LIBS =
 BUILDONCHANGE = Makefile
 
 # Path to linker-scripts (see -T option)
-LINKERSCRIPTPATH = .
+LINKERSCRIPTPATH = ../libraries
 
 # List any directories with files included from linker-scripts.
 #    Each directory must be seperated by a space.
@@ -232,7 +222,7 @@ LINKERSCRIPTINC  = .
 
 # List any extra directories to look for library files here.
 #     Each directory must be seperated by a space.
-EXTRA_LIBDIRS =
+EXTRA_LIBDIRS = $(APPLIBDIR)
 
 # Optimization level, can be [0, 1, 2, 3, s].
 # 0 = Turn off optimization. Reduce compilation time and make debugging

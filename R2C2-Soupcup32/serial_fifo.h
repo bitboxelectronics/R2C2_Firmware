@@ -27,14 +27,12 @@
 #ifndef SerialFifo_h
 #define SerialFifo_h
 
-#include "lpcusb_type.h"
-
 #define SERIAL_FIFO_SIZE 256
 
 typedef struct {
-	int		head;
-	int 	tail;
-	U8		*buf;
+	int				head;
+	int 			tail;
+	unsigned char	*buf;
 } fifo_t;
 
 void fifo_init(fifo_t *fifo, unsigned char *buf);

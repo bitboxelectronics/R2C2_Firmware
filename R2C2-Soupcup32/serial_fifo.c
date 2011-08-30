@@ -27,7 +27,6 @@
 
 // CodeRed - LPCUSB type.h renamed
 //#include "type.h"
-#include "lpcusb_type.h"
 #include "serial_fifo.h"
 
 void fifo_init(fifo_t *fifo, unsigned char *buf)
@@ -46,13 +45,13 @@ unsigned char fifo_put(fifo_t *fifo, unsigned char c)
 	next = (fifo->head + 1) % SERIAL_FIFO_SIZE;
 	if (next == fifo->tail) {
 		// full
-		return FALSE;
+		return 0;
 	}
 	
 	fifo->buf[fifo->head] = c;
 	fifo->head = next;
 	
-	return TRUE;
+	return 1;
 }
 
 
@@ -62,7 +61,7 @@ unsigned char fifo_get(fifo_t *fifo, unsigned char *pc)
 	
 	// check if FIFO has data
 	if (fifo->head == fifo->tail) {
-		return FALSE;
+		return 0;
 	}
 	
 	next = (fifo->tail + 1) % SERIAL_FIFO_SIZE;
@@ -70,7 +69,7 @@ unsigned char fifo_get(fifo_t *fifo, unsigned char *pc)
 	*pc = fifo->buf[fifo->tail];
 	fifo->tail = next;
 
-	return TRUE;
+	return 1;
 }
 
 

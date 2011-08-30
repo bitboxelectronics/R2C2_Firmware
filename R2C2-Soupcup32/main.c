@@ -27,7 +27,6 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "LPC17xx.h"
 #include "lpc17xx_nvic.h"
 #include "lpc17xx_pinsel.h"
 #include "lpc17xx_gpio.h"

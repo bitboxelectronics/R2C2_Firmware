@@ -16,6 +16,7 @@
 #include "lpc17xx_pinsel.h"
 #include "lpc17xx_gpio.h"
 #include "LPC17xx.h"
+// #include "system_ARMCM3.h"
 #include "type.h"
 
 #ifndef	DBG
@@ -69,13 +70,13 @@ unsigned write_flash(unsigned * dst, char * src, unsigned no_of_bytes)
   if(byte_ctr == FLASH_BUF_SIZE)
   {
     /* We have accumulated enough bytes to trigger a flash write */
-    find_erase_prepare_sector(SystemCoreClock/1000, (unsigned)dst);
+    find_erase_prepare_sector(SystemFrequency/1000, (unsigned)dst);
     if(result_table[0] != CMD_SUCCESS)
     {
       DBG("Error: prepare sectors\n");
       while(1); /* No way to recover. Just let OS report a write failure */
     }
-    write_data( SystemCoreClock/1000,
+    write_data( SystemFrequency/1000,
                 (unsigned)dst,
                 (void *)flash_buf,
                 FLASH_BUF_SIZE);
@@ -85,7 +86,7 @@ unsigned write_flash(unsigned * dst, char * src, unsigned no_of_bytes)
       while(1); /* No way to recover. Just let OS report a write failure */
     }
 
-    compare_data( SystemCoreClock/1000,
+    compare_data( SystemFrequency/1000,
                 (unsigned)dst,
                 (void *)flash_buf,
                 FLASH_BUF_SIZE);
@@ -267,8 +268,8 @@ void check_isp_entry_pin (void)
 
 void erase_user_flash(void)
 {
-  prepare_sector(USER_START_SECTOR,MAX_USER_SECTOR,SystemCoreClock/1000);
-  erase_sector(USER_START_SECTOR,MAX_USER_SECTOR,SystemCoreClock/1000);
+  prepare_sector(USER_START_SECTOR,MAX_USER_SECTOR,SystemFrequency/1000);
+  erase_sector(USER_START_SECTOR,MAX_USER_SECTOR,SystemFrequency/1000);
   if(result_table[0] != CMD_SUCCESS)
   {
     while(1); /* No way to recover. Just let OS report a write failure */

@@ -384,7 +384,7 @@ void gcode_parse_char(uint8_t c) {
 				) {
             if (sd_writing_file)
             {
-              if (next_target.seen_M && ( (next_target.M >= 20) || (next_target.M <= 29) ) )
+              if (next_target.seen_M && (next_target.M >= 20) && (next_target.M <= 29) )
               {
                 if (next_target.seen_M && next_target.M == 29)
                 { 
@@ -398,6 +398,7 @@ void gcode_parse_char(uint8_t c) {
               {
                 write_to_file();
               }
+              serial_writestr("ok\r\n");
             }
             else
             {

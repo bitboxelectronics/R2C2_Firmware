@@ -116,7 +116,7 @@ typedef enum IRQn
  * @brief  Setup the microcontroller system.
  *         Initialize the System and update the SystemFrequency variable.
  */
-extern void SystemInit (void);
+// extern void SystemInit (void);
 
 
 /** @addtogroup Peripheral_register_structures

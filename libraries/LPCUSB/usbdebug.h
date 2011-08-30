@@ -26,7 +26,7 @@
 */
 
 
-int printf(const char *format, ...);
+// int printf(const char *format, ...);
 
 #ifdef DEBUG
 #define DBG	printf

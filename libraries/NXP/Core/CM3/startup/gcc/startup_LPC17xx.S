@@ -128,6 +128,10 @@ __cs3_interrupt_vector_cortex_m:
     .globl  __cs3_reset_cortex_m
     .type   __cs3_reset_cortex_m, %function
 __cs3_reset_cortex_m:
+/* provide _start symbol, in case we use the wrong linker script */
+	.globl	_start
+	.type	_start, %function
+_start:
     .fnstart
 
 /* delay at startup to let JTAG-connection catch-up */

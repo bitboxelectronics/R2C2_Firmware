@@ -42,26 +42,26 @@
 
 int main(void)
 {
-  // DeInit NVIC and SCBNVIC
-  NVIC_DeInit();
-  NVIC_SCBDeInit();
+	// DeInit NVIC and SCBNVIC
+	NVIC_DeInit();
+	NVIC_SCBDeInit();
 
-  /* Configure the NVIC Preemption Priority Bits:
-   * two (2) bits of preemption priority, six (6) bits of sub-priority.
-   * Since the Number of Bits used for Priority Levels is five (5), so the
-   * actual bit number of sub-priority is three (3)
-   */
-  NVIC_SetPriorityGrouping(0x05);
+	/* Configure the NVIC Preemption Priority Bits:
+	 * two (2) bits of preemption priority, six (6) bits of sub-priority.
+	 * Since the Number of Bits used for Priority Levels is five (5), so the
+	 * actual bit number of sub-priority is three (3)
+	 */
+	NVIC_SetPriorityGrouping(0x05);
 
-  /* Change the Vector Table to the USER_FLASH_START
-  in case the user application uses interrupts */
-  SCB->VTOR = (USER_FLASH_START & 0x1FFFFF80);
+	/* Change the Vector Table to the USER_FLASH_START
+		in case the user application uses interrupts */
+	SCB->VTOR = (USER_FLASH_START & 0x1FFFFF80);
 
-  USBSerial_Init(); // Initialize USB<->Serial
+	USBSerial_Init(); // Initialize USB<->Serial
 
-  SysTickTimer_Init(); // Initialize the timer for millis()
+	SysTickTimer_Init(); // Initialize the timer for millis()
 
-  soupcup32();
+ 	soupcup32();
 
 	NVIC_SystemReset();
 }

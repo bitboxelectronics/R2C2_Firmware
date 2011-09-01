@@ -132,15 +132,6 @@ int32_t	decfloat_to_int(decfloat *df, int32_t multiplicand, int32_t denominator)
 	return r;
 }
 
-static bool write_to_file(void)
-{
-  UINT bytes_written;
-  FRESULT result;
-
-  result = f_write (&file, gcode_line, gcode_len, &bytes_written);
-
-  return result == FR_OK;
-}
 
 /*
 	public functions
@@ -189,7 +180,8 @@ void gcode_parse_char(uint8_t c) {
 	if (c >= 'a' && c <= 'z')
 		c &= ~32;
 
-	gcode_line [gcode_len++] = c;
+  if (gcode_len < MAX_LINE)
+  	gcode_line [gcode_len++] = c;
 
 	// process previous field
 	if (last_field) {
@@ -396,7 +388,7 @@ void gcode_parse_char(uint8_t c) {
               }
               else
               {
-                write_to_file();
+                sd_write_to_file(gcode_line, gcode_len);
               }
               serial_writestr("ok\r\n");
             }

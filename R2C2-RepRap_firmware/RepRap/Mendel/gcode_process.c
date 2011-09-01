@@ -193,7 +193,9 @@ unsigned sd_open(FIL *pFile, char *path, uint8_t flags)
   res = f_open (pFile, path, flags);
 
   if (res == FR_OK)
+  {
     return 1;
+  }
   else
   {
     //debug
@@ -205,6 +207,17 @@ unsigned sd_open(FIL *pFile, char *path, uint8_t flags)
 void sd_close(FIL *pFile)
 {
   f_close (pFile);
+}
+
+ 
+bool sd_write_to_file(char *pStr, unsigned bytes_to_write)
+{
+  UINT bytes_written;
+  FRESULT result;
+
+  result = f_write (&file, pStr, bytes_to_write, &bytes_written);
+
+  return result == FR_OK;
 }
 
 unsigned sd_filesize (FIL *pFile)

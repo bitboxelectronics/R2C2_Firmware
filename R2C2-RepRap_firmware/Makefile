@@ -274,8 +274,9 @@ OPT = s
 CSTANDARD = -std=gnu99
 
 # Flash programming tool
-FLASH_TOOL = OPENOCD
+#FLASH_TOOL = OPENOCD
 #FLASH_TOOL = LPC21ISP
+FLASH_TOOL = R2C2
 
 # Some warnings can be disabled by this setting 
 # (useful for the old single-file AT91-lib) 
@@ -559,11 +560,16 @@ ifdef SHELL_IS_WIN32
 else
 	$(OOCD_EXE) $(OOCD_CL)
 endif
-else
+else ifeq ($(FLASH_TOOL),LPC21ISP)
 # Program the device using lpc21isp (for NXP2k and ADuC UART bootloader)
 program: $(OUTDIR)/$(TARGET).hex
 	@echo $(MSG_LPC21_RESETREMINDER)
 	-$(LPC21ISP) $(LPC21ISP_OPTIONS) $(LPC21ISP_FLASHFILE) $(LPC21ISP_PORT) $(LPC21ISP_BAUD) $(LPC21ISP_XTAL)
+else ifeq ($(FLASH_TOOL),R2C2)
+program: $(OUTDIR)/$(TARGET).bin
+	mount /mnt/r2c2
+	cp $(OUTDIR)/$(TARGET).bin /mnt/r2c2/firmware.bin
+	eject /mnt/r2c2
 endif
 
 # Create final output file in ihex format from ELF output file (.hex).

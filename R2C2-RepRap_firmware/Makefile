@@ -142,19 +142,9 @@ INCLUDES = $(APPLIBDIR)/CMSISv1p30_LPC17xx/inc \
 # List C source files here. (C dependencies are automatically generated.)
 # use file-extension c for "c-only"-files
 SRC = \
-	$(APPLIBDIR)/LPCUSB/src/usbcontrol.c \
-	$(APPLIBDIR)/LPCUSB/src/usbhw_lpc.c \
-	$(APPLIBDIR)/LPCUSB/src/usbinit.c \
-	$(APPLIBDIR)/LPCUSB/src/usbstdreq.c \
+	$(wildcard $(APPLIBDIR)/LPCUSB/src/*.c) \
 	$(APPLIBDIR)/CMSISv1p30_LPC17xx/src/system_LPC17xx.c \
-	$(APPLIBDIR)/NXP/Drivers/source/lpc17xx_nvic.c \
-	$(APPLIBDIR)/NXP/Drivers/source/lpc17xx_gpio.c \
-	$(APPLIBDIR)/NXP/Drivers/source/lpc17xx_timer.c \
-	$(APPLIBDIR)/NXP/Drivers/source/lpc17xx_clkpwr.c \
-	$(APPLIBDIR)/NXP/Drivers/source/lpc17xx_adc.c \
-	$(APPLIBDIR)/NXP/Drivers/source/lpc17xx_pinsel.c \
-	$(APPLIBDIR)/NXP/Drivers/source/lpc17xx_ssp.c \
-	$(APPLIBDIR)/NXP/Drivers/source/lpc17xx_pwm.c \
+	$(wildcard $(APPLIBDIR)/NXP/Drivers/source/lpc17xx_*.c) \
 	$(APPLIBDIR)/FatFs/src/ff.c \
 	$(APPLIBDIR)/FatFs/src/diskio.c \
 	$(APPLIBDIR)/FatFs/src/fattime.c \
@@ -478,16 +468,16 @@ MSG_BEGIN = --------  begin, mode: $(RUN_MODE)  --------
 MSG_END = --------  end  --------
 MSG_SIZE_BEFORE = Size before:
 MSG_SIZE_AFTER = Size after build:
-MSG_LOAD_FILE = Creating load file:
+MSG_LOAD_FILE =        " COPY     "
 MSG_EXTENDED_LISTING = Creating Extended Listing/Disassembly:
 MSG_SYMBOL_TABLE = Creating Symbol Table:
-MSG_LINKING = ---- Linking:
-MSG_COMPILING = ---- Compiling C:
-MSG_COMPILING_ARM = ---- Compiling C ARM-only:
-MSG_COMPILINGCPP = ---- Compiling C++:
-MSG_COMPILINGCPP_ARM = ---- Compiling C++ ARM-only:
-MSG_ASSEMBLING = ---- Assembling:
-MSG_ASSEMBLING_ARM = ---- Assembling ARM-only:
+MSG_LINKING =          "  LD      "
+MSG_COMPILING =        "  CC      "
+MSG_COMPILING_ARM =    "  CC      "
+MSG_COMPILINGCPP =     "  CPP     "
+MSG_COMPILINGCPP_ARM = "  CPP     "
+MSG_ASSEMBLING =       "  AS      "
+MSG_ASSEMBLING_ARM =   "  AS      "
 MSG_CLEANING = Cleaning project:
 MSG_LPC21_RESETREMINDER = You may have to bring the target in bootloader-mode now.
 MSG_ASMFROMC = "Creating asm-File from C-Source:"

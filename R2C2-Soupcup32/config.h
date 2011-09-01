@@ -3,6 +3,8 @@
 
 #include	"io.h"
 
+#include	"position.h"
+
 typedef float UNIT;
 
 enum {
@@ -23,9 +25,7 @@ typedef struct {
 	UNIT	steps_per_mm;
 	UNIT	accel;
 	UNIT	length;
-	int		nm;
-	int		st;
-	float	mm;
+	POS		position;
 	PIN		step;
 	PIN		dir;
 	PIN		enable;

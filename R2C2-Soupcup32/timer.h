@@ -37,6 +37,8 @@
 // #define	DEFAULT_TICK	(100 US)
 #define	WAITING_DELAY 10000 // (10 * MS)
 
+typedef void (*void_func_ptr)(void);
+
 void setTimer(long delay);
 void setupTimerInterrupt();
 void enableTimerInterrupt();
@@ -45,6 +47,7 @@ void SysTickTimer_Init(void);
 void delay(int delay);
 void delay_ms(int delay);
 void delayMicrosecondsInterruptible(int us);
+void timer_register_callback(void_func_ptr);
 #define	delay_us(d) delayMicrosecondsInterruptible(d)
 long millis(void);
 

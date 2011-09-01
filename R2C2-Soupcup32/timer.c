@@ -38,15 +38,18 @@
 unsigned char clock_counter_250ms = 0;
 unsigned char clock_counter_1s = 0;
 volatile unsigned char clock_flag = 0;
-long millis_ticks;
+volatile long millis_ticks;
 void (*tick_handler)(void) = 0;
+
+void timer_register_callback(void_func_ptr) {
+	tick_handler = void_func_ptr;
+}
 
 void TIMER0_IRQHandler(void)
 {
 	TIM_ClearIntPending(LPC_TIM0, TIM_MR0_INT);
 	if (tick_handler)
 		tick_handler();
-
 }
 
 /* Ticks are in 1/100MHz = 10ns ticks, minimum of 200 ticks = 2us
@@ -133,7 +136,7 @@ void SysTick_Handler(void)
 
 		/* 100ms tick for SDCard ***********************************************/
 		counter++;
-		if (counter > 99)
+		if (counter >= 100)
 		{
 			MMC_disk_timerproc();
 			counter = 0;
@@ -145,7 +148,7 @@ void SysTick_Handler(void)
 	/* Buzzer soft timer ***************************************************/
 		if (buzzer_state) /* if buzzer in on... */
 		{
-			if (!--duration) /* decrement and test the duration time that buzzer should be on */
+			if (--duration == 0) /* decrement and test the duration time that buzzer should be on */
 			{
 				buzzer_pwm_stop();
 				buzzer_state = 0;

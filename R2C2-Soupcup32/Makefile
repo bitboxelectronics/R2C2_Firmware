@@ -145,21 +145,7 @@ INCLUDES = \
 
 # List C source files here. (C dependencies are automatically generated.)
 # use file-extension c for "c-only"-files
-SRC =	main.c \
-	sbl_iap.c \
-	sdcard.c \
-	serial.c \
-	serial_fifo.c \
-	timer.c \
-	usb.c \
-	spi.c \
-	soupcup32.c \
-	config.c \
-	io.c \
-	fs.c \
-	position.c \
-	debug.c \
-	buzzer.c \
+SRC =	$(wildcard *.c) \
 	$(wildcard $(APPLIBDIR)/LPCUSB/src/*.c) \
 	$(APPLIBDIR)/CMSISv1p30_LPC17xx/src/system_LPC17xx.c \
 	$(APPLIBDIR)/CMSISv1p30_LPC17xx/src/core_cm3.c \

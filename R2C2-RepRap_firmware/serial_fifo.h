@@ -32,15 +32,19 @@
 #define SERIAL_FIFO_SIZE 256
 
 typedef struct {
-	int		head;
-	int 	tail;
-	U8		*buf;
+	volatile int head;
+	volatile int tail;
+	volatile U8 *buf;
 } fifo_t;
 
 void fifo_init(fifo_t *fifo, unsigned char *buf);
 unsigned char fifo_put(fifo_t *fifo, unsigned char c);
+unsigned char _fifo_put(fifo_t *fifo, unsigned char c);
 unsigned char fifo_get(fifo_t *fifo, unsigned char *pc);
+unsigned char _fifo_get(fifo_t *fifo, unsigned char *pc);
 int  fifo_avail(fifo_t *fifo);
+int  _fifo_avail(fifo_t *fifo);
 int fifo_free(fifo_t *fifo);
+int _fifo_free(fifo_t *fifo);
 
 #endif

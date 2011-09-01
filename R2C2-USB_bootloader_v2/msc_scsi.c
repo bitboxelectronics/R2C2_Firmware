@@ -97,8 +97,8 @@ static const U8		abInquiry[] = {
 	0x00,
 	0x00,
 	'b','i','t','B','O','X',' ',' ',	// vendor
-	'R','2','C','2',' ','e','l','e',	// product
-	'c','t','r','o','n','i','c','s',
+	'R','2','C','2',' ','B','o','o',	// product
+	't','l','o','a','d','e','r',' ',
 	'2','.','0',' '						// revision
 };
 

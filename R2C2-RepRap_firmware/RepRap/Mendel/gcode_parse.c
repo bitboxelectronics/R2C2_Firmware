@@ -65,10 +65,6 @@ double steps_per_in_y;
 double steps_per_in_z;
 double steps_per_in_e;
 
-// for SD functions
-#define MAX_LINE 120
-char gcode_line [MAX_LINE];
-int gcode_len;
 
 void gcode_parse_init(void)
 {
@@ -162,13 +158,21 @@ void SpecialMoveE(int32_t e, uint32_t f) {
 	enqueue(&t);
 }
 
+void gcode_parse_line (tLineBuffer *pLine) 
+{
+  unsigned int j;
+
+  for (j=0; j < pLine->len; j++)
+    gcode_parse_char (pLine->data [j], pLine);
+}
+
 /****************************************************************************
 *                                                                           *
 * Character Received - add it to our command                                *
 *                                                                           *
 ****************************************************************************/
 
-void gcode_parse_char(uint8_t c) {
+void gcode_parse_char(uint8_t c, tLineBuffer *pLine) {
   bool send_reply = true;
 
 	#ifdef ASTERISK_IN_CHECKSUM_INCLUDED
@@ -179,9 +183,6 @@ void gcode_parse_char(uint8_t c) {
 	// uppercase
 	if (c >= 'a' && c <= 'z')
 		c &= ~32;
-
-  if (gcode_len < MAX_LINE)
-  	gcode_line [gcode_len++] = c;
 
 	// process previous field
 	if (last_field) {
@@ -388,7 +389,7 @@ void gcode_parse_char(uint8_t c) {
               }
               else
               {
-                sd_write_to_file(gcode_line, gcode_len);
+                sd_write_to_file(pLine->data, pLine->len);
               }
               serial_writestr("ok\r\n");
             }
@@ -430,7 +431,6 @@ void gcode_parse_char(uint8_t c) {
                 next_target.seen_parens_comment = next_target.checksum_read = \
                 next_target.checksum_calculated = 0;
 		next_target.chpos = 0;
-    gcode_len = 0;
 		last_field = 0;
 		read_digit.sign = read_digit.mantissa = read_digit.exponent = 0;
 

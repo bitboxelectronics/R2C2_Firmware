@@ -48,6 +48,9 @@
 #include "config.h"
 #include "buzzer.h"
 
+tLineBuffer serial_line_buf;
+tLineBuffer sd_line_buf;
+
 void io_init(void)
 {
   /* Extruder 0 Heater pin */
@@ -219,18 +222,61 @@ long arraySize = 0;
           arraySize = 0;
       }
 
-
-    // if queue is full, no point in reading chars- host will just have to wait
-    if ((serial_rxchars() != 0) && (queue_full() == 0))
+    // process characters from the serial port
+    while (!serial_line_buf.seen_lf && (serial_rxchars() != 0) )
     {
       unsigned char c = serial_popchar();
+      
+      if (serial_line_buf.len < MAX_LINE)
+        serial_line_buf.data [serial_line_buf.len++] = c;
 
-      /* Read each char and at end of each line, put the "GCode" on movebuffer.
-       * If there are movemnet to do, Timer will start and execute code which
+      if ((c==10) || (c==13))
+      {
+        if (serial_line_buf.len > 1)
+          serial_line_buf.seen_lf = 1;
+        else
+          serial_line_buf.len = 0;
+      }      
+    }
+
+    // process SD file if no serial command pending
+    if (!serial_line_buf.seen_lf && sd_printing)
+    {
+      if (sd_read_file (&sd_line_buf))
+      {
+          sd_line_buf.seen_lf = 1;
+      } 
+      else
+      {
+        sd_printing = false;
+        serial_writestr ("Done printing file\r\n");
+      }
+    }
+
+    // if queue is full, we wait
+    if (queue_full() == 0)
+    {
+  
+      /* At end of each line, put the "GCode" on movebuffer.
+       * If there are movement to do, Timer will start and execute code which
        * will take data from movebuffer and generate the required step pulses
        * for stepper motors.
        */
-      gcode_parse_char(c);
+  
+      // give priority to user commands
+      if (serial_line_buf.seen_lf)
+      {
+        gcode_parse_line (&serial_line_buf);
+        serial_line_buf.len = 0;
+        serial_line_buf.seen_lf = 0;
+      }
+      else if (sd_line_buf.seen_lf)
+      {
+        gcode_parse_line (&sd_line_buf);
+        sd_line_buf.len = 0;
+        sd_line_buf.seen_lf = 0;
+      }
+
     }
 
     /* Do every 100ms */

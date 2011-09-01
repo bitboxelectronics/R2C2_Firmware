@@ -209,6 +209,20 @@ void sd_close(FIL *pFile)
   f_close (pFile);
 }
 
+bool sd_read_file(tLineBuffer *pLine)
+{
+  char *ptr;
+
+  ptr = f_gets(pLine->data, MAX_LINE, &file);
+
+  if (ptr != NULL)
+  {
+    sd_pos += strlen(ptr);
+    return true;
+  }
+  else
+    return false;
+}
  
 bool sd_write_to_file(char *pStr, unsigned bytes_to_write)
 {

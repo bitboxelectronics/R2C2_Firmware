@@ -35,6 +35,8 @@
 #include "lpc17xx_ssp.h"
 #include "spi.h"
 
+#define	SSP_SetClock(sspx, clock)	setSSPclock(sspx, clock)
+
 /*-----------------------------------------------------------------------*/
 /* SPI low-level functions                                               */
 /*-----------------------------------------------------------------------*/

@@ -5,8 +5,15 @@
 
 #include	"config.h"
 
-U8 linebuf[128];
-int linebuf_p;
+#define	MAX_LINE_LENGTH 128
+
+unsigned char ser_linebuf[MAX_LINE_LENGTH];
+int ser_linebuf_p;
+
+unsigned char sd_linebuf[MAX_LINE_LENGTH];
+int sd_linebuf_p;
+
+int sd_printing = 0;
 
 void soupcup32() {
 	if (fs_init() != FR_OK) {
@@ -16,12 +23,17 @@ void soupcup32() {
 
 	for (;;) {
 		if (serial_rxchars()) {
-			U8 c;
-			linebuf[linebuf_p++] = c = serial_popchar();
+			unsigned char c;
+			ser_linebuf[ser_linebuf_p++] = c = serial_popchar();
 			if (c < 32) {
-				linebuf_p = 0;
+				ser_linebuf[ser_linebuf_p] = 0;
+				ser_linebuf_p = 0;
 				serial_writestr("OK\n");
 			}
+		}
+		
+		if (sd_printing) {
+			
 		}
 	}
 }

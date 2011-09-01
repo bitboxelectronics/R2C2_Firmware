@@ -27,8 +27,8 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef _BUZZER_
-#define _BUZZER_
+#ifndef _BUZZER_H
+#define _BUZZER_H
 
 extern volatile uint8_t buzzer_state;
 extern volatile uint16_t duration;
@@ -42,5 +42,9 @@ void buzzer_pwm_stop (void);
  */
 void buzzer_play (uint16_t frequency, uint16_t duration);
 
-#endif  /* _BUZZER_ */
+inline void buzzer_wait(void) {
+	for (;buzzer_state != 0;);
+}
+
+#endif  /* _BUZZER_H */
 

@@ -6,7 +6,7 @@
 
 FATFS		fatfs;
 FIL			file;
-FILINFO	fileinfo;
+FILINFO		fileinfo;
 
 FRESULT fs_init() {
 	spi_init();

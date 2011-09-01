@@ -132,10 +132,10 @@ OUTDIR = $(RUN_MODE)
 TARGET = project
 
 # Utility variables
-APPLIBDIR    = ../libraries
+APPLIBDIR    = ../R2C2-RepRap_firmware/libraries
 INCLUDES = \
-	$(APPLIBDIR)/LPCUSB \
-	$(APPLIBDIR)/NXP/Core/CM3 \
+	$(APPLIBDIR)/LPCUSB/inc \
+	$(APPLIBDIR)/CMSISv1p30_LPC17xx/inc \
 	$(APPLIBDIR)/NXP/Drivers/include \
 	$(APPLIBDIR)/FatFs/src \
 	inc \
@@ -160,8 +160,13 @@ SRC =	main.c \
 	position.c \
 	debug.c \
 	buzzer.c \
-#	$(APPLIBDIR)/LPCUSB/usbcontrol.c $(APPLIBDIR)/LPCUSB/usbhw_lpc.c $(APPLIBDIR)/LPCUSB/usbinit.c $(APPLIBDIR)/LPCUSB/usbstdreq.c \
-#	$(APPLIBDIR)/NXP/Core/CM3/system_LPC17xx.c $(APPLIBDIR)/NXP/Drivers/source/lpc17xx_nvic.c $(APPLIBDIR)/NXP/Drivers/source/lpc17xx_timer.c $(APPLIBDIR)/NXP/Drivers/source/lpc17xx_gpio.c $(APPLIBDIR)/NXP/Drivers/source/lpc17xx_pinsel.c $(APPLIBDIR)/NXP/Drivers/source/lpc17xx_libcfg_default.c
+	$(wildcard $(APPLIBDIR)/LPCUSB/src/*.c) \
+	$(APPLIBDIR)/CMSISv1p30_LPC17xx/src/system_LPC17xx.c \
+	$(APPLIBDIR)/CMSISv1p30_LPC17xx/src/core_cm3.c \
+	$(wildcard $(APPLIBDIR)/NXP/Drivers/source/lpc17xx_*.c) \
+	$(APPLIBDIR)/FatFs/src/ff.c \
+	$(APPLIBDIR)/FatFs/src/diskio.c \
+	$(APPLIBDIR)/FatFs/src/fattime.c \
 
 
 # List C source files here which must be compiled in ARM-Mode (no -mthumb).
@@ -185,7 +190,7 @@ CPPSRCARM =
 # Even though the DOS/Win* filesystem matches both .s and .S the same,
 # it will preserve the spelling of the filenames, and gcc itself does
 # care about how the name is spelled on its command-line.
-ASRC =
+ASRC = startup.S
 #ASRC = $(APPLIBDIR)/NXP/Core/CM3/startup/gcc/startup_LPC17xx.S
 
 # List Assembler source files here which must be assembled in ARM-Mode.
@@ -212,7 +217,8 @@ EXTRAINCDIRS  = $(INCLUDES)
 #     EXTRA_LIBS = xyz abc efsl
 #    for newlib-lpc (file: libnewlibc-lpc.a):
 #     EXTRA_LIBS = newlib-lpc
-EXTRA_LIBS = lpc17xx fatfs lpcusb
+#EXTRA_LIBS = lpc17xx fatfs lpcusb
+EXTRA_LIBS =
 
 # List non-source files which should trigger build here
 #    Typically the Makefile and selected header-files
@@ -242,11 +248,11 @@ EXTRA_LIBDIRS = $(APPLIBDIR)
 # s = -Os enables all -O2 optimizations that do not typically increase code
 #     size.
 # (See gcc manual for further information)
-OPT = 0
+#OPT = 0
 #OPT = 1
 #OPT = 2
 #OPT = 3
-#OPT = s
+OPT = s
 
 # Debugging format.
 #DEBUG = stabs

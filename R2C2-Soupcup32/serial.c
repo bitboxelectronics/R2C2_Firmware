@@ -44,9 +44,9 @@ int serial_rxchars()
   return fifo_avail(&rxfifo);
 }
 
-U8 serial_popchar()
+unsigned char serial_popchar()
 {
-  U8 c = 0;
+  unsigned char c = 0;
 
   fifo_get(&rxfifo, &c);
 
@@ -62,7 +62,7 @@ int serial_txchars()
   return fifo_avail(&txfifo);
 }
 
-void serial_writechar(U8 data)
+void serial_writechar(unsigned char data)
 {
   fifo_put(&txfifo, data);
 }
@@ -72,14 +72,14 @@ void serial_writeblock(void *data, int datalen)
   int i;
 
   for (i = 0; i < datalen; i++)
-    serial_writechar(((U8 *) data)[i]);
+    serial_writechar(((unsigned char *) data)[i]);
 }
 
 void serial_writestr(void *data)
 {
   int i = 0;
-	U8 r;
+	unsigned char r;
 
-  while ((r = ((U8 *) data)[i++]))
+  while ((r = ((unsigned char *) data)[i++]))
     serial_writechar(r);
 }

@@ -62,23 +62,25 @@ int main(void)
 
 	pins_init();
 
-	buzzer_init();
+	// debug_num(1);
 
-	debug_num(1);
-
-	buzzer_play(2771, 50);
+	// buzzer_play(2771, 50);
 
 	SysTickTimer_Init(); // Initialize the timer for millis()
 
-	buzzer_play(2000, 50);
+	buzzer_init();
+
+	//buzzer_play(2000, 50);
 
 	USBSerial_Init(); // Initialize USB<->Serial
 
-	buzzer_play(1000, 100);
+	//buzzer_play(1000, 100);
 
-	debug_next();
+	//debug_next();
 
-	for (;;);
+	buzzer_play(2000, 50);
+	buzzer_wait();
+	buzzer_play(1775, 100);
 
  	soupcup32();
 

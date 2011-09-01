@@ -31,7 +31,6 @@
 #define	_SERIAL_H
 
 #include <stdint.h>
-#include <type.h>
 #include "serial_fifo.h"
 
 fifo_t txfifo;
@@ -47,9 +46,9 @@ int serial_rxchars(void);
 int serial_txchars(void);
 
 // read one character
-U8 serial_popchar(void);
+unsigned char serial_popchar(void);
 // send one character
-void serial_writechar(U8 data);
+void serial_writechar(unsigned char data);
 
 // read/write many characters
 // uint8_t serial_recvblock(uint8_t *block, int blocksize);

@@ -72,7 +72,7 @@ void SYSTICK_InternalInit(uint32_t time)
 		 * RELOAD = (SystemCoreClock/1000) * time - 1
 		 * with time base is millisecond
 		 */
-		SysTick->RELOAD = (cclk/1000)*time - 1;
+		SysTick->LOAD = (cclk/1000)*time - 1;
 	}
 }
 
@@ -105,7 +105,7 @@ void SYSTICK_ExternalInit(uint32_t freq, uint32_t time)
 		 * with time base is millisecond
 		 */
 		maxtime = (freq/1000)*time - 1;
-		SysTick->RELOAD = (freq/1000)*time - 1;
+		SysTick->LOAD = (freq/1000)*time - 1;
 	}
 }
 
@@ -154,7 +154,7 @@ void SYSTICK_IntCmd(FunctionalState NewState)
  **********************************************************************/
 uint32_t SYSTICK_GetCurrentValue(void)
 {
-	return (SysTick->CURR);
+	return (SysTick->VAL);
 }
 
 /*********************************************************************//**

@@ -1026,3 +1026,4 @@ typedef struct
 #define LPC_USB               ((LPC_USB_TypeDef       *) LPC_USB_BASE      )
 
 #endif  // __LPC17xx_H__
+#define DMAREQSEL             (*(__IO uint32_t *)  ( 0x4000C1C4))

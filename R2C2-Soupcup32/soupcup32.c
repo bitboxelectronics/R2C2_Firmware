@@ -19,6 +19,7 @@ void soupcup32() {
 			U8 c;
 			linebuf[linebuf_p++] = c = serial_popchar();
 			if (c < 32) {
+				linebuf_p = 0;
 				serial_writestr("OK\n");
 			}
 		}

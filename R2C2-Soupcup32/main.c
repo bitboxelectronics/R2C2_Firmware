@@ -37,6 +37,9 @@
 #include	"sbl_iap.h"
 #include	"sbl_config.h"
 #include	"timer.h"
+#include	"config.h"
+#include	"debug.h"
+#include	"buzzer.h"
 
 #include	"soupcup32.h"
 
@@ -57,9 +60,25 @@ int main(void)
 		in case the user application uses interrupts */
 	SCB->VTOR = (USER_FLASH_START & 0x1FFFFF80);
 
-	USBSerial_Init(); // Initialize USB<->Serial
+	pins_init();
+
+	buzzer_init();
+
+	debug_num(1);
+
+	buzzer_play(2771, 50);
 
 	SysTickTimer_Init(); // Initialize the timer for millis()
+
+	buzzer_play(2000, 50);
+
+	USBSerial_Init(); // Initialize USB<->Serial
+
+	buzzer_play(1000, 100);
+
+	debug_next();
+
+	for (;;);
 
  	soupcup32();
 

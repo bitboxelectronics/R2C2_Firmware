@@ -158,6 +158,11 @@ SRC =	main.c \
 	io.c \
 	fs.c \
 	position.c \
+	debug.c \
+	buzzer.c \
+#	$(APPLIBDIR)/LPCUSB/usbcontrol.c $(APPLIBDIR)/LPCUSB/usbhw_lpc.c $(APPLIBDIR)/LPCUSB/usbinit.c $(APPLIBDIR)/LPCUSB/usbstdreq.c \
+#	$(APPLIBDIR)/NXP/Core/CM3/system_LPC17xx.c $(APPLIBDIR)/NXP/Drivers/source/lpc17xx_nvic.c $(APPLIBDIR)/NXP/Drivers/source/lpc17xx_timer.c $(APPLIBDIR)/NXP/Drivers/source/lpc17xx_gpio.c $(APPLIBDIR)/NXP/Drivers/source/lpc17xx_pinsel.c $(APPLIBDIR)/NXP/Drivers/source/lpc17xx_libcfg_default.c
+
 
 # List C source files here which must be compiled in ARM-Mode (no -mthumb).
 # use file-extension c for "c-only"-files
@@ -181,6 +186,7 @@ CPPSRCARM =
 # it will preserve the spelling of the filenames, and gcc itself does
 # care about how the name is spelled on its command-line.
 ASRC =
+#ASRC = $(APPLIBDIR)/NXP/Core/CM3/startup/gcc/startup_LPC17xx.S
 
 # List Assembler source files here which must be assembled in ARM-Mode.
 ASRCARM  =
@@ -236,11 +242,11 @@ EXTRA_LIBDIRS = $(APPLIBDIR)
 # s = -Os enables all -O2 optimizations that do not typically increase code
 #     size.
 # (See gcc manual for further information)
-#OPT = 0
+OPT = 0
 #OPT = 1
 #OPT = 2
 #OPT = 3
-OPT = s
+#OPT = s
 
 # Debugging format.
 #DEBUG = stabs

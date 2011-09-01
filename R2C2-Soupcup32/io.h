@@ -90,13 +90,10 @@ typedef U16 PIN;
 #define P4_28	0x9c
 #define P4_29	0x9d
 
-inline U8 port_from_pin(PIN p) {
-	return ((p & 0xE0) >> 5);
-}
+#define port_from_pin(p) ((p >> 5) & 0x1F)
 
-inline U32 bitvalue_from_pin(PIN p) {
-	return (1 << (p & 0x1F));
-}
+#define bitvalue_from_pin(p) (1 << (p & 0x1F))
+
 
 int is_valid(PIN);
 

@@ -50,3 +50,11 @@ void write(PIN p, U8 value) {
 	else
 		FIO_ClearValue(port_from_pin(p), bitvalue_from_pin(p));
 }
+
+void set_pin(PIN p) {
+	FIO_SetValue(port_from_pin(p), bitvalue_from_pin(p));
+}
+
+void clear_pin(PIN p) {
+	FIO_ClearValue(port_from_pin(p), bitvalue_from_pin(p));
+}

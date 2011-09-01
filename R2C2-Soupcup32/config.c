@@ -3,6 +3,7 @@
 #include	<math.h>
 
 #include	"lpc17xx_pinsel.h"
+#include	"io.h"
 
 axis_config axes[NUM_AXES] = {
 	// X

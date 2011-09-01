@@ -37,6 +37,8 @@
 #include "serial_fifo.h"
 #include "serial.h"
 
+#include "debug.h"
+
 #define BAUD_RATE   115200
 
 #define INT_IN_EP       0x81
@@ -194,6 +196,8 @@ static void BulkOut(U8 bEP, U8 bEPStatus)
 {
   int i, iLen;
 
+  if (bEPStatus) {}
+
   if (fifo_free(&rxfifo) < MAX_PACKET_SIZE)
   {
     // may not fit into fifo
@@ -224,6 +228,8 @@ static void BulkOut(U8 bEP, U8 bEPStatus)
 static void BulkIn(U8 bEP, U8 bEPStatus)
 {
   int i, iLen;
+
+  if (bEPStatus) {}
 
   if (fifo_avail(&txfifo) == 0)
   {
@@ -286,6 +292,7 @@ static BOOL HandleClassRequest(TSetupPacket *pSetup, int *piLen, U8 **ppbData)
 
 static void USBFrameHandler(U16 wFrame)
 {
+  if (wFrame) {}
   if (fifo_avail(&txfifo) > 0)
   {
     // data available, enable NAK interrupt on bulk in
@@ -308,6 +315,8 @@ void enable_USB_interrupts(void);
 
 void USBSerial_Init(void)
 {
+	debug_num(2);
+
   // initialise stack
   USBInit();
 

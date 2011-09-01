@@ -32,20 +32,18 @@
 #include "lpc_types.h"
 // #include "ios.h"
 #include "sdcard.h"
-// #include "buzzer.h"
+#include "buzzer.h"
 // #include "system_ARMCM3.h"
 
 unsigned char clock_counter_250ms = 0;
 unsigned char clock_counter_1s = 0;
 volatile unsigned char clock_flag = 0;
 long millis_ticks;
-volatile uint8_t buzzer_state = 0;
-uint16_t duration;
 void (*tick_handler)(void) = 0;
 
 void TIMER0_IRQHandler(void)
 {
-	TIM_ClearIntPending(TIM0, TIM_MR0_INT);
+	TIM_ClearIntPending(LPC_TIM0, TIM_MR0_INT);
 	if (tick_handler)
 		tick_handler();
 
@@ -55,7 +53,7 @@ void TIMER0_IRQHandler(void)
  * Maximum time of 2^32*10ns = 42.94967296 seconds. */
 void setTimer(uint32_t ticks)
 {
-  TIM0->MR0 = ticks;
+  LPC_TIM0->MR0 = ticks;
 }
 
 void setupTimerInterrupt(void)
@@ -66,7 +64,7 @@ void setupTimerInterrupt(void)
   // Prescale in absolute value
   TIM_ConfigStruct.PrescaleOption = TIM_PRESCALE_TICKVAL;
   TIM_ConfigStruct.PrescaleValue  = 1;
-  TIM_Init(TIM0, TIM_TIMER_MODE,&TIM_ConfigStruct);
+  TIM_Init(LPC_TIM0, TIM_TIMER_MODE,&TIM_ConfigStruct);
 
   /* Configure Timer0 to have the same clock as CPU: 100MHz */
   CLKPWR_SetPCLKDiv(CLKPWR_PCLKSEL_TIMER0, CLKPWR_PCLKSEL_CCLK_DIV_1);
@@ -83,7 +81,7 @@ void setupTimerInterrupt(void)
   TIM_MatchConfigStruct.ExtMatchOutputType = TIM_EXTMATCH_NOTHING;
   // Set Match value, count value of 100000000 (100000000 * 10ns = 100000000ns = 1s --> 1 Hz)
   TIM_MatchConfigStruct.MatchValue   = 1000;
-  TIM_ConfigMatch(TIM0,&TIM_MatchConfigStruct);
+  TIM_ConfigMatch(LPC_TIM0,&TIM_MatchConfigStruct);
 
   /* Set to have highest priority = 0 */
   NVIC_SetPriority(TIMER0_IRQn, 1);
@@ -95,16 +93,16 @@ void enableTimerInterrupt(void)
   NVIC_EnableIRQ(TIMER0_IRQn);
 
   /* Start timer 0 */
-  TIM_Cmd(TIM0, ENABLE);
+  TIM_Cmd(LPC_TIM0, ENABLE);
 }
 
 void disableTimerInterrupt(void)
 {
   /* Stop timer 0 */
-  TIM_Cmd(TIM0, DISABLE);
+  TIM_Cmd(LPC_TIM0, DISABLE);
 
   /* Clear timer 0 pending interrupt */
-  TIM_ClearIntPending(TIM0, TIM_MR0_INT);
+  TIM_ClearIntPending(LPC_TIM0, TIM_MR0_INT);
 
   /* Disable interrupt for timer 0 */
   NVIC_DisableIRQ(TIMER0_IRQn);
@@ -119,7 +117,7 @@ void SysTickTimer_Init(void)
 {
   // Setup SysTick Timer to interrupt at 1 msec intervals
   // Lowest priority = 31
-  if (SysTick_Config(SystemFrequency / 1000))
+  if (SysTick_Config(SystemCoreClock / 1000))
   {
     while (1);  // Capture error
   }
@@ -182,11 +180,3 @@ void delay(int d){
   }
   delayMicrosecondsInterruptible(d & 0xFFFF);
 }
-
-#ifdef	_BUZZER_H
-void buzzer_start (uint16_t duration_ms)
-{
-  duration = duration_ms;
-  buzzer_state = 1;
-}
-#endif

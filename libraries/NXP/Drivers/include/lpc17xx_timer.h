@@ -1,135 +1,53 @@
-/**
- * @file	: lpc17xx_timer.h
- * @brief	: Contains all functions support for SPI firmware library on LPC17xx
- * @version	: 1.0
- * @date	: 14. April. 2009
- * @author	:
- * *----------------------------------------------------------------------------
- * Software that is described herein is for illustrative purposes only
- * which provides customers with programming information regarding the
- * products. This software is supplied "AS IS" without any warranties.
- * NXP Semiconductors assumes no responsibility or liability for the
- * use of the software, conveys no license or title under any patent,
- * copyright, or mask work right to the product. NXP Semiconductors
- * reserves the right to make changes in the software without
- * notification. NXP Semiconductors also make no representation or
- * warranty that such application will be suitable for the specified
- * use without further testing or modification.
- **********************************************************************/
+/**********************************************************************
+* $Id$		lpc17xx_timer.h				2010-05-21
+*//**
+* @file		lpc17xx_timer.h
+* @brief	Contains all macro definitions and function prototypes
+* 			support for Timer firmware library on LPC17xx
+* @version	2.0
+* @date		21. May. 2010
+* @author	NXP MCU SW Application Team
+*
+* Copyright(C) 2010, NXP Semiconductor
+* All rights reserved.
+*
+***********************************************************************
+* Software that is described herein is for illustrative purposes only
+* which provides customers with programming information regarding the
+* products. This software is supplied "AS IS" without any warranties.
+* NXP Semiconductors assumes no responsibility or liability for the
+* use of the software, conveys no license or title under any patent,
+* copyright, or mask work right to the product. NXP Semiconductors
+* reserves the right to make changes in the software without
+* notification. NXP Semiconductors also make no representation or
+* warranty that such application will be suitable for the specified
+* use without further testing or modification.
+**********************************************************************/
+
+/* Peripheral group ----------------------------------------------------------- */
+/** @defgroup TIM TIM
+ * @ingroup LPC1700CMSIS_FwLib_Drivers
+ * @{
+ */
+
 #ifndef __LPC17XX_TIMER_H_
 #define __LPC17XX_TIMER_H_
 
+/* Includes ------------------------------------------------------------------- */
 #include "LPC17xx.h"
 #include "lpc_types.h"
 
-/****************************** PRIVATE MACROS ******************************/
-/** @addtogroup PRIVATE_MACROS
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+/* Private Macros ------------------------------------------------------------- */
+/** @defgroup TIM_Private_Macros TIM Private Macros
  * @{
  */
 
-
-/** @defgroup TIM_PINSEL
- * @{
- */
-/**Pin selection define */
-/** Timer 0 - Capture input pin */
-#define TIM0_PINSEL_CAP0_P1_26	{1, 26, 3, \
-								PINSEL_PINMODE_PULLUP, \
-								PINSEL_PINMODE_NORMAL}
-
-#define TIM0_PINSEL_CAP1_P1_27	{1, 27, 3, \
-								PINSEL_PINMODE_PULLUP, \
-								PINSEL_PINMODE_NORMAL}
-
-
-/** Timer 1 - Capture input pin */
-#define TIM1_PINSEL_CAP0_P1_18	{1, 18, 3, \
-								PINSEL_PINMODE_PULLUP, \
-								PINSEL_PINMODE_NORMAL}
-
-#define TIM1_PINSEL_CAP1_P1_19	{1, 19, 3, \
-								PINSEL_PINMODE_PULLUP, \
-								PINSEL_PINMODE_NORMAL}
-
-
-/** Timer 2 - Capture input pin */
-#define TIM2_PINSEL_CAP0_P0_4	{0, 4, 3, \
-								PINSEL_PINMODE_PULLUP, \
-								PINSEL_PINMODE_NORMAL}
-
-#define TIM2_PINSEL_CAP1_P0_5	{0, 5, 3, \
-								PINSEL_PINMODE_PULLUP, \
-								PINSEL_PINMODE_NORMAL}
-
-
-/** Timer 3 - Capture input pin */
-#define TIM3_PINSEL_CAP0_P0_23	{0, 23, 3, \
-								PINSEL_PINMODE_PULLUP, \
-								PINSEL_PINMODE_NORMAL}
-
-#define TIM3_PINSEL_CAP1_P0_24	{0, 24, 3, \
-								PINSEL_PINMODE_PULLUP, \
-								PINSEL_PINMODE_NORMAL}
-
-/** Timer 0 - Match output pin */
-#define TIM0_PINSEL_MAT0_P1_28	{1, 28, 3, \
-								PINSEL_PINMODE_PULLUP, \
-								PINSEL_PINMODE_NORMAL}
-
-#define TIM0_PINSEL_MAT1_P1_29	{1, 29, 3, \
-								PINSEL_PINMODE_PULLUP, \
-								PINSEL_PINMODE_NORMAL}
-
-
-/** Timer 1 - Match output pin */
-#define TIM1_PINSEL_MAT0_P1_22	{1, 22, 3, \
-								PINSEL_PINMODE_PULLUP, \
-								PINSEL_PINMODE_NORMAL}
-
-#define TIM1_PINSEL_MAT1_P1_23	{1, 23, 3, \
-								PINSEL_PINMODE_PULLUP, \
-								PINSEL_PINMODE_NORMAL}
-
-
-/** Timer 2 - Match output pin */
-#define TIM2_PINSEL_MAT0_P0_6	{0, 6, 3, \
-								PINSEL_PINMODE_PULLUP, \
-								PINSEL_PINMODE_NORMAL}
-
-#define TIM2_PINSEL_MAT1_P0_7	{0, 7, 3, \
-								PINSEL_PINMODE_PULLUP, \
-								PINSEL_PINMODE_NORMAL}
-
-#define TIM2_PINSEL_MAT2_P0_8	{0, 8, 3, \
-								PINSEL_PINMODE_PULLUP, \
-								PINSEL_PINMODE_NORMAL}
-
-#define TIM2_PINSEL_MAT3_P0_9	{0, 9, 3, \
-								PINSEL_PINMODE_PULLUP, \
-								PINSEL_PINMODE_NORMAL}
-
-
-/** Timer 3 - Match output pin */
-#define TIM3_PINSEL_MAT0_P0_10	{0, 10, 3, \
-								PINSEL_PINMODE_PULLUP, \
-								PINSEL_PINMODE_NORMAL}
-
-#define TIM3_PINSEL_MAT1_P0_11	{0, 11, 3, \
-								PINSEL_PINMODE_PULLUP, \
-								PINSEL_PINMODE_NORMAL}
-
-
-/* Max number of pin on each pin function */
-#define	TIMER_MAX_MATCH_PIN 10
-#define	TIMER_MAX_CAPTION_PIN 8
-/**
- * @}
- */
-
-/************************** TIMER/COUNTER Control **************************/
-/** @defgroup TIM_REGISTER_BIT_DEFINITION
- * @{
- */
+/* --------------------- BIT DEFINITIONS -------------------------------------- */
 /**********************************************************************
 ** Interrupt information
 **********************************************************************/
@@ -166,7 +84,8 @@
 /** Timer Match control bit mask */
 #define TIM_MCR_MASKBIT			   ((uint32_t)(0x0FFF))
 /** Timer Match control bit mask for specific channel*/
-#define	TIM_MCR_CHANNEL_MASKBIT(n)		((uint32_t)(7<<n))
+#define	TIM_MCR_CHANNEL_MASKBIT(n)		((uint32_t)(7<<(n*3)))
+
 /**********************************************************************
 * Timer capture control register definitions
 **********************************************************************/
@@ -181,7 +100,7 @@
 /** Timer capture control bit mask */
 #define TIM_CCR_MASKBIT			((uint32_t)(0x3F))
 /** Timer Capture control bit mask for specific channel*/
-#define	TIM_CCR_CHANNEL_MASKBIT(n)		((uint32_t)(7<<n))
+#define	TIM_CCR_CHANNEL_MASKBIT(n)		((uint32_t)(7<<(n*3)))
 
 /**********************************************************************
 * Timer external match register definitions
@@ -203,6 +122,7 @@
 #define TIM_EM_MASK(n) 		(_SBF(((n << 1) + 4), 0x03))
 /** Timer external match bit mask */
 #define TIM_EMR_MASKBIT	0x0FFF
+
 /**********************************************************************
 * Timer Count Control Register definitions
 **********************************************************************/
@@ -214,25 +134,49 @@
 #define TIM_CTCR_MASKBIT	0xF
 #define TIM_COUNTER_MODE ((uint8_t)(1))
 
-/**
- * @}
- */
+
+/* ---------------- CHECK PARAMETER DEFINITIONS ---------------------------- */
+/** Macro to determine if it is valid TIMER peripheral */
+#define PARAM_TIMx(n)	((((uint32_t *)n)==((uint32_t *)LPC_TIM0)) || (((uint32_t *)n)==((uint32_t *)LPC_TIM1)) \
+|| (((uint32_t *)n)==((uint32_t *)LPC_TIM2)) || (((uint32_t *)n)==((uint32_t *)LPC_TIM3)))
+
+/* Macro check interrupt type */
+#define PARAM_TIM_INT_TYPE(TYPE)	((TYPE ==TIM_MR0_INT)||(TYPE ==TIM_MR1_INT)\
+||(TYPE ==TIM_MR2_INT)||(TYPE ==TIM_MR3_INT)\
+||(TYPE ==TIM_CR0_INT)||(TYPE ==TIM_CR1_INT))
+
+/* Macro check TIMER mode */
+#define PARAM_TIM_MODE_OPT(MODE)	((MODE == TIM_TIMER_MODE)||(MODE == TIM_COUNTER_RISING_MODE)\
+|| (MODE == TIM_COUNTER_RISING_MODE)||(MODE == TIM_COUNTER_RISING_MODE))
+
+/* Macro check TIMER prescale value */
+#define PARAM_TIM_PRESCALE_OPT(OPT)	((OPT == TIM_PRESCALE_TICKVAL)||(OPT == TIM_PRESCALE_USVAL))
+
+/* Macro check TIMER counter intput mode */
+#define PARAM_TIM_COUNTER_INPUT_OPT(OPT)	((OPT == TIM_COUNTER_INCAP0)||(OPT == TIM_COUNTER_INCAP1))
+
+/* Macro check TIMER external match mode */
+#define PARAM_TIM_EXTMATCH_OPT(OPT)	((OPT == TIM_EXTMATCH_NOTHING)||(OPT == TIM_EXTMATCH_LOW)\
+||(OPT == TIM_EXTMATCH_HIGH)||(OPT == TIM_EXTMATCH_TOGGLE))
+
+/* Macro check TIMER external match mode */
+#define PARAM_TIM_CAP_MODE_OPT(OPT)	((OPT == TIM_CAPTURE_NONE)||(OPT == TIM_CAPTURE_RISING) \
+||(OPT == TIM_CAPTURE_FALLING)||(OPT == TIM_CAPTURE_ANY))
 
 /**
  * @}
  */
-/**************************** GLOBAL/PUBLIC TYPES ***************************/
-/** @addtogroup PUBLIC_TYPES
+
+
+/* Public Types --------------------------------------------------------------- */
+/** @defgroup TIM_Public_Types TIM Public Types
  * @{
  */
 
-/** @defgroup TIM_TYPES
- * @{
- */
 /***********************************************************************
  * Timer device enumeration
 **********************************************************************/
-/** @brief interrupt  type */
+/** @brief interrupt type */
 typedef enum
 {
 	TIM_MR0_INT =0, /*!< interrupt for Match channel 0*/
@@ -240,14 +184,9 @@ typedef enum
 	TIM_MR2_INT =2, /*!< interrupt for Match channel 2*/
 	TIM_MR3_INT =3, /*!< interrupt for Match channel 3*/
 	TIM_CR0_INT =4, /*!< interrupt for Capture channel 0*/
-	TIM_CR1_INT =5, /*!< interrupt for Capture channel 1*/
+	TIM_CR1_INT =5 /*!< interrupt for Capture channel 1*/
 }TIM_INT_TYPE;
-#define PARAM_TIM_INT_TYPE(TYPE)	((TYPE ==TIM_MR0_INT)||\
-									 (TYPE ==TIM_MR1_INT)||\
-									 (TYPE ==TIM_MR2_INT)||\
-									 (TYPE ==TIM_MR3_INT)||\
-									 (TYPE ==TIM_CR0_INT)||\
-									 (TYPE ==TIM_CR1_INT))
+
 /** @brief Timer/counter operating mode */
 typedef enum
 {
@@ -256,26 +195,21 @@ typedef enum
 	TIM_COUNTER_FALLING_MODE,		/*!< Counter falling mode */
 	TIM_COUNTER_ANY_MODE			/*!< Counter on both edges */
 } TIM_MODE_OPT;
-#define PARAM_TIM_MODE_OPT(MODE)	((	MODE	==TIM_TIMER_MODE)|| \
-									(	MODE	==TIM_COUNTER_RISING_MODE)|| \
-									(	MODE	==TIM_COUNTER_RISING_MODE)|| \
-								    (	MODE	==TIM_COUNTER_RISING_MODE))
+
 /** @brief Timer/Counter prescale option */
 typedef enum
 {
 	TIM_PRESCALE_TICKVAL = 0,		/*!< Prescale in absolute value */
 	TIM_PRESCALE_USVAL				/*!< Prescale in microsecond value */
 } TIM_PRESCALE_OPT;
-#define PARAM_TIM_PRESCALE_OPT(OPT)	((	OPT	==	TIM_PRESCALE_TICKVAL)|| \
-										(	OPT	==	TIM_PRESCALE_USVAL))
+
 /** @brief Counter input option */
 typedef enum
 {
 	TIM_COUNTER_INCAP0 = 0,			/*!< CAPn.0 input pin for TIMERn */
 	TIM_COUNTER_INCAP1,				/*!< CAPn.1 input pin for TIMERn */
 } TIM_COUNTER_INPUT_OPT;
-#define PARAM_TIM_COUNTER_INPUT_OPT(OPT)	((	OPT	==	TIM_COUNTER_INCAP0)|| \
-											(	OPT	==	TIM_COUNTER_INCAP1))
+
 /** @brief Timer/Counter external match option */
 typedef enum
 {
@@ -284,10 +218,7 @@ typedef enum
 	TIM_EXTMATCH_HIGH,				/*!< Force external output pin to high if match */
 	TIM_EXTMATCH_TOGGLE				/*!< Toggle external output pin if match */
 }TIM_EXTMATCH_OPT;
-#define PARAM_TIM_EXTMATCH_OPT(OPT)	((	OPT	==	TIM_EXTMATCH_NOTHING)|| \
-									(	OPT	==	TIM_EXTMATCH_LOW)|| \
-									(	OPT	==	TIM_EXTMATCH_HIGH)|| \
-									(	OPT	==	TIM_EXTMATCH_TOGGLE))
+
 /** @brief Timer/counter capture mode options */
 typedef enum {
 	TIM_CAPTURE_NONE = 0,	/*!< No Capture */
@@ -295,33 +226,31 @@ typedef enum {
 	TIM_CAPTURE_FALLING,	/*!< Falling capture mode */
 	TIM_CAPTURE_ANY			/*!< On both edges */
 } TIM_CAP_MODE_OPT;
-#define PARAM_TIM_CAP_MODE_OPT(OPT)	((	OPT	==	TIM_CAPTURE_NONE)|| \
-									(	OPT	==	TIM_CAPTURE_RISING)|| \
-									(	OPT	==	TIM_CAPTURE_FALLING)|| \
-									(	OPT	==	TIM_CAPTURE_ANY))
-/** Configuration structure in TIMER mode */
+
+/** @brief Configuration structure in TIMER mode */
 typedef struct
 {
 
-	uint8_t PrescaleOption;
-	uint8_t Reserved[3];
-	uint32_t PrescaleValue;
+	uint8_t PrescaleOption;		/**< Timer Prescale option, should be:
+									- TIM_PRESCALE_TICKVAL: Prescale in absolute value
+									- TIM_PRESCALE_USVAL: Prescale in microsecond value
+									*/
+	uint8_t Reserved[3];		/**< Reserved */
+	uint32_t PrescaleValue;		/**< Prescale value */
 } TIM_TIMERCFG_Type;
 
-/** Configuration structure in COUNTER mode */
+/** @brief Configuration structure in COUNTER mode */
 typedef struct {
 
-	uint8_t CounterOption;
+	uint8_t CounterOption;		/**< Counter Option, should be:
+								- TIM_COUNTER_INCAP0: CAPn.0 input pin for TIMERn
+								- TIM_COUNTER_INCAP1: CAPn.1 input pin for TIMERn
+								*/
 	uint8_t CountInputSelect;
 	uint8_t Reserved[2];
 } TIM_COUNTERCFG_Type;
 
-
-/*
- * Pin configuration structure here...
- */
-
-/** Match channel configuration structure */
+/** @brief Match channel configuration structure */
 typedef struct {
 	uint8_t MatchChannel;	/**< Match channel, should be in range
 							from 0..3 */
@@ -339,17 +268,16 @@ typedef struct {
 							*/
 
 	uint8_t ExtMatchOutputType;	/**< External Match Output type, should be:
-							 -	 0:	Do nothing for external output pin if match
-							 -   1:	Force external output pin to low if match
-							 - 	 2: Force external output pin to high if match
-							 -   3: Toggle external output pin if match.
+							 -	 TIM_EXTMATCH_NOTHING:	Do nothing for external output pin if match
+							 -   TIM_EXTMATCH_LOW:	Force external output pin to low if match
+							 - 	 TIM_EXTMATCH_HIGH: Force external output pin to high if match
+							 -   TIM_EXTMATCH_TOGGLE: Toggle external output pin if match.
 							*/
 	uint8_t Reserved[3];	/** Reserved */
 	uint32_t MatchValue;	/** Match value */
 } TIM_MATCHCFG_Type;
 
-
-/** Capture Input configuration structure */
+/** @brief Capture Input configuration structure */
 typedef struct {
 	uint8_t CaptureChannel;	/**< Capture channel, should be in range
 							from 0..1 */
@@ -372,58 +300,43 @@ typedef struct {
  * @}
  */
 
-/**
- * @}
- */
-/*************************** GLOBAL/PUBLIC MACROS ***************************/
-/** @addtogroup PUBLIC_MACROS
+
+/* Public Functions ----------------------------------------------------------- */
+/** @defgroup TIM_Public_Functions TIM Public Functions
  * @{
  */
+/* Init/DeInit TIM functions -----------*/
+void TIM_Init(LPC_TIM_TypeDef *TIMx, TIM_MODE_OPT TimerCounterMode, void *TIM_ConfigStruct);
+void TIM_DeInit(LPC_TIM_TypeDef *TIMx);
 
-/** @defgroup TIM_MACROS
- * @{
- */
-/** Macro to determine if it is valid TIMER peripheral */
-#define PARAM_TIMx(n)	((((uint32_t *)n)==((uint32_t *)TIM0)) \
-						|| (((uint32_t *)n)==((uint32_t *)TIM1)) \
-						|| (((uint32_t *)n)==((uint32_t *)TIM2)) \
-						|| (((uint32_t *)n)==((uint32_t *)TIM3)))
+/* TIM interrupt functions -------------*/
+void TIM_ClearIntPending(LPC_TIM_TypeDef *TIMx, TIM_INT_TYPE IntFlag);
+void TIM_ClearIntCapturePending(LPC_TIM_TypeDef *TIMx, TIM_INT_TYPE IntFlag);
+FlagStatus TIM_GetIntStatus(LPC_TIM_TypeDef *TIMx, TIM_INT_TYPE IntFlag);
+FlagStatus TIM_GetIntCaptureStatus(LPC_TIM_TypeDef *TIMx, TIM_INT_TYPE IntFlag);
 
+/* TIM configuration functions --------*/
+void TIM_ConfigStructInit(TIM_MODE_OPT TimerCounterMode, void *TIM_ConfigStruct);
+void TIM_ConfigMatch(LPC_TIM_TypeDef *TIMx, TIM_MATCHCFG_Type *TIM_MatchConfigStruct);
+void TIM_UpdateMatchValue(LPC_TIM_TypeDef *TIMx,uint8_t MatchChannel, uint32_t MatchValue);
+void TIM_SetMatchExt(LPC_TIM_TypeDef *TIMx,TIM_EXTMATCH_OPT ext_match );
+void TIM_ConfigCapture(LPC_TIM_TypeDef *TIMx, TIM_CAPTURECFG_Type *TIM_CaptureConfigStruct);
+void TIM_Cmd(LPC_TIM_TypeDef *TIMx, FunctionalState NewState);
 
-/**
- * @}
- */
-
-/**
- * @}
- */
-
-
-/************************** GLOBAL/PUBLIC FUNCTIONS *************************/
-/** @addtogroup PUBLIC_FUNCTION_PROTOTYPES
- * @{
- */
-
-/** @defgroup TIM_FUNCTIONS
- * @{
- */
-FlagStatus TIM_GetIntStatus(TIM_TypeDef *TIMx, uint8_t IntFlag);
-void TIM_ClearIntPending(TIM_TypeDef *TIMx, uint8_t IntFlag);
-void TIM_Cmd(TIM_TypeDef *TIMx, FunctionalState NewState);
-void TIM_ResetCounter(TIM_TypeDef *TIMx);
-void TIM_Init(TIM_TypeDef *TIMx, uint8_t TimerCounterMode, void *TIM_ConfigStruct);
-void TIM_DeInit(TIM_TypeDef *TIMx);
-void TIM_ConfigStructInit(uint8_t TimerCounterMode, void *TIM_ConfigStruct);
-void TIM_ConfigMatch(TIM_TypeDef *TIMx, TIM_MATCHCFG_Type *TIM_MatchConfigStruct);
-void TIM_SetMatchExt(TIM_TypeDef *TIMx,TIM_EXTMATCH_OPT ext_match );
-void TIM_ConfigCapture(TIM_TypeDef *TIMx, TIM_CAPTURECFG_Type *TIM_CaptureConfigStruct);
-uint32_t TIM_GetCaptureValue(TIM_TypeDef *TIMx, uint8_t CaptureChannel);
-/**
- * @}
- */
+uint32_t TIM_GetCaptureValue(LPC_TIM_TypeDef *TIMx, TIM_COUNTER_INPUT_OPT CaptureChannel);
+void TIM_ResetCounter(LPC_TIM_TypeDef *TIMx);
 
 /**
  * @}
  */
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __LPC17XX_TIMER_H_ */
+
+/**
+ * @}
+ */
+
+/* --------------------------------- End Of File ------------------------------ */

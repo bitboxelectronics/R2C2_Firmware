@@ -80,21 +80,25 @@ void spi_init(void)
   SSP_ConfigStruct.Databit = SSP_DATABIT_8;
   SSP_ConfigStruct.Mode = SSP_MASTER_MODE;
   SSP_ConfigStruct.FrameFormat = SSP_FRAME_SPI;
-  SSP_Init(SSP0, &SSP_ConfigStruct);
+  SSP_Init(LPC_SSP0, &SSP_ConfigStruct);
 
   /* Enable SSP peripheral */
-  SSP_Cmd(SSP0, ENABLE);
+  SSP_Cmd(LPC_SSP0, ENABLE);
 }
+
+#if !defined SSP_SetClock
+	#define SSP_SetClock(...) setSSPclock(__VA_ARGS__)
+#endif
 
 void spi_set_speed( enum speed_setting speed )
 {
   if ( speed == INTERFACE_SLOW )
   {
-    SSP_SetClock(SSP0, 400000);
+    SSP_SetClock(LPC_SSP0, 400000);
   }
   else
   {
-    SSP_SetClock(SSP0, 25000000);
+    SSP_SetClock(LPC_SSP0, 25000000);
   }
 }
 
@@ -102,8 +106,8 @@ void spi_close(void)
 {
   PINSEL_CFG_Type PinCfg;
 
-  SSP_Cmd(SSP0, DISABLE);
-  SSP_DeInit(SSP0);
+  SSP_Cmd(LPC_SSP0, DISABLE);
+  SSP_DeInit(LPC_SSP0);
 
   PinCfg.Funcnum   = PINSEL_FUNC_0;
   PinCfg.OpenDrain = PINSEL_PINMODE_NORMAL;
@@ -123,9 +127,9 @@ uint8_t spi_rw( uint8_t out )
 {
   uint8_t in;
 
-  SSP0->DR = out;
-  while (SSP0->SR & SSP_SR_BSY ) { ; }
-  in = SSP0->DR;
+  LPC_SSP0->DR = out;
+  while (LPC_SSP0->SR & SSP_SR_BSY ) { ; }
+  in = LPC_SSP0->DR;
 
   return in;
 }
@@ -154,26 +158,26 @@ void spi_rcvr_block (
                 startcnt = FIFO_ELEM;
         }
 
-        SSP0->CR0 |= SSP_CR0_DSS(16); // DSS to 16 bit
+        LPC_SSP0->CR0 |= SSP_CR0_DSS(16); // DSS to 16 bit
 
         for ( i = startcnt; i; i-- ) {
-                SSP0->DR = 0xffff;  // fill TX FIFO
+                LPC_SSP0->DR = 0xffff;  // fill TX FIFO
         }
 
         do {
-                while ( !(SSP0->SR & SSP_SR_RNE ) ) {
+                while ( !(LPC_SSP0->SR & SSP_SR_RNE ) ) {
                         // wait for data in RX FIFO (RNE set)
                 }
-                rec = SSP0->DR;
+                rec = LPC_SSP0->DR;
                 if ( i < ( hwtr - startcnt ) ) {
-                        SSP0->DR = 0xffff;
+                        LPC_SSP0->DR = 0xffff;
                 }
                 *buff++ = (uint8_t)(rec >> 8);
                 *buff++ = (uint8_t)(rec);
                 i++;
         } while ( i < hwtr );
 
-        SSP0->CR0 = ( SSP0->CR0 & ~SSP_CR0_DSS(16) ) | SSP_CR0_DSS(8); // DSS to 8 bit
+        LPC_SSP0->CR0 = ( LPC_SSP0->CR0 & ~SSP_CR0_DSS(16) ) | SSP_CR0_DSS(8); // DSS to 8 bit
 }
 
 void spi_xmit_block (
@@ -183,23 +187,23 @@ void spi_xmit_block (
         uint16_t cnt;
         int16_t data;
 
-        SSP0->CR0 |= SSP_CR0_DSS(16); // DSS to 16 bit
+        LPC_SSP0->CR0 |= SSP_CR0_DSS(16); // DSS to 16 bit
 
         for ( cnt = 0; cnt < ( 512 / 2 ); cnt++ ) {
-                while ( !( SSP0->SR & SSP_SR_TNF ) ) {
+                while ( !( LPC_SSP0->SR & SSP_SR_TNF ) ) {
                         ; // wait for TX FIFO not full (TNF)
                 }
                 data  = (*buff++) << 8;
                 data |= *buff++;
-                SSP0->DR = data;
+                LPC_SSP0->DR = data;
         }
 
-        while ( SSP0->SR & SSP_SR_BSY ) {
+        while ( LPC_SSP0->SR & SSP_SR_BSY ) {
                 // wait for BSY gone
         }
-        while ( SSP0->SR & SSP_SR_RNE ) {
-                data = SSP0->DR; // drain receive FIFO
+        while ( LPC_SSP0->SR & SSP_SR_RNE ) {
+                data = LPC_SSP0->DR; // drain receive FIFO
         }
 
-        SSP0->CR0 = ( SSP0->CR0 & ~SSP_CR0_DSS(16) ) | SSP_CR0_DSS(8); // DSS to 8 bit
+        LPC_SSP0->CR0 = ( LPC_SSP0->CR0 & ~SSP_CR0_DSS(16) ) | SSP_CR0_DSS(8); // DSS to 8 bit
 }

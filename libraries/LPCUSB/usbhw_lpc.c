@@ -520,16 +520,22 @@ BOOL USBHwInit(void)
 	PINSEL1 = (PINSEL1 & ~(3 << 14)) | (1 << 14);	// P0.23
 	// configure P0.31 for CONNECT
 	PINSEL1 = (PINSEL1 & ~(3 << 30)) | (2 << 30);	// P0.31
+	debug_num(4);
 
 	// enable PUSB
-	PCONP |= (1 << 31);		
-	
+	PCONP |= (1 << 31);
+
+	debug_num(5);
+
 	// initialise PLL
 	PLL1CON = 1;			// enable PLL
 	PLL1CFG = (1 << 5) | 3; // P = 2, M = 4
+debug_num(6);
 	PLL1FEED = 0xAA;
 	PLL1FEED = 0x55;
+	debug_num(7);
 	while ((PLL1STAT & (1 << 10)) == 0);
+	debug_num(8);
 
 	PLL1CON = 3;			// enable and connect
 	PLL1FEED = 0xAA;

@@ -1,33 +1,43 @@
-/**
- * @file	: lpc17xx_pinsel.c
- * @brief	: Contains all functions support for Pin connect block firmware
- * 				library on LPC17xx
- * @version	: 1.0
- * @date	: 25. Feb. 2009
- * @author	: HoanTran
- *----------------------------------------------------------------------------
- * Software that is described herein is for illustrative purposes only
- * which provides customers with programming information regarding the
- * products. This software is supplied "AS IS" without any warranties.
- * NXP Semiconductors assumes no responsibility or liability for the
- * use of the software, conveys no license or title under any patent,
- * copyright, or mask work right to the product. NXP Semiconductors
- * reserves the right to make changes in the software without
- * notification. NXP Semiconductors also make no representation or
- * warranty that such application will be suitable for the specified
- * use without further testing or modification.
- **********************************************************************/
-#include "lpc17xx_pinsel.h"
+/**********************************************************************
+* $Id$		lpc17xx_pinsel.c				2010-05-21
+*//**
+* @file		lpc17xx_pinsel.c
+* @brief	Contains all functions support for Pin connect block firmware
+* 			library on LPC17xx
+* @version	2.0
+* @date		21. May. 2010
+* @author	NXP MCU SW Application Team
+*
+* Copyright(C) 2010, NXP Semiconductor
+* All rights reserved.
+*
+***********************************************************************
+* Software that is described herein is for illustrative purposes only
+* which provides customers with programming information regarding the
+* products. This software is supplied "AS IS" without any warranties.
+* NXP Semiconductors assumes no responsibility or liability for the
+* use of the software, conveys no license or title under any patent,
+* copyright, or mask work right to the product. NXP Semiconductors
+* reserves the right to make changes in the software without
+* notification. NXP Semiconductors also make no representation or
+* warranty that such application will be suitable for the specified
+* use without further testing or modification.
+**********************************************************************/
 
-
-/************************** GLOBAL/PUBLIC FUNCTIONS *************************/
-/** @addtogroup Public_Functions
-  * @{
-  */
-
-/** @defgroup PINSEL_Public_Functions
+/* Peripheral group ----------------------------------------------------------- */
+/** @addtogroup PINSEL
  * @{
  */
+
+/* Includes ------------------------------------------------------------------- */
+#include "lpc17xx_pinsel.h"
+
+/* Public Functions ----------------------------------------------------------- */
+
+static void set_PinFunc ( uint8_t portnum, uint8_t pinnum, uint8_t funcnum);
+static void set_ResistorMode ( uint8_t portnum, uint8_t pinnum, uint8_t modenum);
+static void set_OpenDrainMode( uint8_t portnum, uint8_t pinnum, uint8_t modenum);
+
 /*********************************************************************//**
  * @brief 		Setup the pin selection function
  * @param[in]	portnum PORT number,
@@ -81,11 +91,11 @@
  *
  * @return 		None
  **********************************************************************/
-void PINSEL_SetPinFunc ( uint8_t portnum, uint8_t pinnum, uint8_t funcnum)
+static void set_PinFunc ( uint8_t portnum, uint8_t pinnum, uint8_t funcnum)
 {
 	uint32_t pinnum_t = pinnum;
 	uint32_t pinselreg_idx = 2 * portnum;
-	uint32_t *pPinCon = (uint32_t *)&PINCON->PINSEL0;
+	uint32_t *pPinCon = (uint32_t *)&LPC_PINCON->PINSEL0;
 
 	if (pinnum_t >= 16) {
 		pinnum_t -= 16;
@@ -94,28 +104,6 @@ void PINSEL_SetPinFunc ( uint8_t portnum, uint8_t pinnum, uint8_t funcnum)
 	*(uint32_t *)(pPinCon + pinselreg_idx) &= ~(0x03UL << (pinnum_t * 2));
 	*(uint32_t *)(pPinCon + pinselreg_idx) |= ((uint32_t)funcnum) << (pinnum_t * 2);
 }
-
-
-
-/*********************************************************************//**
- * @brief 		Configure trace function
- * @param[in] 	NewState State of the Trace function configuration,
- * 				should be one of the following:
- * 				- ENABLE : Enable Trace Function
- * 				- DISABLE : Disable Trace Function
- *
- * @return 		None
- **********************************************************************/
-void PINSEL_ConfigTraceFunc(FunctionalState NewState)
-{
-	if (NewState == ENABLE) {
-		PINCON->PINSEL10 |= (0x01UL << 3);
-	} else if (NewState == DISABLE) {
-		PINCON->PINSEL10 &= ~(0x01UL << 3);
-	}
-}
-
-
 
 /*********************************************************************//**
  * @brief 		Setup resistor mode for each pin
@@ -168,11 +156,11 @@ void PINSEL_ConfigTraceFunc(FunctionalState NewState)
 
  * @return 		None
  **********************************************************************/
-void PINSEL_SetResistorMode ( uint8_t portnum, uint8_t pinnum, uint8_t modenum)
+void set_ResistorMode ( uint8_t portnum, uint8_t pinnum, uint8_t modenum)
 {
 	uint32_t pinnum_t = pinnum;
 	uint32_t pinmodereg_idx = 2 * portnum;
-	uint32_t *pPinCon = (uint32_t *)&PINCON->PINMODE0;
+	uint32_t *pPinCon = (uint32_t *)&LPC_PINCON->PINMODE0;
 
 	if (pinnum_t >= 16) {
 		pinnum_t -= 16;
@@ -182,8 +170,6 @@ void PINSEL_SetResistorMode ( uint8_t portnum, uint8_t pinnum, uint8_t modenum)
 	*(uint32_t *)(pPinCon + pinmodereg_idx) &= ~(0x03UL << (pinnum_t * 2));
 	*(uint32_t *)(pPinCon + pinmodereg_idx) |= ((uint32_t)modenum) << (pinnum_t * 2);
 }
-
-
 
 /*********************************************************************//**
  * @brief 		Setup Open drain mode for each pin
@@ -236,9 +222,9 @@ void PINSEL_SetResistorMode ( uint8_t portnum, uint8_t pinnum, uint8_t modenum)
  *
  * @return 		None
  **********************************************************************/
-void PINSEL_SetOpenDrainMode( uint8_t portnum, uint8_t pinnum, uint8_t modenum)
+void set_OpenDrainMode( uint8_t portnum, uint8_t pinnum, uint8_t modenum)
 {
-	uint32_t *pPinCon = (uint32_t *)&PINCON->PINMODE_OD0;
+	uint32_t *pPinCon = (uint32_t *)&LPC_PINCON->PINMODE_OD0;
 
 	if (modenum == PINSEL_PINMODE_OPENDRAIN){
 		*(uint32_t *)(pPinCon + portnum) |= (0x01UL << pinnum);
@@ -247,7 +233,29 @@ void PINSEL_SetOpenDrainMode( uint8_t portnum, uint8_t pinnum, uint8_t modenum)
 	}
 }
 
+/* End of Public Functions ---------------------------------------------------- */
 
+/* Public Functions ----------------------------------------------------------- */
+/** @addtogroup PINSEL_Public_Functions
+ * @{
+ */
+/*********************************************************************//**
+ * @brief 		Configure trace function
+ * @param[in] 	NewState State of the Trace function configuration,
+ * 				should be one of the following:
+ * 				- ENABLE : Enable Trace Function
+ * 				- DISABLE : Disable Trace Function
+ *
+ * @return 		None
+ **********************************************************************/
+void PINSEL_ConfigTraceFunc(FunctionalState NewState)
+{
+	if (NewState == ENABLE) {
+		LPC_PINCON->PINSEL10 |= (0x01UL << 3);
+	} else if (NewState == DISABLE) {
+		LPC_PINCON->PINSEL10 &= ~(0x01UL << 3);
+	}
+}
 
 /*********************************************************************//**
  * @brief 		Setup I2C0 pins
@@ -273,7 +281,7 @@ void PINSEL_SetI2C0Pins(uint8_t i2cPinMode, FunctionalState filterSlewRateEnable
 	if (filterSlewRateEnable == DISABLE){
 		regVal = PINSEL_I2CPADCFG_SCLI2C0 | PINSEL_I2CPADCFG_SDAI2C0;
 	}
-	PINCON->I2CPADCFG = regVal;
+	LPC_PINCON->I2CPADCFG = regVal;
 }
 
 
@@ -287,15 +295,18 @@ void PINSEL_SetI2C0Pins(uint8_t i2cPinMode, FunctionalState filterSlewRateEnable
  **********************************************************************/
 void PINSEL_ConfigPin(PINSEL_CFG_Type *PinCfg)
 {
-	PINSEL_SetPinFunc(PinCfg->Portnum, PinCfg->Pinnum, PinCfg->Funcnum);
-	PINSEL_SetResistorMode(PinCfg->Portnum, PinCfg->Pinnum, PinCfg->Pinmode);
-	PINSEL_SetOpenDrainMode(PinCfg->Portnum, PinCfg->Pinnum, PinCfg->OpenDrain);
+	set_PinFunc(PinCfg->Portnum, PinCfg->Pinnum, PinCfg->Funcnum);
+	set_ResistorMode(PinCfg->Portnum, PinCfg->Pinnum, PinCfg->Pinmode);
+	set_OpenDrainMode(PinCfg->Portnum, PinCfg->Pinnum, PinCfg->OpenDrain);
 }
 
 
 /**
  * @}
  */
+
 /**
  * @}
  */
+
+/* --------------------------------- End Of File ------------------------------ */

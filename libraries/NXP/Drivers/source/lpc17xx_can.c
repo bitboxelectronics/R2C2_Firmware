@@ -1,26 +1,36 @@
-/**
- * @file	: lpc17xx_can.c
- * @brief	: Contains all functions support for CAN firmware library on LPC17xx
- * @version	: 1.0
- * @date	: 1.June.2009
- * @author	: NguyenCao
- *----------------------------------------------------------------------------
- * Software that is described herein is for illustrative purposes only
- * which provides customers with programming information regarding the
- * products. This software is supplied "AS IS" without any warranties.
- * NXP Semiconductors assumes no responsibility or liability for the
- * use of the software, conveys no license or title under any patent,
- * copyright, or mask work right to the product. NXP Semiconductors
- * reserves the right to make changes in the software without
- * notification. NXP Semiconductors also make no representation or
- * warranty that such application will be suitable for the specified
- * use without further testing or modification.
- **********************************************************************/
+/**********************************************************************
+* $Id$		lpc17xx_can.c				2011-03-09
+*//**
+* @file		lpc17xx_can.c
+* @brief	Contains all functions support for CAN firmware library on LPC17xx
+* @version	3.3
+* @date		09. March. 2011
+* @author	NXP MCU SW Application Team
+*
+* Copyright(C) 2011, NXP Semiconductor
+* All rights reserved.
+*
+***********************************************************************
+* Software that is described herein is for illustrative purposes only
+* which provides customers with programming information regarding the
+* products. This software is supplied "AS IS" without any warranties.
+* NXP Semiconductors assumes no responsibility or liability for the
+* use of the software, conveys no license or title under any patent,
+* copyright, or mask work right to the product. NXP Semiconductors
+* reserves the right to make changes in the software without
+* notification. NXP Semiconductors also make no representation or
+* warranty that such application will be suitable for the specified
+* use without further testing or modification.
+**********************************************************************/
 
+/* Peripheral group ----------------------------------------------------------- */
+/** @addtogroup CAN
+ * @{
+ */
+
+/* Includes ------------------------------------------------------------------- */
 #include "lpc17xx_can.h"
 #include "lpc17xx_clkpwr.h"
-//#include "lpc17xx_pinsel.h"
-
 
 /* If this source file built with example, the LPC17xx FW library configuration
  * file in each example directory ("lpc17xx_libcfg.h") must be included,
@@ -32,47 +42,17 @@
 #include "lpc17xx_libcfg_default.h"
 #endif /* __BUILD_WITH_EXAMPLE__ */
 
-FunctionalState FULLCAN_ENABLE;
 
-//use for debugging
-CAN_TypeDef *CAN1x = CAN1;
-CAN_TypeDef *CAN2x = CAN2;
-CANAF_RAM_TypeDef *CANAFRAMx = CANAF_RAM;
-CANAF_TypeDef *CANAFx = CANAF;
-
-/************************** PRIVATE VARIABLES *************************/
 #ifdef _CAN
 
-/** @addtogroup Private_Variables
+/* Private Variables ---------------------------------------------------------- */
+/** @defgroup CAN_Private_Variables CAN Private Variables
  * @{
  */
 
-/** @defgroup CAN_Private_Variables
- * @{
- */
+FunctionalState FULLCAN_ENABLE;
 
-/* Values of bit time register for different baudrates
-   NT = Nominal bit time = TSEG1 + TSEG2 + 3
-   SP = Sample point     = ((TSEG2 +1) / (TSEG1 + TSEG2 + 3)) * 100%
-                                            SAM,  SJW, TSEG1, TSEG2, NT,  SP */
-const uint32_t CAN_BIT_TIME[] = {       0, /*             not used             */
-                                      0, /*             not used             */
-                                      0, /*             not used             */
-                                      0, /*             not used             */
-                             0x0001C000, /* 0+1,  3+1,   1+1,   0+1,  4, 75% */
-                                      0, /*             not used             */
-                             0x0012C000, /* 0+1,  3+1,   2+1,   1+1,  6, 67% */
-                                      0, /*             not used             */
-                             0x0023C000, /* 0+1,  3+1,   3+1,   2+1,  8, 63% */
-                                      0, /*             not used             */
-                             0x0025C000, /* 0+1,  3+1,   5+1,   2+1, 10, 70% */
-                                      0, /*             not used             */
-                             0x0036C000, /* 0+1,  3+1,   6+1,   3+1, 12, 67% */
-                                      0, /*             not used             */
-                                      0, /*             not used             */
-                             0x0048C000, /* 0+1,  3+1,   8+1,   4+1, 15, 67% */
-                             0x0049C000, /* 0+1,  3+1,   9+1,   4+1, 16, 69% */
-                           };
+
 /* Counts number of filters (CAN message objects) used */
 uint16_t CANAF_FullCAN_cnt = 0;
 uint16_t CANAF_std_cnt = 0;
@@ -80,119 +60,106 @@ uint16_t CANAF_gstd_cnt = 0;
 uint16_t CANAF_ext_cnt = 0;
 uint16_t CANAF_gext_cnt = 0;
 
-static fnCANCbs_Type* _apfnCANCbs[12]={
-		NULL, 	//CAN Recieve  Call-back funtion pointer
-		NULL,	//CAN Transmit1 Call-back funtion pointer
-		NULL,	//CAN Error Warning Call-back function pointer
-		NULL,	//CAN Data Overrun Call-back function pointer
-		NULL,	//CAN Wake-up Call-back funtion pointer
-		NULL,	//CAN Error Passive Call-back function pointer
-		NULL,	//CAN Arbitration Lost Call-back function pointer
-		NULL,	//CAN Bus Error Call-back function pointer
-		NULL,	//CAN ID Ready Call-back function pointer
-		NULL,	//CAN Transmit2 Call-back function pointer
-		NULL,	//CAN Transmit3 Call-back function pointer
-		NULL	//FullCAN Receive Call-back function pointer
-};
-
+/* End of Private Variables ----------------------------------------------------*/
 /**
  * @}
  */
 
-/**
- * @}
- */
-/***************************** PRIVATE FUNCTION *****************************/
-/** @addtogroup  Private_Functions
- * @{
- */
+/* Private Variables ---------------------------------------------------------- */
+static void can_SetBaudrate (LPC_CAN_TypeDef *CANx, uint32_t baudrate);
 
-/** @defgroup 	CAN_Private_Functions
- * @{
- */
 /*********************************************************************//**
- * @brief 		Setting CAN baud rate
- * @param[in] 	CANx point to CAN_TypeDef object, should be:
- * 				- CAN1
- * 				- CAN2
- * @param[in]	baudrate is the baud rate value will be set
+ * @brief 		Setting CAN baud rate (bps)
+ * @param[in] 	CANx point to LPC_CAN_TypeDef object, should be:
+ * 				- LPC_CAN1: CAN1 peripheral
+ * 				- LPC_CAN2: CAN2 peripheral
+ * @param[in]	baudrate: is the baud rate value will be set
  * @return 		None
  ***********************************************************************/
-void CAN_SetBaudRate (CAN_TypeDef *CANx, uint32_t baudrate)
+static void can_SetBaudrate (LPC_CAN_TypeDef *CANx, uint32_t baudrate)
 {
-	uint32_t nominal_time;
 	uint32_t result = 0;
+	uint8_t NT, TSEG1, TSEG2, BRFail;
 	uint32_t CANPclk = 0;
-
+	uint32_t BRP;
 	CHECK_PARAM(PARAM_CANx(CANx));
 
-	if (CANx == CAN1)
+	if (CANx == LPC_CAN1)
 	{
-		CANPclk = CLKPWR_GetPCLK (CLKPWR_PCONP_PCAN1);
+		CANPclk = CLKPWR_GetPCLK (CLKPWR_PCLKSEL_CAN1);
 	}
 	else
 	{
-		CANPclk = CLKPWR_GetPCLK (CLKPWR_PCONP_PCAN2);
+		CANPclk = CLKPWR_GetPCLK (CLKPWR_PCLKSEL_CAN2);
 	}
-	/* Determine which nominal time to use for PCLK and baudrate */
-	if (baudrate <= 500000)
+	result = CANPclk / baudrate;
+	/* Calculate suitable nominal time value
+	 * NT (nominal time) = (TSEG1 + TSEG2 + 3)
+	 * NT <= 24
+	 * TSEG1 >= 2*TSEG2
+	 */
+	BRFail = 1;
+	for(NT=24;NT>0;NT=NT-2)
 	{
-		nominal_time = 12;
+		if ((result%NT)==0)
+		{
+			BRP = result / NT - 1;
+			NT--;
+			TSEG2 = (NT/3) - 1;
+			TSEG1 = NT -(NT/3) - 1;
+			BRFail = 0;
+			break;
+		}
 	}
-	else if (((CANPclk / 1000000) % 15) == 0)
-	{
-		nominal_time = 15;
-	}
-	else if (((CANPclk / 1000000) % 16) == 0)
-	{
-		nominal_time = 16;
-	}
-	else
-	{
-		nominal_time = 10;
-	}
-
-	/* Prepare value appropriate for bit time register                         */
-	result  = (CANPclk / nominal_time) / baudrate - 1;
-	result &= 0x000003FF;
-	result |= CAN_BIT_TIME[nominal_time];
-
+	if(BRFail)
+		while(1); // Failed to calculate exact CAN baud rate
 	/* Enter reset mode */
 	CANx->MOD = 0x01;
-	/* Set bit timing */
-	CANx->BTR  = result;
-
+	/* Set bit timing
+	 * Default: SAM = 0x00;
+	 *          SJW = 0x03;
+	 */
+	CANx->BTR  = (TSEG2<<20)|(TSEG1<<16)|(3<<14)|BRP;
 	/* Return to normal operating */
 	CANx->MOD = 0;
 }
+/* End of Private Functions ----------------------------------------------------*/
+
+
+/* Public Functions ----------------------------------------------------------- */
+/** @addtogroup CAN_Public_Functions
+ * @{
+ */
 
 /********************************************************************//**
  * @brief		Initialize CAN peripheral with given baudrate
- * @param[in]	CANx pointer to CAN_TypeDef, should be:
- * 				- CAN1: CAN 1
- * 				- CAN2: CAN 2
- * @param[in]	baudrate: the value of CAN baudrate will be set
- * @return 		void
+ * @param[in]	CANx pointer to LPC_CAN_TypeDef, should be:
+ * 				- LPC_CAN1: CAN1 peripheral
+ * 				- LPC_CAN2: CAN2 peripheral
+ * @param[in]	baudrate: the value of CAN baudrate will be set (bps)
+ * @return 		None
  *********************************************************************/
-void CAN_Init(CAN_TypeDef *CANx, uint32_t baudrate)
+void CAN_Init(LPC_CAN_TypeDef *CANx, uint32_t baudrate)
 {
 	uint32_t temp;
+	uint16_t i;
 	CHECK_PARAM(PARAM_CANx(CANx));
 
-	if(CANx == CAN1)
+	if(CANx == LPC_CAN1)
 	{
 		/* Turn on power and clock for CAN1 */
 		CLKPWR_ConfigPPWR(CLKPWR_PCONP_PCAN1, ENABLE);
 		/* Set clock divide for CAN1 */
-		CLKPWR_SetPCLKDiv (CLKPWR_PCONP_PCAN1, CLKPWR_PCLKSEL_CCLK_DIV_4);
 	}
 	else
 	{
 		/* Turn on power and clock for CAN1 */
 		CLKPWR_ConfigPPWR(CLKPWR_PCONP_PCAN2, ENABLE);
 		/* Set clock divide for CAN2 */
-		CLKPWR_SetPCLKDiv (CLKPWR_PCONP_PCAN2, CLKPWR_PCLKSEL_CCLK_DIV_4);
 	}
+	CLKPWR_SetPCLKDiv (CLKPWR_PCLKSEL_CAN1, CLKPWR_PCLKSEL_CCLK_DIV_2);
+	CLKPWR_SetPCLKDiv (CLKPWR_PCLKSEL_CAN2, CLKPWR_PCLKSEL_CCLK_DIV_2);
+	CLKPWR_SetPCLKDiv (CLKPWR_PCLKSEL_ACF, CLKPWR_PCLKSEL_CCLK_DIV_2);
 
 	CANx->MOD = 1; // Enter Reset Mode
 	CANx->IER = 0; // Disable All CAN Interrupts
@@ -205,253 +172,68 @@ void CAN_Init(CAN_TypeDef *CANx, uint32_t baudrate)
 	CANx->MOD = 0;// Return Normal operating
 
 	//Reset CANAF value
-	CANAF->AFMR = 0x01;
+	LPC_CANAF->AFMR = 0x01;
 
-	CANAF->SFF_sa = 0x00;
-	CANAF->SFF_GRP_sa = 0x00;
-	CANAF->EFF_sa = 0x00;
-	CANAF->EFF_GRP_sa = 0x00;
-	CANAF->ENDofTable = 0x00;
+	//clear ALUT RAM
+	for (i = 0; i < 512; i++) {
+		LPC_CANAF_RAM->mask[i] = 0x00;
+	}
 
-	CANAF->AFMR = 0x00;
+	LPC_CANAF->SFF_sa = 0x00;
+	LPC_CANAF->SFF_GRP_sa = 0x00;
+	LPC_CANAF->EFF_sa = 0x00;
+	LPC_CANAF->EFF_GRP_sa = 0x00;
+	LPC_CANAF->ENDofTable = 0x00;
+
+	LPC_CANAF->AFMR = 0x00;
 	/* Set baudrate */
-	CAN_SetBaudRate (CANx, baudrate);
+	can_SetBaudrate (CANx, baudrate);
 }
+
 /********************************************************************//**
- * @brief		Add Explicit ID into AF Look-Up Table dynamically.
- * @param[in]	CANx pointer to CAN_TypeDef, should be:
- * 				- CAN1: CAN 1
- * 				- CAN2: CAN 2
- * @param[in]	id: The ID of entry will be added
- * @param[in]	format: is the type of ID Frame Format, should be:
- * 				- STD_ID_FORMAT: 11-bit ID value
- * 				- EXT_ID_FORMAT: 29-bit ID value
- * @return 		CAN Error, could be:
- * 				- CAN_OBJECTS_FULL_ERROR: No more rx or tx objects available
-				- CAN_OK: ID is added into table successfully
+ * @brief		CAN deInit
+ * @param[in]	CANx pointer to LPC_CAN_TypeDef, should be:
+ * 				- LPC_CAN1: CAN1 peripheral
+ * 				- LPC_CAN2: CAN2 peripheral
+ * @return 		None
  *********************************************************************/
-CAN_ERROR CAN_LoadID (CAN_TypeDef *CANx,CANAF_RAM_TypeDef *CANAFRAM, uint32_t id, CAN_ID_FORMAT_Type format)
+void CAN_DeInit(LPC_CAN_TypeDef *CANx)
 {
-	uint32_t ctrl0 = 0;
-	uint32_t buf0, buf1;
-	int16_t cnt1, cnt2, bound1, total;
-
 	CHECK_PARAM(PARAM_CANx(CANx));
-	CHECK_PARAM(PARAM_ID_FORMAT(format));
-	CHECK_PARAM(PARAM_CANAFRAMx(CANAFRAM));
 
-	if (CANx == CAN1)
+	if(CANx == LPC_CAN1)
 	{
-		ctrl0 = 0;
+		/* Turn on power and clock for CAN1 */
+		CLKPWR_ConfigPPWR(CLKPWR_PCONP_PCAN1, DISABLE);
 	}
-	else if (CANx == CAN2)
+	else
 	{
-		ctrl0 = 1;
+		/* Turn on power and clock for CAN1 */
+		CLKPWR_ConfigPPWR(CLKPWR_PCONP_PCAN2, DISABLE);
 	}
-
-	/* Acceptance Filter Memory full - return */
-	total = ((CANAF_std_cnt + 1) >> 1)+ CANAF_gstd_cnt + CANAF_ext_cnt + \
-			(CANAF_ext_cnt<<1);
-	if(total >= 512 )
-	{
-		return CAN_OBJECTS_FULL_ERROR;
-	}
-
-	/* Setup Acceptance Filter Configuration
-    Acceptance Filter Mode Register = Off */
- 	CANAF->AFMR = 0x00000001;
-
- 	if (format == STD_ID_FORMAT)
- 	{
- 		/* Add mask for standard identifiers   */
- 		id &= 0x07FF;
- 		id |= (ctrl0 << 13) | (1 << 11); /* Add controller number */
-
- 		/* Move all remaining extended mask entries one place up
-		if new entry will increase standard ID filters list */
- 		if ((CANAF_std_cnt & 0x0001) == 0 && CANAF_ext_cnt != 0)
- 		{
- 			cnt1   = (CANAF_std_cnt >> 1);
- 			bound1 = CANAF_ext_cnt;
- 			buf0   = CANAFRAM->mask[cnt1];
- 			while (bound1--)
- 			{
- 				cnt1++;
- 				buf1 = CANAF_RAM->mask[cnt1];
- 				CANAFRAM->mask[cnt1] = buf0;
- 				buf0 = buf1;
- 			}
- 		}
- 		if (CANAF_std_cnt == 0)
- 		{
- 			/* For entering first ID */
- 			CANAFRAM->mask[0] = 0x0000FFFF | (id << 16);
- 		}
- 		else if (CANAF_std_cnt == 1)
- 		{
- 			/* For entering second ID */
- 			if ((CANAFRAM->mask[0] >> 16) > id)
- 			{
- 				CANAFRAM->mask[0] = (CANAFRAM->mask[0] >> 16) | (id << 16);
- 			}
- 			else
- 			{
- 				CANAFRAM->mask[0] = (CANAFRAM->mask[0] & 0xFFFF0000) | id;
- 			}
- 		}
- 		else
- 		{
- 			/* Find where to insert new ID */
- 			cnt1 = 0;
- 			cnt2 = CANAF_std_cnt;
- 			bound1 = (CANAF_std_cnt - 1) >> 1;
- 			while (cnt1 <= bound1)
- 			{
- 				/* Loop through standard existing IDs */
- 				if ((CANAFRAM->mask[cnt1] >> 16) > id)
- 				{
- 					cnt2 = cnt1 * 2;
- 					break;
- 				}
-
- 				if ((CANAFRAM->mask[cnt1] & 0x0000FFFF) > id)
- 				{
- 					cnt2 = cnt1 * 2 + 1;
- 					break;
- 				}
-
- 				cnt1++;
- 			}
- 			/* cnt1 = U32 where to insert new ID */
- 			/* cnt2 = U16 where to insert new ID */
-
- 			if (cnt1 > bound1)
- 			{
- 				/* Adding ID as last entry */
- 				/* Even number of IDs exists */
- 				if ((CANAF_std_cnt & 0x0001) == 0)
- 				{
- 					CANAFRAM->mask[cnt1]  = 0x0000FFFF | (id << 16);
- 				}
- 				/* Odd  number of IDs exists */
- 				else
- 				{
- 					CANAFRAM->mask[cnt1]  = (CANAFRAM->mask[cnt1] & 0xFFFF0000) | id;
- 				}
- 			}
- 			else
- 			{
- 				buf0 = CANAFRAM->mask[cnt1]; /* Remember current entry */
- 				if ((cnt2 & 0x0001) == 0)
- 				{
- 					/* Insert new mask to even address*/
- 					buf1 = (id << 16) | (buf0 >> 16);
- 				}
- 				else
- 				{
- 					/* Insert new mask to odd  address */
- 					buf1 = (buf0 & 0xFFFF0000) | id;
- 				}
- 				CANAFRAM->mask[cnt1] = buf1;/* Insert mask */
- 				bound1 = CANAF_std_cnt >> 1;
- 				/* Move all remaining standard mask entries one place up */
- 				while (cnt1 < bound1)
- 				{
- 					cnt1++;
- 					buf1  = CANAFRAM->mask[cnt1];
- 					CANAFRAM->mask[cnt1] = (buf1 >> 16) | (buf0 << 16);
- 					buf0  = buf1;
- 				}
-
- 				if ((CANAF_std_cnt & 0x0001) == 0)
- 				{
- 					/* Even number of IDs exists */
- 					CANAFRAM->mask[cnt1] = (CANAFRAM->mask[cnt1] & 0xFFFF0000)
- 					 							| (0x0000FFFF);
- 				}
- 			}
- 		}
- 		CANAF_std_cnt++;
- 		buf0 = ((CANAF_std_cnt + 1) >> 1) << 2;
- 		if(buf0 != CANAF->SFF_GRP_sa) // add new entry
- 		{
- 			CANAF->SFF_GRP_sa +=0x04 ;
- 			CANAF->EFF_sa     +=0x04 ;
- 			CANAF->EFF_GRP_sa +=0x04;
- 			CANAF->ENDofTable +=0x04;
- 		}
- 	}
-
- 	/* Add mask for extended identifiers */
- 	else
- 	{
- 		/* Add controller number */
- 		id |= (ctrl0) << 29;
-
- 		cnt1 = (((CANAF_std_cnt + 1) >> 1) + CANAF_gstd_cnt);
- 		cnt2 = 0;
- 		while (cnt2 < CANAF_ext_cnt)
- 		{
- 			/* Loop through extended existing masks*/
- 			if (CANAFRAM->mask[cnt1] > id)
- 			{
- 				break;
- 			}
- 			cnt1++;/* cnt1 = U32 where to insert new mask */
-			cnt2++;
- 		}
-
- 		buf0 = CANAFRAM->mask[cnt1];  /* Remember current entry */
- 		CANAFRAM->mask[cnt1] = id;    /* Insert mask */
-
- 		CANAF_ext_cnt++;
-
- 		bound1 = CANAF_ext_cnt + CANAF_gext_cnt - 1;
- 		/* Move all remaining extended mask entries one place up*/
- 		while (cnt2 < bound1)
- 		{
- 			cnt1++;
- 			cnt2++;
- 			buf1 = CANAFRAM->mask[cnt1];
- 			CANAFRAM->mask[cnt1] = buf0;
- 			buf0 = buf1;
- 		}
- 		/* update address values */
-		CANAF->EFF_GRP_sa += 4;
-		CANAF->ENDofTable += 4;
- 	}
- 	if(CANAF_FullCAN_cnt == 0) //not use FullCAN mode
- 	{
- 		CANAF->AFMR = 0x00;//not use FullCAN mode
- 	}
- 	else
- 	{
- 		CANAF->AFMR = 0x04;
- 	}
-
- 	return CAN_OK;
 }
+
 /********************************************************************//**
  * @brief		Setup Acceptance Filter Look-Up Table
- * @param[in]	CANx pointer to CANAF_TypeDef, should be: CANAF
- * @param[in]	AFSection is the pointer to AF_SectionDef struct
+ * @param[in]	CANAFx	pointer to LPC_CANAF_TypeDef
+ * 				Should be: LPC_CANAF
+ * @param[in]	AFSection	the pointer to AF_SectionDef structure
  * 				It contain information about 5 sections will be install in AFLUT
- * @return 		CAN Error, could be:
+ * @return 		CAN Error	could be:
  * 				- CAN_OBJECTS_FULL_ERROR: No more rx or tx objects available
  * 				- CAN_AF_ENTRY_ERROR: table error-violation of ascending numerical order
  * 				- CAN_OK: ID is added into table successfully
  *********************************************************************/
-CAN_ERROR CAN_SetupAFLUT(CANAF_TypeDef* CANAFx,CANAF_RAM_TypeDef* CANAFRAM, AF_SectionDef* AFSection)
+CAN_ERROR CAN_SetupAFLUT(LPC_CANAF_TypeDef* CANAFx, AF_SectionDef* AFSection)
 {
 	uint8_t ctrl1,ctrl2;
 	uint8_t dis1, dis2;
-	uint16_t SID, SID_temp, count = 0;
-	uint32_t EID, EID_temp, entry, buf;
+	uint16_t SID, ID_temp,i, count = 0;
+	uint32_t EID, entry, buf;
 	uint16_t lowerSID, upperSID;
 	uint32_t lowerEID, upperEID;
 
 	CHECK_PARAM(PARAM_CANAFx(CANAFx));
-	CHECK_PARAM(PARAM_CANAFRAMx(CANAFRAM));
 	CANAFx->AFMR = 0x01;
 
 /***** setup FullCAN Table *****/
@@ -462,7 +244,7 @@ CAN_ERROR CAN_SetupAFLUT(CANAF_TypeDef* CANAFx,CANAF_RAM_TypeDef* CANAFRAM, AF_S
 	else
 	{
 		FULLCAN_ENABLE = ENABLE;
-		while(1)
+		for(i=0;i<(AFSection->FC_NumEntry);i++)
 		{
 			if(count + 1 > 64)
 			{
@@ -480,41 +262,42 @@ CAN_ERROR CAN_SetupAFLUT(CANAF_TypeDef* CANAFx,CANAF_RAM_TypeDef* CANAFRAM, AF_S
 			{
 				if(count!=0x00)
 				{
-					buf = CANAFRAM->mask[count-1];
-					SID_temp = (buf & 0x000003FF);
-					if(SID_temp > SID)
+					buf = LPC_CANAF_RAM->mask[count-1];
+					ID_temp = (buf & 0xE7FF); //mask controller & identifier bits
+					if(ID_temp > ((ctrl1<<13)|SID))
 					{
 						return CAN_AF_ENTRY_ERROR;
 					}
 				}
 				entry = (ctrl1<<29)|(dis1<<28)|(SID<<16)|(1<<27);
-				CANAFRAM->mask[count] &= 0x0000FFFF;
-				CANAFRAM->mask[count] |= entry;
+				LPC_CANAF_RAM->mask[count] &= 0x0000FFFF;
+				LPC_CANAF_RAM->mask[count] |= entry;
 				CANAF_FullCAN_cnt++;
+				if(CANAF_FullCAN_cnt == AFSection->FC_NumEntry) //this is the lastest FullCAN entry
+					count++;
 			}
 			else
 			{
-				buf = CANAFRAM->mask[count];
-				SID_temp = (buf & 0x03FF0000)>>16;
-				if(SID_temp > SID)
+				buf = LPC_CANAF_RAM->mask[count];
+				ID_temp = (buf >>16) & 0xE7FF;
+				if(ID_temp > ((ctrl1<<13)|SID))
 				{
 					return CAN_AF_ENTRY_ERROR;
 				}
 				entry = (ctrl1<<13)|(dis1<<12)|(SID<<0)|(1<<11);
-				CANAF_RAM->mask[count] &= 0xFFFF0000;
-				CANAF_RAM->mask[count]|= entry;
+				LPC_CANAF_RAM->mask[count] &= 0xFFFF0000;
+				LPC_CANAF_RAM->mask[count]|= entry;
 				count++;
 				CANAF_FullCAN_cnt++;
 			}
-			AFSection->FullCAN_Sec =(FullCAN_Entry*)(AFSection->FullCAN_Sec->next);
-			if(AFSection->FullCAN_Sec == NULL) break;
+			AFSection->FullCAN_Sec = (FullCAN_Entry *)((uint32_t)(AFSection->FullCAN_Sec)+ sizeof(FullCAN_Entry));
 		}
 	}
 
 /***** Setup Explicit Standard Frame Format Section *****/
 	if(AFSection->SFF_Sec != NULL)
 	{
-		while(1)
+		for(i=0;i<(AFSection->SFF_NumEntry);i++)
 		{
 			if(count + 1 > 512)
 			{
@@ -534,40 +317,42 @@ CAN_ERROR CAN_SetupAFLUT(CANAF_TypeDef* CANAFx,CANAF_RAM_TypeDef* CANAFRAM, AF_S
 			{
 				if(CANAF_std_cnt !=0 )
 				{
-					buf = CANAFRAM->mask[count-1];
-					SID_temp = (buf & 0x00000FFF);
-					if(SID_temp > SID)
+					buf = LPC_CANAF_RAM->mask[count-1];
+					ID_temp = (buf & 0xE7FF); //mask controller & identifier bits
+					if(ID_temp > ((ctrl1<<13)|SID))
 					{
 						return CAN_AF_ENTRY_ERROR;
 					}
 				}
 				entry = (ctrl1<<29)|(dis1<<28)|(SID<<16);
-				CANAFRAM->mask[count] &= 0x0000FFFF;
-				CANAFRAM->mask[count] |= entry;
+				LPC_CANAF_RAM->mask[count] &= 0x0000FFFF;
+				LPC_CANAF_RAM->mask[count] |= entry;
 				CANAF_std_cnt++;
+				if(CANAF_std_cnt == AFSection->SFF_NumEntry)//if this is the last SFF entry
+					count++;
 			}
 			else
 			{
-				buf = CANAFRAM->mask[count];
-				SID_temp = (buf & 0x0FFF0000)>>16;
-				if(SID_temp > SID)
+				buf = LPC_CANAF_RAM->mask[count];
+				ID_temp = (buf >>16) & 0xE7FF;
+				if(ID_temp > ((ctrl1<<13)|SID))
 				{
 					return CAN_AF_ENTRY_ERROR;
 				}
 				entry = (ctrl1<<13)|(dis1<<12)|(SID<<0);
-				CANAFRAM->mask[count] &= 0xFFFF0000;
-				CANAFRAM->mask[count] |= entry;
+				LPC_CANAF_RAM->mask[count] &= 0xFFFF0000;
+				LPC_CANAF_RAM->mask[count] |= entry;
 				count++;
 				CANAF_std_cnt++;
 			}
-			AFSection->SFF_Sec = (SFF_Entry*)(AFSection->SFF_Sec->next);
-			if(AFSection->SFF_Sec == NULL) break;
+			AFSection->SFF_Sec = (SFF_Entry *)((uint32_t)(AFSection->SFF_Sec)+ sizeof(SFF_Entry));
 		}
 	}
+
 /***** Setup Group of Standard Frame Format Identifier Section *****/
 	if(AFSection->SFF_GPR_Sec != NULL)
 	{
-		while(1)
+		for(i=0;i<(AFSection->SFF_GPR_NumEntry);i++)
 		{
 			if(count + 1 > 512)
 			{
@@ -591,27 +376,26 @@ CAN_ERROR CAN_SetupAFLUT(CANAF_TypeDef* CANAFx,CANAF_RAM_TypeDef* CANAFRAM, AF_S
 			entry = 0x00;
 			if(CANAF_gstd_cnt!=0)
 			{
-				buf = CANAFRAM->mask[count-1];
-				SID_temp = buf & 0x00000FFF;
-				if(SID_temp > lowerSID)
+				buf = LPC_CANAF_RAM->mask[count-1];
+				ID_temp = buf & 0xE7FF;
+				if((ctrl1 != ctrl2)||(lowerSID > upperSID)||(ID_temp > ((ctrl1<<13)|lowerSID)))
 				{
 					return CAN_AF_ENTRY_ERROR;
 				}
 			}
 			entry = (ctrl1 << 29)|(dis1 << 28)|(lowerSID << 16)|  \
 					(ctrl2 << 13)|(dis2 << 12)|(upperSID << 0);
-			CANAFRAM->mask[count] = entry;
+			LPC_CANAF_RAM->mask[count] = entry;
 			CANAF_gstd_cnt++;
 			count++;
-			AFSection->SFF_GPR_Sec = (SFF_GPR_Entry*)(AFSection->SFF_GPR_Sec->next);
-			if(AFSection->SFF_GPR_Sec == NULL) break;
+			AFSection->SFF_GPR_Sec = (SFF_GPR_Entry *)((uint32_t)(AFSection->SFF_GPR_Sec)+ sizeof(SFF_GPR_Entry));
 		}
 	}
 
 /***** Setup Explicit Extend Frame Format Identifier Section *****/
 	if(AFSection->EFF_Sec != NULL)
 	{
-		while(1)
+		for(i=0;i<(AFSection->EFF_NumEntry);i++)
 		{
 			if(count + 1 > 512)
 			{
@@ -624,28 +408,27 @@ CAN_ERROR CAN_SetupAFLUT(CANAF_TypeDef* CANAFx,CANAF_RAM_TypeDef* CANAFRAM, AF_S
 			CHECK_PARAM(PARAM_ID_29(EID));
 			CHECK_PARAM(PARAM_CTRL(ctrl1));
 
-			entry = 0x00; //reset entry value
+			entry = (ctrl1 << 29)|(EID << 0);
 			if(CANAF_ext_cnt != 0)
 			{
-				buf = CANAFRAM->mask[count-1];
-				EID_temp = buf & 0x0FFFFFFF;
-				if(EID_temp > EID)
+				buf = LPC_CANAF_RAM->mask[count-1];
+//				EID_temp = buf & 0x0FFFFFFF;
+				if(buf > entry)
 				{
 					return CAN_AF_ENTRY_ERROR;
 				}
 			}
-			entry = (ctrl1 << 29)|(EID << 0);
-			CANAFRAM->mask[count] = entry;
+			LPC_CANAF_RAM->mask[count] = entry;
 			CANAF_ext_cnt ++;
 			count++;
-			AFSection->EFF_Sec = (EFF_Entry*)(AFSection->EFF_Sec->next);
-			if(AFSection->EFF_Sec == NULL) break;
+			AFSection->EFF_Sec = (EFF_Entry *)((uint32_t)(AFSection->EFF_Sec)+ sizeof(EFF_Entry));
 		}
 	}
+
 /***** Setup Group of Extended Frame Format Identifier Section *****/
 	if(AFSection->EFF_GPR_Sec != NULL)
 	{
-		while(1)
+		for(i=0;i<(AFSection->EFF_GPR_NumEntry);i++)
 		{
 			if(count + 2 > 512)
 			{
@@ -665,54 +448,898 @@ CAN_ERROR CAN_SetupAFLUT(CANAF_TypeDef* CANAFx,CANAF_RAM_TypeDef* CANAFRAM, AF_S
 			entry = 0x00;
 			if(CANAF_gext_cnt != 0)
 			{
-				buf = CANAFRAM->mask[count-1];
-				EID_temp = buf & 0x0FFFFFFF;
-				if(EID_temp > lowerEID)
+				buf = LPC_CANAF_RAM->mask[count-1];
+//				EID_temp = buf & 0x0FFFFFFF;
+				if((ctrl1 != ctrl2) || (lowerEID > upperEID) || (buf > ((ctrl1 << 29)|(lowerEID << 0))))
 				{
 					return CAN_AF_ENTRY_ERROR;
 				}
 			}
 			entry = (ctrl1 << 29)|(lowerEID << 0);
-			CANAFRAM->mask[count++] = entry;
+			LPC_CANAF_RAM->mask[count++] = entry;
 			entry = (ctrl2 << 29)|(upperEID << 0);
-			CANAFRAM->mask[count++] = entry;
+			LPC_CANAF_RAM->mask[count++] = entry;
 			CANAF_gext_cnt++;
-			AFSection->EFF_GPR_Sec = (EFF_GPR_Entry*)(AFSection->EFF_GPR_Sec->next);
-			if(AFSection->EFF_GPR_Sec == NULL) break;
+			AFSection->EFF_GPR_Sec = (EFF_GPR_Entry *)((uint32_t)(AFSection->EFF_GPR_Sec)+ sizeof(EFF_GPR_Entry));
 		}
 	}
 	//update address values
-	CANAF->SFF_sa = ((CANAF_FullCAN_cnt + 1)>>1)<<2;
-	CANAF->SFF_GRP_sa = CANAF->SFF_sa + (((CANAF_std_cnt+1)>>1)<< 2);
-	CANAF->EFF_sa = CANAF->SFF_GRP_sa + (CANAF_gstd_cnt << 2);
-	CANAF->EFF_GRP_sa = CANAF->EFF_sa + (CANAF_ext_cnt << 2);
-	CANAF->ENDofTable = CANAF->EFF_GRP_sa + (CANAF_ext_cnt << 3);
+	LPC_CANAF->SFF_sa = ((CANAF_FullCAN_cnt + 1)>>1)<<2;
+	LPC_CANAF->SFF_GRP_sa = LPC_CANAF->SFF_sa + (((CANAF_std_cnt+1)>>1)<< 2);
+	LPC_CANAF->EFF_sa = LPC_CANAF->SFF_GRP_sa + (CANAF_gstd_cnt << 2);
+	LPC_CANAF->EFF_GRP_sa = LPC_CANAF->EFF_sa + (CANAF_ext_cnt << 2);
+	LPC_CANAF->ENDofTable = LPC_CANAF->EFF_GRP_sa + (CANAF_gext_cnt << 3);
 
 	if(FULLCAN_ENABLE == DISABLE)
 	{
-		CANAF->AFMR = 0x00; // Normal mode
+		LPC_CANAF->AFMR = 0x00; // Normal mode
 	}
 	else
 	{
-		//Enable FullCAN Interrupt
-//		CANAF->FCANIE = 0x01;
-		CANAF->AFMR = 0x04;
+		LPC_CANAF->AFMR = 0x04;
 	}
 	return CAN_OK;
 }
 /********************************************************************//**
+ * @brief		Add Explicit ID into AF Look-Up Table dynamically.
+ * @param[in]	CANx pointer to LPC_CAN_TypeDef, should be:
+ * 				- LPC_CAN1: CAN1 peripheral
+ * 				- LPC_CAN2: CAN2 peripheral
+ * @param[in]	id: The ID of entry will be added
+ * @param[in]	format: is the type of ID Frame Format, should be:
+ * 				- STD_ID_FORMAT: 11-bit ID value
+ * 				- EXT_ID_FORMAT: 29-bit ID value
+ * @return 		CAN Error, could be:
+ * 				- CAN_OBJECTS_FULL_ERROR: No more rx or tx objects available
+ * 				- CAN_ID_EXIT_ERROR: ID exited in table
+ * 				- CAN_OK: ID is added into table successfully
+ *********************************************************************/
+CAN_ERROR CAN_LoadExplicitEntry(LPC_CAN_TypeDef* CANx, uint32_t id, CAN_ID_FORMAT_Type format)
+{
+	uint32_t tmp0 = 0;
+	uint32_t buf0=0, buf1=0;
+	int16_t cnt1=0, cnt2=0, bound1=0, total=0;
+
+
+	CHECK_PARAM(PARAM_CANx(CANx));
+	CHECK_PARAM(PARAM_ID_FORMAT(format));
+
+	if (CANx == LPC_CAN1)
+	{
+		tmp0 = 0;
+	}
+	else if (CANx == LPC_CAN2)
+	{
+		tmp0 = 1;
+	}
+
+	/* Acceptance Filter Memory full - return */
+	total =((CANAF_FullCAN_cnt+1)>>1)+ CANAF_FullCAN_cnt*3 +((CANAF_std_cnt + 1) >> 1)+  \
+			CANAF_gstd_cnt + CANAF_ext_cnt + (CANAF_gext_cnt<<1);
+	if (total >= 512){ //don't have enough space
+		return CAN_OBJECTS_FULL_ERROR;
+	}
+
+	/* Setup Acceptance Filter Configuration
+    Acceptance Filter Mode Register = Off */
+	LPC_CANAF->AFMR = 0x00000001;
+
+/*********** Add Explicit Standard Identifier Frame Format entry *********/
+ 	if(format == STD_ID_FORMAT)
+ 	{
+ 		id &= 0x07FF;
+ 		id |= (tmp0 << 13); /* Add controller number */
+		/* Move all remaining sections one place up
+		if new entry will increase FullCAN list */
+		if ((CANAF_std_cnt & 0x0001) == 0)
+		{
+			cnt1   = ((CANAF_FullCAN_cnt+1)>>1)+((CANAF_std_cnt+1)>>1);
+			bound1 = total - cnt1;
+			buf0   = LPC_CANAF_RAM->mask[cnt1];
+			while(bound1--)
+			{
+				cnt1++;
+				buf1 = LPC_CANAF_RAM->mask[cnt1];
+				LPC_CANAF_RAM->mask[cnt1] = buf0;
+				buf0 = buf1;
+			}
+		}
+		if (CANAF_std_cnt == 0)
+		{
+			cnt2 = (CANAF_FullCAN_cnt + 1)>>1;
+			/* For entering first ID */
+			LPC_CANAF_RAM->mask[cnt2] = 0x0000FFFF | (id << 16);
+		}
+		else if (CANAF_std_cnt == 1)
+		{
+			cnt2 = (CANAF_FullCAN_cnt + 1)>>1;
+			/* For entering second ID */
+			if (((LPC_CANAF_RAM->mask[cnt2] >> 16)& 0xE7FF) > id)
+			{
+				LPC_CANAF_RAM->mask[cnt2] = (LPC_CANAF_RAM->mask[cnt2] >> 16) | (id << 16);
+			}
+			else
+			{
+				LPC_CANAF_RAM->mask[cnt2] = (LPC_CANAF_RAM->mask[cnt2] & 0xFFFF0000) | id;
+			}
+		}
+		else
+		{
+			/* Find where to insert new ID */
+			cnt1 = (CANAF_FullCAN_cnt+1)>>1;
+			cnt2 = CANAF_std_cnt;
+			bound1 = ((CANAF_FullCAN_cnt+1)>>1)+((CANAF_std_cnt+1)>>1);
+			while (cnt1 < bound1)
+			{
+				/* Loop through standard existing IDs */
+				if (((LPC_CANAF_RAM->mask[cnt1] >> 16) & 0xE7FF) > id)
+				{
+					cnt2 = cnt1 * 2;
+					break;
+				}
+
+				if ((LPC_CANAF_RAM->mask[cnt1] & 0x0000E7FF) > id)
+				{
+					cnt2 = cnt1 * 2 + 1;
+					break;
+				}
+
+				cnt1++;
+			}
+			/* cnt1 = U32 where to insert new ID */
+			/* cnt2 = U16 where to insert new ID */
+
+			if (cnt1 == bound1)
+			{
+				/* Adding ID as last entry */
+				/* Even number of IDs exists */
+				if ((CANAF_std_cnt & 0x0001) == 0)
+				{
+					LPC_CANAF_RAM->mask[cnt1]  = 0x0000FFFF | (id << 16);
+				}
+				/* Odd  number of IDs exists */
+				else
+				{
+					LPC_CANAF_RAM->mask[cnt1]  = (LPC_CANAF_RAM->mask[cnt1] & 0xFFFF0000) | id;
+				}
+			}
+			else
+			{
+				buf0 = LPC_CANAF_RAM->mask[cnt1]; /* Remember current entry */
+				if ((cnt2 & 0x0001) == 0)
+				{
+					/* Insert new mask to even address*/
+					buf1 = (id << 16) | (buf0 >> 16);
+				}
+				else
+				{
+					/* Insert new mask to odd  address */
+					buf1 = (buf0 & 0xFFFF0000) | id;
+				}
+				LPC_CANAF_RAM->mask[cnt1] = buf1;/* Insert mask */
+				bound1 = ((CANAF_FullCAN_cnt+1)>>1)+((CANAF_std_cnt+1)>>1)-1;
+				/* Move all remaining standard mask entries one place up */
+				while (cnt1 < bound1)
+				{
+					cnt1++;
+					buf1  = LPC_CANAF_RAM->mask[cnt1];
+					LPC_CANAF_RAM->mask[cnt1] = (buf1 >> 16) | (buf0 << 16);
+					buf0  = buf1;
+				}
+
+				if ((CANAF_std_cnt & 0x0001) == 0)
+				{
+					/* Even number of IDs exists */
+					LPC_CANAF_RAM->mask[cnt1+1] = (buf0 <<16) |(0x0000FFFF);
+				}
+			}
+		}
+		CANAF_std_cnt++;
+		//update address values
+		LPC_CANAF->SFF_GRP_sa +=0x04 ;
+		LPC_CANAF->EFF_sa     +=0x04 ;
+		LPC_CANAF->EFF_GRP_sa +=0x04;
+		LPC_CANAF->ENDofTable +=0x04;
+ 	}
+
+/*********** Add Explicit Extended Identifier Frame Format entry *********/
+ 	else
+ 	{
+ 		/* Add controller number */
+ 		id |= (tmp0) << 29;
+
+ 		cnt1 = ((CANAF_FullCAN_cnt+1)>>1)+(((CANAF_std_cnt + 1) >> 1) + CANAF_gstd_cnt);
+ 		cnt2 = 0;
+ 		while (cnt2 < CANAF_ext_cnt)
+ 		{
+ 			/* Loop through extended existing masks*/
+ 			if (LPC_CANAF_RAM->mask[cnt1] > id)
+ 			{
+ 				break;
+ 			}
+ 			cnt1++;/* cnt1 = U32 where to insert new mask */
+			cnt2++;
+ 		}
+
+ 		buf0 = LPC_CANAF_RAM->mask[cnt1];  /* Remember current entry */
+ 		LPC_CANAF_RAM->mask[cnt1] = id;    /* Insert mask */
+
+ 		CANAF_ext_cnt++;
+
+ 		bound1 = total;
+ 		/* Move all remaining extended mask entries one place up*/
+ 		while (cnt2 < bound1)
+ 		{
+ 			cnt1++;
+ 			cnt2++;
+ 			buf1 = LPC_CANAF_RAM->mask[cnt1];
+ 			LPC_CANAF_RAM->mask[cnt1] = buf0;
+ 			buf0 = buf1;
+ 		}
+ 		/* update address values */
+ 		LPC_CANAF->EFF_GRP_sa += 4;
+ 		LPC_CANAF->ENDofTable += 4;
+ 	}
+ 	if(CANAF_FullCAN_cnt == 0) //not use FullCAN mode
+ 	{
+ 		LPC_CANAF->AFMR = 0x00;//not use FullCAN mode
+ 	}
+ 	else
+ 	{
+ 		LPC_CANAF->AFMR = 0x04;
+ 	}
+
+ 	return CAN_OK;
+}
+
+/********************************************************************//**
+ * @brief		Load FullCAN entry into AFLUT
+ * @param[in]	CANx: CAN peripheral selected, should be:
+ * 				- LPC_CAN1: CAN1 peripheral
+ * 				- LPC_CAN2: CAN2 peripheral
+ * @param[in]	id: identifier of entry that will be added
+ * @return 		CAN_ERROR, could be:
+ * 				- CAN_OK: loading is successful
+ * 				- CAN_ID_EXIT_ERROR: ID exited in FullCAN Section
+ * 				- CAN_OBJECTS_FULL_ERROR: no more space available
+ *********************************************************************/
+CAN_ERROR CAN_LoadFullCANEntry (LPC_CAN_TypeDef* CANx, uint16_t id)
+{
+	uint32_t ctrl0 = 0;
+	uint32_t buf0=0, buf1=0, buf2=0;
+	uint32_t tmp0=0, tmp1=0, tmp2=0;
+	int16_t cnt1=0, cnt2=0, bound1=0, total=0;
+	uint32_t abc;
+
+	CHECK_PARAM(PARAM_CANx(CANx));
+
+	if (CANx == LPC_CAN1)
+	{
+		ctrl0 = 0;
+	}
+	else if (CANx == LPC_CAN2)
+	{
+		ctrl0 = 1;
+	}
+
+	/* Acceptance Filter Memory full - return */
+	total =((CANAF_FullCAN_cnt+1)>>1)+ CANAF_FullCAN_cnt*3 +((CANAF_std_cnt + 1) >> 1)+  \
+			CANAF_gstd_cnt + CANAF_ext_cnt + (CANAF_gext_cnt<<1);
+	//don't have enough space for this fullCAN Entry and its Object(3*32 bytes)
+	if ((total >=508)||(CANAF_FullCAN_cnt>=64)){
+		return CAN_OBJECTS_FULL_ERROR;
+	}
+	/* Setup Acceptance Filter Configuration
+    Acceptance Filter Mode Register = Off */
+	LPC_CANAF->AFMR = 0x00000001;
+
+	/* Add mask for standard identifiers   */
+	id &= 0x07FF;
+	id |= (ctrl0 << 13) | (1 << 11); /* Add controller number */
+//	total = ((CANAF_std_cnt + 1) >> 1)+ CANAF_gstd_cnt + CANAF_ext_cnt + (CANAF_gext_cnt<<1);
+	/* Move all remaining sections one place up
+	if new entry will increase FullCAN list */
+	if (((CANAF_FullCAN_cnt & 0x0001) == 0)&&(total!=0))
+	{
+		//then remove remaining section
+		cnt1   = (CANAF_FullCAN_cnt >> 1);
+		bound1 = total;
+		buf0   = LPC_CANAF_RAM->mask[cnt1];
+
+		while (bound1--)
+		{
+			cnt1++;
+			buf1 = LPC_CANAF_RAM->mask[cnt1];
+			LPC_CANAF_RAM->mask[cnt1] = buf0;
+			buf0 = buf1;
+		}
+	}
+	if (CANAF_FullCAN_cnt == 0)
+	{
+		/* For entering first ID */
+		LPC_CANAF_RAM->mask[0] = 0x0000FFFF | (id << 16);
+	}
+	else if (CANAF_FullCAN_cnt == 1)
+	{
+		/* For entering second ID */
+		if (((LPC_CANAF_RAM->mask[0] >> 16)& 0xE7FF) > id)
+		{
+			LPC_CANAF_RAM->mask[0] = (LPC_CANAF_RAM->mask[0] >> 16) | (id << 16);
+		}
+		else
+		{
+			LPC_CANAF_RAM->mask[0] = (LPC_CANAF_RAM->mask[0] & 0xFFFF0000) | id;
+		}
+	}
+	else
+	{
+		/* Find where to insert new ID */
+		cnt1 = 0;
+		cnt2 = CANAF_FullCAN_cnt;
+		bound1 = (CANAF_FullCAN_cnt - 1) >> 1;
+		while (cnt1 <= bound1)
+		{
+			abc = (LPC_CANAF_RAM->mask[cnt1] >> 16)& 0xE7FF;
+			/* Loop through standard existing IDs */
+			if (((LPC_CANAF_RAM->mask[cnt1] >> 16) & 0xE7FF) > (id & 0xE7FF))
+			{
+				cnt2 = cnt1 * 2;
+				break;
+			}
+
+			abc = LPC_CANAF_RAM->mask[cnt1] & 0x0000E7FF;
+			if ((LPC_CANAF_RAM->mask[cnt1] & 0x0000E7FF) > (id & 0xE7FF))
+			{
+				cnt2 = cnt1 * 2 + 1;
+				break;
+			}
+
+			cnt1++;
+		}
+		/* cnt1 = U32 where to insert new ID */
+		/* cnt2 = U16 where to insert new ID */
+
+		if (cnt1 > bound1)
+		{
+			/* Adding ID as last entry */
+			/* Even number of IDs exists */
+			if ((CANAF_FullCAN_cnt & 0x0001) == 0)
+			{
+				LPC_CANAF_RAM->mask[cnt1]  = 0x0000FFFF | (id << 16);
+			}
+			/* Odd  number of IDs exists */
+			else
+			{
+				LPC_CANAF_RAM->mask[cnt1]  = (LPC_CANAF_RAM->mask[cnt1] & 0xFFFF0000) | id;
+			}
+		}
+		else
+		{
+			buf0 = LPC_CANAF_RAM->mask[cnt1]; /* Remember current entry */
+			if ((cnt2 & 0x0001) == 0)
+			{
+				/* Insert new mask to even address*/
+				buf1 = (id << 16) | (buf0 >> 16);
+			}
+			else
+			{
+				/* Insert new mask to odd  address */
+				buf1 = (buf0 & 0xFFFF0000) | id;
+			}
+			LPC_CANAF_RAM->mask[cnt1] = buf1;/* Insert mask */
+			bound1 = CANAF_FullCAN_cnt >> 1;
+			/* Move all remaining standard mask entries one place up */
+			while (cnt1 < bound1)
+			{
+				cnt1++;
+				buf1  = LPC_CANAF_RAM->mask[cnt1];
+				LPC_CANAF_RAM->mask[cnt1] = (buf1 >> 16) | (buf0 << 16);
+				buf0  = buf1;
+			}
+
+			if ((CANAF_FullCAN_cnt & 0x0001) == 0)
+			{
+				/* Even number of IDs exists */
+				LPC_CANAF_RAM->mask[cnt1] = (LPC_CANAF_RAM->mask[cnt1] & 0xFFFF0000)
+											| (0x0000FFFF);
+			}
+		}
+	}
+	//restruct FulCAN Object Section
+	bound1 = CANAF_FullCAN_cnt - cnt2;
+	cnt1 = total - (CANAF_FullCAN_cnt)*3 + cnt2*3 + 1;
+	buf0 = LPC_CANAF_RAM->mask[cnt1];
+	buf1 = LPC_CANAF_RAM->mask[cnt1+1];
+	buf2 = LPC_CANAF_RAM->mask[cnt1+2];
+	LPC_CANAF_RAM->mask[cnt1]=LPC_CANAF_RAM->mask[cnt1+1]= LPC_CANAF_RAM->mask[cnt1+2]=0x00;
+	cnt1+=3;
+	while(bound1--)
+	{
+		tmp0 = LPC_CANAF_RAM->mask[cnt1];
+		tmp1 = LPC_CANAF_RAM->mask[cnt1+1];
+		tmp2 = LPC_CANAF_RAM->mask[cnt1+2];
+		LPC_CANAF_RAM->mask[cnt1]= buf0;
+		LPC_CANAF_RAM->mask[cnt1+1]= buf1;
+		LPC_CANAF_RAM->mask[cnt1+2]= buf2;
+		buf0 = tmp0;
+		buf1 = tmp1;
+		buf2 = tmp2;
+		cnt1+=3;
+	}
+	CANAF_FullCAN_cnt++;
+	//update address values
+	LPC_CANAF->SFF_sa 	  +=0x04;
+	LPC_CANAF->SFF_GRP_sa +=0x04 ;
+	LPC_CANAF->EFF_sa     +=0x04 ;
+	LPC_CANAF->EFF_GRP_sa +=0x04;
+	LPC_CANAF->ENDofTable +=0x04;
+
+	LPC_CANAF->AFMR = 0x04;
+ 	return CAN_OK;
+}
+
+/********************************************************************//**
+ * @brief		Load Group entry into AFLUT
+ * @param[in]	CANx: CAN peripheral selected, should be:
+ * 				- LPC_CAN1: CAN1 peripheral
+ * 				- LPC_CAN2: CAN2 peripheral
+ * @param[in]	lowerID, upperID: lower and upper identifier of entry
+ * @param[in]	format: type of ID format, should be:
+ * 				- STD_ID_FORMAT: Standard ID format (11-bit value)
+ * 				- EXT_ID_FORMAT: Extended ID format (29-bit value)
+ * @return 		CAN_ERROR, could be:
+ * 				- CAN_OK: loading is successful
+ * 				- CAN_CONFLICT_ID_ERROR: Conflict ID occurs
+ * 				- CAN_OBJECTS_FULL_ERROR: no more space available
+ *********************************************************************/
+CAN_ERROR CAN_LoadGroupEntry(LPC_CAN_TypeDef* CANx, uint32_t lowerID, \
+		uint32_t upperID, CAN_ID_FORMAT_Type format)
+{
+	uint16_t tmp = 0;
+	uint32_t buf0, buf1, entry1, entry2, LID,UID;
+	int16_t cnt1, bound1, total;
+	//LPC_CANAF_RAM_TypeDef *AFLUTTest = LPC_CANAF_RAM;
+
+	CHECK_PARAM(PARAM_CANx(CANx));
+	CHECK_PARAM(PARAM_ID_FORMAT(format));
+
+	if(lowerID > upperID) return CAN_CONFLICT_ID_ERROR;
+	if(CANx == LPC_CAN1)
+	{
+		tmp = 0;
+	}
+	else
+	{
+		tmp = 1;
+	}
+
+	total =((CANAF_FullCAN_cnt+1)>>1)+ CANAF_FullCAN_cnt*3 +((CANAF_std_cnt + 1) >> 1)+  \
+			CANAF_gstd_cnt + CANAF_ext_cnt + (CANAF_gext_cnt<<1);
+
+	/* Setup Acceptance Filter Configuration
+	Acceptance Filter Mode Register = Off */
+	LPC_CANAF->AFMR = 0x00000001;
+
+/*********Add Group of Standard Identifier Frame Format************/
+	if(format == STD_ID_FORMAT)
+	{
+		if ((total >= 512)){//don't have enough space
+			return CAN_OBJECTS_FULL_ERROR;
+		}
+		lowerID &=0x7FF; //mask ID
+		upperID &=0x7FF;
+		entry1  = (tmp << 29)|(lowerID << 16)|(tmp << 13)|(upperID << 0);
+		cnt1 = ((CANAF_FullCAN_cnt+1)>>1) + ((CANAF_std_cnt + 1) >> 1);
+
+		//if this is the first Group standard ID entry
+		if(CANAF_gstd_cnt == 0)
+		{
+			LPC_CANAF_RAM->mask[cnt1] = entry1;
+		}
+		else
+		{
+			//find the position to add new Group entry
+			bound1 = ((CANAF_FullCAN_cnt+1)>>1) + ((CANAF_std_cnt + 1) >> 1) + CANAF_gstd_cnt;
+			while(cnt1 < bound1)
+			{
+				//compare controller first
+				while((LPC_CANAF_RAM->mask[cnt1] >> 29)< (entry1 >> 29))//increase until meet greater or equal controller
+					cnt1++;
+				buf0 = LPC_CANAF_RAM->mask[cnt1];
+				if((LPC_CANAF_RAM->mask[cnt1] >> 29)> (entry1 >> 29)) //meet greater controller
+				{
+					//add at this position
+					LPC_CANAF_RAM->mask[cnt1] = entry1;
+					break;
+				}
+				else //meet equal controller
+				{
+					LID  = (buf0 >> 16)&0x7FF;
+					UID  = buf0 & 0x7FF;
+					if (upperID <= LID)
+					{
+						//add new entry before this entry
+						LPC_CANAF_RAM->mask[cnt1] = entry1;
+						break;
+					}
+					else if (lowerID >= UID)
+					{
+						//load next entry to compare
+						cnt1 ++;
+					}
+					else
+						return CAN_CONFLICT_ID_ERROR;
+				}
+			}
+			if(cnt1 >= bound1)
+			{
+				//add new entry at the last position in this list
+				buf0 = LPC_CANAF_RAM->mask[cnt1];
+				LPC_CANAF_RAM->mask[cnt1] = entry1;
+			}
+
+			//remove all remaining entry of this section one place up
+			bound1 = total - cnt1;
+			while(bound1--)
+			{
+				cnt1++;
+				buf1 = LPC_CANAF_RAM->mask[cnt1];
+				LPC_CANAF_RAM->mask[cnt1] = buf0;
+				buf0 = buf1;
+			}
+		}
+		CANAF_gstd_cnt++;
+		//update address values
+		LPC_CANAF->EFF_sa     +=0x04 ;
+		LPC_CANAF->EFF_GRP_sa +=0x04;
+		LPC_CANAF->ENDofTable +=0x04;
+	}
+
+
+/*********Add Group of Extended Identifier Frame Format************/
+	else
+	{
+		if ((total >= 511)){//don't have enough space
+			return CAN_OBJECTS_FULL_ERROR;
+		}
+		lowerID  &= 0x1FFFFFFF; //mask ID
+		upperID &= 0x1FFFFFFF;
+		entry1   = (tmp << 29)|(lowerID << 0);
+		entry2   = (tmp << 29)|(upperID << 0);
+
+		cnt1 = ((CANAF_FullCAN_cnt+1)>>1) + ((CANAF_std_cnt + 1) >> 1) + CANAF_gstd_cnt + CANAF_ext_cnt;
+		//if this is the first Group standard ID entry
+		if(CANAF_gext_cnt == 0)
+		{
+			LPC_CANAF_RAM->mask[cnt1] = entry1;
+			LPC_CANAF_RAM->mask[cnt1+1] = entry2;
+		}
+		else
+		{
+			//find the position to add new Group entry
+			bound1 = ((CANAF_FullCAN_cnt+1)>>1) + ((CANAF_std_cnt + 1) >> 1) + CANAF_gstd_cnt \
+						+ CANAF_ext_cnt + (CANAF_gext_cnt<<1);
+			while(cnt1 < bound1)
+			{
+				while((LPC_CANAF_RAM->mask[cnt1] >>29)< tmp) //increase until meet greater or equal controller
+					cnt1++;
+				buf0 = LPC_CANAF_RAM->mask[cnt1];
+				buf1 = LPC_CANAF_RAM->mask[cnt1+1];
+				if((LPC_CANAF_RAM->mask[cnt1] >> 29)> (entry1 >> 29)) //meet greater controller
+				{
+					//add at this position
+					LPC_CANAF_RAM->mask[cnt1] = entry1;
+					LPC_CANAF_RAM->mask[++cnt1] = entry2;
+					break;
+				}
+				else //meet equal controller
+				{
+					LID  = buf0 & 0x1FFFFFFF; //mask ID
+					UID  = buf1 & 0x1FFFFFFF;
+					if (upperID <= LID)
+					{
+						//add new entry before this entry
+						LPC_CANAF_RAM->mask[cnt1] = entry1;
+						LPC_CANAF_RAM->mask[++cnt1] = entry2;
+						break;
+					}
+					else if (lowerID >= UID)
+					{
+						//load next entry to compare
+						cnt1 +=2;
+					}
+					else
+						return CAN_CONFLICT_ID_ERROR;
+				}
+			}
+			if(cnt1 >= bound1)
+			{
+				//add new entry at the last position in this list
+				buf0 = LPC_CANAF_RAM->mask[cnt1];
+				buf1 = LPC_CANAF_RAM->mask[cnt1+1];
+				LPC_CANAF_RAM->mask[cnt1]   = entry1;
+				LPC_CANAF_RAM->mask[++cnt1] = entry2;
+			}
+			//remove all remaining entry of this section two place up
+			bound1 = total - cnt1 + 1;
+			cnt1++;
+			while(bound1>0)
+			{
+				entry1 = LPC_CANAF_RAM->mask[cnt1];
+				entry2 = LPC_CANAF_RAM->mask[cnt1+1];
+				LPC_CANAF_RAM->mask[cnt1]   = buf0;
+				LPC_CANAF_RAM->mask[cnt1+1] = buf1;
+				buf0 = entry1;
+				buf1 = entry2;
+				cnt1   +=2;
+				bound1 -=2;
+			}
+		}
+		CANAF_gext_cnt++;
+		//update address values
+		LPC_CANAF->ENDofTable +=0x08;
+	}
+	LPC_CANAF->AFMR = 0x04;
+ 	return CAN_OK;
+}
+
+/********************************************************************//**
+ * @brief		Remove AFLUT entry (FullCAN entry and Explicit Standard entry)
+ * @param[in]	EntryType: the type of entry that want to remove, should be:
+ * 				- FULLCAN_ENTRY
+ * 				- EXPLICIT_STANDARD_ENTRY
+ * 				- GROUP_STANDARD_ENTRY
+ * 				- EXPLICIT_EXTEND_ENTRY
+ * 				- GROUP_EXTEND_ENTRY
+ * @param[in]	position: the position of this entry in its section
+ * Note: the first position is 0
+ * @return 		CAN_ERROR, could be:
+ * 				- CAN_OK: removing is successful
+ * 				- CAN_ENTRY_NOT_EXIT_ERROR: entry want to remove is not exit
+ *********************************************************************/
+CAN_ERROR CAN_RemoveEntry(AFLUT_ENTRY_Type EntryType, uint16_t position)
+{
+	uint16_t cnt, bound, total;
+	uint32_t buf0, buf1;
+	CHECK_PARAM(PARAM_AFLUT_ENTRY_TYPE(EntryType));
+	CHECK_PARAM(PARAM_POSITION(position));
+
+	/* Setup Acceptance Filter Configuration
+	Acceptance Filter Mode Register = Off */
+	LPC_CANAF->AFMR = 0x00000001;
+	total = ((CANAF_FullCAN_cnt+1)>>1)+((CANAF_std_cnt + 1) >> 1) + \
+			CANAF_gstd_cnt + CANAF_ext_cnt + (CANAF_gext_cnt<<1);
+
+
+/************** Remove FullCAN Entry *************/
+	if(EntryType == FULLCAN_ENTRY)
+	{
+		if((CANAF_FullCAN_cnt==0)||(position >= CANAF_FullCAN_cnt))
+		{
+			return CAN_ENTRY_NOT_EXIT_ERROR;
+		}
+		else
+		{
+			cnt = position >> 1;
+			buf0 = LPC_CANAF_RAM->mask[cnt];
+			bound = (CANAF_FullCAN_cnt - position -1)>>1;
+			if((position & 0x0001) == 0) //event position
+			{
+				while(bound--)
+				{
+					//remove all remaining FullCAN entry one place down
+					buf1  = LPC_CANAF_RAM->mask[cnt+1];
+					LPC_CANAF_RAM->mask[cnt] = (buf1 >> 16) | (buf0 << 16);
+					buf0  = buf1;
+					cnt++;
+				}
+			}
+			else //odd position
+			{
+				while(bound--)
+				{
+					//remove all remaining FullCAN entry one place down
+					buf1  = LPC_CANAF_RAM->mask[cnt+1];
+					LPC_CANAF_RAM->mask[cnt] = (buf0 & 0xFFFF0000)|(buf1 >> 16);
+					LPC_CANAF_RAM->mask[cnt+1] = LPC_CANAF_RAM->mask[cnt+1] << 16;
+					buf0  = buf1<<16;
+					cnt++;
+				}
+			}
+			if((CANAF_FullCAN_cnt & 0x0001) == 0)
+			{
+				if((position & 0x0001)==0)
+					LPC_CANAF_RAM->mask[cnt] = (buf0 << 16) | (0x0000FFFF);
+				else
+					LPC_CANAF_RAM->mask[cnt] = buf0 | 0x0000FFFF;
+			}
+			else
+			{
+				//remove all remaining section one place down
+				cnt = (CANAF_FullCAN_cnt + 1)>>1;
+				bound = total + CANAF_FullCAN_cnt * 3;
+				while(bound>cnt)
+				{
+					LPC_CANAF_RAM->mask[cnt-1] = LPC_CANAF_RAM->mask[cnt];
+					cnt++;
+				}
+				LPC_CANAF_RAM->mask[cnt-1]=0x00;
+				//update address values
+				LPC_CANAF->SFF_sa 	  -=0x04;
+				LPC_CANAF->SFF_GRP_sa -=0x04 ;
+				LPC_CANAF->EFF_sa     -=0x04 ;
+				LPC_CANAF->EFF_GRP_sa -=0x04;
+				LPC_CANAF->ENDofTable -=0x04;
+			}
+			CANAF_FullCAN_cnt--;
+
+			//delete its FullCAN Object in the FullCAN Object section
+			//remove all remaining FullCAN Object three place down
+			cnt = total + position * 3;
+			bound = (CANAF_FullCAN_cnt - position + 1) * 3;
+
+			while(bound)
+			{
+				LPC_CANAF_RAM->mask[cnt]=LPC_CANAF_RAM->mask[cnt+3];;
+				LPC_CANAF_RAM->mask[cnt+1]=LPC_CANAF_RAM->mask[cnt+4];
+				LPC_CANAF_RAM->mask[cnt+2]=LPC_CANAF_RAM->mask[cnt+5];
+				bound -=3;
+				cnt   +=3;
+			}
+		}
+	}
+
+/************** Remove Explicit Standard ID Entry *************/
+	else if(EntryType == EXPLICIT_STANDARD_ENTRY)
+	{
+		if((CANAF_std_cnt==0)||(position >= CANAF_std_cnt))
+		{
+			return CAN_ENTRY_NOT_EXIT_ERROR;
+		}
+		else
+		{
+			cnt = ((CANAF_FullCAN_cnt+1)>>1)+ (position >> 1);
+			buf0 = LPC_CANAF_RAM->mask[cnt];
+			bound = (CANAF_std_cnt - position - 1)>>1;
+			if((position & 0x0001) == 0) //event position
+			{
+				while(bound--)
+				{
+					//remove all remaining FullCAN entry one place down
+					buf1  = LPC_CANAF_RAM->mask[cnt+1];
+					LPC_CANAF_RAM->mask[cnt] = (buf1 >> 16) | (buf0 << 16);
+					buf0  = buf1;
+					cnt++;
+				}
+			}
+			else //odd position
+			{
+				while(bound--)
+				{
+					//remove all remaining FullCAN entry one place down
+					buf1  = LPC_CANAF_RAM->mask[cnt+1];
+					LPC_CANAF_RAM->mask[cnt] = (buf0 & 0xFFFF0000)|(buf1 >> 16);
+					LPC_CANAF_RAM->mask[cnt+1] = LPC_CANAF_RAM->mask[cnt+1] << 16;
+					buf0  = buf1<<16;
+					cnt++;
+				}
+			}
+			if((CANAF_std_cnt & 0x0001) == 0)
+			{
+				if((position & 0x0001)==0)
+					LPC_CANAF_RAM->mask[cnt] = (buf0 << 16) | (0x0000FFFF);
+				else
+					LPC_CANAF_RAM->mask[cnt] = buf0 | 0x0000FFFF;
+			}
+			else
+			{
+				//remove all remaining section one place down
+				cnt = ((CANAF_FullCAN_cnt + 1)>>1) + ((CANAF_std_cnt + 1) >> 1);
+				bound = total + CANAF_FullCAN_cnt * 3;
+				while(bound>cnt)
+				{
+					LPC_CANAF_RAM->mask[cnt-1] = LPC_CANAF_RAM->mask[cnt];
+					cnt++;
+				}
+				LPC_CANAF_RAM->mask[cnt-1]=0x00;
+				//update address value
+				LPC_CANAF->SFF_GRP_sa -=0x04 ;
+				LPC_CANAF->EFF_sa     -=0x04 ;
+				LPC_CANAF->EFF_GRP_sa -=0x04;
+				LPC_CANAF->ENDofTable -=0x04;
+			}
+			CANAF_std_cnt--;
+		}
+	}
+
+/************** Remove Group of Standard ID Entry *************/
+	else if(EntryType == GROUP_STANDARD_ENTRY)
+	{
+		if((CANAF_gstd_cnt==0)||(position >= CANAF_gstd_cnt))
+		{
+			return CAN_ENTRY_NOT_EXIT_ERROR;
+		}
+		else
+		{
+			cnt = ((CANAF_FullCAN_cnt + 1)>>1) + ((CANAF_std_cnt + 1) >> 1)+ position + 1;
+			bound = total + CANAF_FullCAN_cnt * 3;
+			while (cnt<bound)
+			{
+				LPC_CANAF_RAM->mask[cnt-1] = LPC_CANAF_RAM->mask[cnt];
+				cnt++;
+			}
+			LPC_CANAF_RAM->mask[cnt-1]=0x00;
+		}
+		CANAF_gstd_cnt--;
+		//update address value
+		LPC_CANAF->EFF_sa     -=0x04;
+		LPC_CANAF->EFF_GRP_sa -=0x04;
+		LPC_CANAF->ENDofTable -=0x04;
+	}
+
+/************** Remove Explicit Extended ID Entry *************/
+	else if(EntryType == EXPLICIT_EXTEND_ENTRY)
+	{
+		if((CANAF_ext_cnt==0)||(position >= CANAF_ext_cnt))
+		{
+			return CAN_ENTRY_NOT_EXIT_ERROR;
+		}
+		else
+		{
+			cnt = ((CANAF_FullCAN_cnt + 1)>>1) + ((CANAF_std_cnt + 1) >> 1)+ CANAF_gstd_cnt + position + 1;
+			bound = total + CANAF_FullCAN_cnt * 3;
+			while (cnt<bound)
+			{
+				LPC_CANAF_RAM->mask[cnt-1] = LPC_CANAF_RAM->mask[cnt];
+				cnt++;
+			}
+			LPC_CANAF_RAM->mask[cnt-1]=0x00;
+		}
+		CANAF_ext_cnt--;
+		LPC_CANAF->EFF_GRP_sa -=0x04;
+		LPC_CANAF->ENDofTable -=0x04;
+	}
+
+/************** Remove Group of Extended ID Entry *************/
+	else
+	{
+		if((CANAF_gext_cnt==0)||(position >= CANAF_gext_cnt))
+		{
+			return CAN_ENTRY_NOT_EXIT_ERROR;
+		}
+		else
+		{
+			cnt = total - (CANAF_gext_cnt<<1) + (position<<1);
+			bound = total + CANAF_FullCAN_cnt * 3;
+			while (cnt<bound)
+			{
+				//remove all remaining entry two place up
+				LPC_CANAF_RAM->mask[cnt] = LPC_CANAF_RAM->mask[cnt+2];
+				LPC_CANAF_RAM->mask[cnt+1] = LPC_CANAF_RAM->mask[cnt+3];
+				cnt+=2;
+			}
+		}
+		CANAF_gext_cnt--;
+		LPC_CANAF->ENDofTable -=0x08;
+	}
+	LPC_CANAF->AFMR = 0x04;
+	return CAN_OK;
+}
+
+/********************************************************************//**
  * @brief		Send message data
- * @param[in]	CANx pointer to CAN_TypeDef, should be:
- * 				- CAN1: CAN 1
- * 				- CAN2: CAN 2
+ * @param[in]	CANx pointer to LPC_CAN_TypeDef, should be:
+ * 				- LPC_CAN1: CAN1 peripheral
+ * 				- LPC_CAN2: CAN2 peripheral
  * @param[in]	CAN_Msg point to the CAN_MSG_Type Structure, it contains message
  * 				information such as: ID, DLC, RTR, ID Format
  * @return 		Status:
  * 				- SUCCESS: send message successfully
  * 				- ERROR: send message unsuccessfully
  *********************************************************************/
-Status CAN_SendMsg (CAN_TypeDef *CANx, CAN_MSG_Type *CAN_Msg)
+Status CAN_SendMsg (LPC_CAN_TypeDef *CANx, CAN_MSG_Type *CAN_Msg)
 {
+	uint32_t data;
 	CHECK_PARAM(PARAM_CANx(CANx));
 	CHECK_PARAM(PARAM_ID_FORMAT(CAN_Msg->format));
 	if(CAN_Msg->format==STD_ID_FORMAT)
@@ -727,12 +1354,12 @@ Status CAN_SendMsg (CAN_TypeDef *CANx, CAN_MSG_Type *CAN_Msg)
 	CHECK_PARAM(PARAM_FRAME_TYPE(CAN_Msg->type));
 
 	//Check status of Transmit Buffer 1
-	if ((CANx->SR & 0x00000004)>>2)
+	if (CANx->SR & (1<<2))
 	{
 		/* Transmit Channel 1 is available */
 		/* Write frame informations and frame data into its CANxTFI1,
 		 * CANxTID1, CANxTDA1, CANxTDB1 register */
-		CANx->TFI1 &= ~0x000F000;
+		CANx->TFI1 &= ~0x000F0000;
 		CANx->TFI1 |= (CAN_Msg->len)<<16;
 		if(CAN_Msg->type == REMOTE_FRAME)
 		{
@@ -755,22 +1382,24 @@ Status CAN_SendMsg (CAN_TypeDef *CANx, CAN_MSG_Type *CAN_Msg)
 		CANx->TID1 = CAN_Msg->id;
 
 		/*Write first 4 data bytes*/
-		CANx->TDA1 = *((uint32_t *) &(CAN_Msg->dataA));
+		data = (CAN_Msg->dataA[0])|(((CAN_Msg->dataA[1]))<<8)|((CAN_Msg->dataA[2])<<16)|((CAN_Msg->dataA[3])<<24);
+		CANx->TDA1 = data;
 
 		/*Write second 4 data bytes*/
-		 CANx->TDB1 = *((uint32_t *) &(CAN_Msg->dataB));
+		data = (CAN_Msg->dataB[0])|(((CAN_Msg->dataB[1]))<<8)|((CAN_Msg->dataB[2])<<16)|((CAN_Msg->dataB[3])<<24);
+		CANx->TDB1 = data;
 
 		 /*Write transmission request*/
 		 CANx->CMR = 0x21;
 		 return SUCCESS;
 	}
 	//check status of Transmit Buffer 2
-	else if((CANx->SR & 0x00000004)>>10)
+	else if(CANx->SR & (1<<10))
 	{
 		/* Transmit Channel 2 is available */
 		/* Write frame informations and frame data into its CANxTFI2,
 		 * CANxTID2, CANxTDA2, CANxTDB2 register */
-		CANx->TFI2 &= ~0x000F000;
+		CANx->TFI2 &= ~0x000F0000;
 		CANx->TFI2 |= (CAN_Msg->len)<<16;
 		if(CAN_Msg->type == REMOTE_FRAME)
 		{
@@ -793,22 +1422,24 @@ Status CAN_SendMsg (CAN_TypeDef *CANx, CAN_MSG_Type *CAN_Msg)
 		CANx->TID2 = CAN_Msg->id;
 
 		/*Write first 4 data bytes*/
-		CANx->TDA2 = *((uint32_t *) &(CAN_Msg->dataA));
+		data = (CAN_Msg->dataA[0])|(((CAN_Msg->dataA[1]))<<8)|((CAN_Msg->dataA[2])<<16)|((CAN_Msg->dataA[3])<<24);
+		CANx->TDA2 = data;
 
 		/*Write second 4 data bytes*/
-		CANx->TDB2 = *((uint32_t *) &(CAN_Msg->dataB));
+		data = (CAN_Msg->dataB[0])|(((CAN_Msg->dataB[1]))<<8)|((CAN_Msg->dataB[2])<<16)|((CAN_Msg->dataB[3])<<24);
+		CANx->TDB2 = data;
 
 		/*Write transmission request*/
 		CANx->CMR = 0x41;
 		return SUCCESS;
 	}
 	//check status of Transmit Buffer 3
-	else if ((CANx->SR & 0x00000004)>>18)
+	else if (CANx->SR & (1<<18))
 	{
 		/* Transmit Channel 3 is available */
 		/* Write frame informations and frame data into its CANxTFI3,
 		 * CANxTID3, CANxTDA3, CANxTDB3 register */
-		CANx->TFI3 &= ~0x000F000;
+		CANx->TFI3 &= ~0x000F0000;
 		CANx->TFI3 |= (CAN_Msg->len)<<16;
 		if(CAN_Msg->type == REMOTE_FRAME)
 		{
@@ -831,10 +1462,12 @@ Status CAN_SendMsg (CAN_TypeDef *CANx, CAN_MSG_Type *CAN_Msg)
 		CANx->TID3 = CAN_Msg->id;
 
 		/*Write first 4 data bytes*/
-		CANx->TDA3 = *((uint32_t *) &(CAN_Msg->dataA));
+		data = (CAN_Msg->dataA[0])|(((CAN_Msg->dataA[1]))<<8)|((CAN_Msg->dataA[2])<<16)|((CAN_Msg->dataA[3])<<24);
+		CANx->TDA3 = data;
 
 		/*Write second 4 data bytes*/
-		CANx->TDB3 = *((uint32_t *) &(CAN_Msg->dataB));
+		data = (CAN_Msg->dataB[0])|(((CAN_Msg->dataB[1]))<<8)|((CAN_Msg->dataB[2])<<16)|((CAN_Msg->dataB[3])<<24);
+		CANx->TDB3 = data;
 
 		/*Write transmission request*/
 		CANx->CMR = 0x81;
@@ -848,17 +1481,19 @@ Status CAN_SendMsg (CAN_TypeDef *CANx, CAN_MSG_Type *CAN_Msg)
 
 /********************************************************************//**
  * @brief		Receive message data
- * @param[in]	CANx pointer to CAN_TypeDef, should be:
- * 				- CAN1: CAN 1
- * 				- CAN2: CAN 2
+ * @param[in]	CANx pointer to LPC_CAN_TypeDef, should be:
+ * 				- LPC_CAN1: CAN1 peripheral
+ * 				- LPC_CAN2: CAN2 peripheral
  * @param[in]	CAN_Msg point to the CAN_MSG_Type Struct, it will contain received
  *  			message information such as: ID, DLC, RTR, ID Format
  * @return 		Status:
  * 				- SUCCESS: receive message successfully
  * 				- ERROR: receive message unsuccessfully
  *********************************************************************/
-Status CAN_ReceiveMsg (CAN_TypeDef *CANx, CAN_MSG_Type *CAN_Msg)
+Status CAN_ReceiveMsg (LPC_CAN_TypeDef *CANx, CAN_MSG_Type *CAN_Msg)
 {
+	uint32_t data;
+
 	CHECK_PARAM(PARAM_CANx(CANx));
 
 	//check status of Receive Buffer
@@ -878,10 +1513,18 @@ Status CAN_ReceiveMsg (CAN_TypeDef *CANx, CAN_MSG_Type *CAN_Msg)
 		if (CAN_Msg->type == DATA_FRAME)
 		{
 			/* Read first 4 data bytes */
-			*((uint32_t *) &CAN_Msg->dataA) = CANx->RDA;
+			data = CANx->RDA;
+			*((uint8_t *) &CAN_Msg->dataA[0])= data & 0x000000FF;
+			*((uint8_t *) &CAN_Msg->dataA[1])= (data & 0x0000FF00)>>8;;
+			*((uint8_t *) &CAN_Msg->dataA[2])= (data & 0x00FF0000)>>16;
+			*((uint8_t *) &CAN_Msg->dataA[3])= (data & 0xFF000000)>>24;
 
 			/* Read second 4 data bytes */
-			*((uint32_t *) &CAN_Msg->dataB) = CANx->RDB;
+			data = CANx->RDB;
+			*((uint8_t *) &CAN_Msg->dataB[0])= data & 0x000000FF;
+			*((uint8_t *) &CAN_Msg->dataB[1])= (data & 0x0000FF00)>>8;
+			*((uint8_t *) &CAN_Msg->dataB[2])= (data & 0x00FF0000)>>16;
+			*((uint8_t *) &CAN_Msg->dataB[3])= (data & 0xFF000000)>>24;
 
 		/*release receive buffer*/
 		CANx->CMR = 0x04;
@@ -890,6 +1533,7 @@ Status CAN_ReceiveMsg (CAN_TypeDef *CANx, CAN_MSG_Type *CAN_Msg)
 		{
 			/* Received Frame is a Remote Frame, not have data, we just receive
 			 * message information only */
+			CANx->CMR = 0x04; /*release receive buffer*/
 			return SUCCESS;
 		}
 	}
@@ -903,9 +1547,7 @@ Status CAN_ReceiveMsg (CAN_TypeDef *CANx, CAN_MSG_Type *CAN_Msg)
 
 /********************************************************************//**
  * @brief		Receive FullCAN Object
- * @param[in]	CANx pointer to CAN_TypeDef, should be:
- * 				- CAN1: CAN 1
- * 				- CAN2: CAN 2
+ * @param[in]	CANAFx: CAN Acceptance Filter register, should be: LPC_CANAF
  * @param[in]	CAN_Msg point to the CAN_MSG_Type Struct, it will contain received
  *  			message information such as: ID, DLC, RTR, ID Format
  * @return 		CAN_ERROR, could be:
@@ -913,24 +1555,24 @@ Status CAN_ReceiveMsg (CAN_TypeDef *CANx, CAN_MSG_Type *CAN_Msg)
  * 				- CAN_OK: Received FullCAN Object successful
  *
  *********************************************************************/
-CAN_ERROR FCAN_ReadObj (CANAF_TypeDef* CANAFx, CAN_MSG_Type *CAN_Msg)
+CAN_ERROR FCAN_ReadObj (LPC_CANAF_TypeDef* CANAFx, CAN_MSG_Type *CAN_Msg)
 {
-	uint32_t *pSrc;
+	uint32_t *pSrc, data;
 	uint32_t interrut_word, msg_idx, test_bit, head_idx, tail_idx;
 
 	CHECK_PARAM(PARAM_CANAFx(CANAFx));
 
 	interrut_word = 0;
 
-	if (CANAF->FCANIC0 != 0)
+	if (LPC_CANAF->FCANIC0 != 0)
 	{
-		interrut_word = CANAF->FCANIC0;
+		interrut_word = LPC_CANAF->FCANIC0;
 		head_idx = 0;
 		tail_idx = 31;
 	}
-	else if (CANAF->FCANIC1 != 0)
+	else if (LPC_CANAF->FCANIC1 != 0)
 	{
-		interrut_word = CANAF->FCANIC1;
+		interrut_word = LPC_CANAF->FCANIC1;
 		head_idx = 32;
 		tail_idx = 63;
 	}
@@ -946,7 +1588,7 @@ CAN_ERROR FCAN_ReadObj (CANAF_TypeDef* CANAFx, CAN_MSG_Type *CAN_Msg)
 
 			if (test_bit)
 			{
-				pSrc = (uint32_t *) (CANAF->ENDofTable + CANAF_RAM_BASE + msg_idx * 12);
+				pSrc = (uint32_t *) (LPC_CANAF->ENDofTable + LPC_CANAF_RAM_BASE + msg_idx * 12);
 
 	    	 	/* Has been finished updating the content */
 	    	 	if ((*pSrc & 0x03000000L) == 0x03000000L)
@@ -957,13 +1599,20 @@ CAN_ERROR FCAN_ReadObj (CANAF_TypeDef* CANAFx, CAN_MSG_Type *CAN_Msg)
 	    	 		/*Set to DatA*/
 	    	 		pSrc++;
 	    	 		/* Copy to dest buf */
-	    	 		*((uint32_t *) &CAN_Msg->dataA) = *pSrc;
+	    	 		data = *pSrc;
+	    			*((uint8_t *) &CAN_Msg->dataA[0])= data & 0x000000FF;
+	    			*((uint8_t *) &CAN_Msg->dataA[1])= (data & 0x0000FF00)>>8;
+	    			*((uint8_t *) &CAN_Msg->dataA[2])= (data & 0x00FF0000)>>16;
+	    			*((uint8_t *) &CAN_Msg->dataA[3])= (data & 0xFF000000)>>24;
 
 	    	 		/*Set to DatB*/
 	    	 		pSrc++;
 	    	 		/* Copy to dest buf */
-	    	 		*((uint32_t *) &CAN_Msg->dataB) = *pSrc;
-
+	    	 		data = *pSrc;
+	    			*((uint8_t *) &CAN_Msg->dataB[0])= data & 0x000000FF;
+	    			*((uint8_t *) &CAN_Msg->dataB[1])= (data & 0x0000FF00)>>8;
+	    			*((uint8_t *) &CAN_Msg->dataB[2])= (data & 0x00FF0000)>>16;
+	    			*((uint8_t *) &CAN_Msg->dataB[3])= (data & 0xFF000000)>>24;
 	    	 		/*Back to Dat1*/
 	    	 		pSrc -= 2;
 
@@ -984,9 +1633,9 @@ CAN_ERROR FCAN_ReadObj (CANAF_TypeDef* CANAFx, CAN_MSG_Type *CAN_Msg)
 }
 /********************************************************************//**
  * @brief		Get CAN Control Status
- * @param[in]	CANx pointer to CAN_TypeDef, should be:
- * 				- CAN1: CAN 1
- * 				- CAN2: CAN 2
+ * @param[in]	CANx pointer to LPC_CAN_TypeDef, should be:
+ * 				- LPC_CAN1: CAN1 peripheral
+ * 				- LPC_CAN2: CAN2 peripheral
  * @param[in]	arg: type of CAN status to get from CAN status register
  * 				Should be:
  * 				- CANCTRL_GLOBAL_STS: CAN Global Status
@@ -995,7 +1644,7 @@ CAN_ERROR FCAN_ReadObj (CANAF_TypeDef* CANAFx, CAN_MSG_Type *CAN_Msg)
  * 				- CANCTRL_STS: CAN Control Status
  * @return 		Current Control Status that you want to get value
  *********************************************************************/
-uint32_t CAN_GetCTRLStatus (CAN_TypeDef* CANx, CAN_CTRL_STS_Type arg)
+uint32_t CAN_GetCTRLStatus (LPC_CAN_TypeDef* CANx, CAN_CTRL_STS_Type arg)
 {
 	CHECK_PARAM(PARAM_CANx(CANx));
 	CHECK_PARAM(PARAM_CTRL_STS_TYPE(arg));
@@ -1004,24 +1653,20 @@ uint32_t CAN_GetCTRLStatus (CAN_TypeDef* CANx, CAN_CTRL_STS_Type arg)
 	{
 	case CANCTRL_GLOBAL_STS:
 		return CANx->GSR;
-		break;
 
 	case CANCTRL_INT_CAP:
 		return CANx->ICR;
-		break;
 
 	case CANCTRL_ERR_WRN:
 		return CANx->EWL;
-		break;
 
 	default: // CANCTRL_STS
 		return CANx->SR;
-		break;
 	}
 }
 /********************************************************************//**
  * @brief		Get CAN Central Status
- * @param[in]	CANCRx point to CANCR_TypeDef
+ * @param[in]	CANCRx point to LPC_CANCR_TypeDef, should be: LPC_CANCR
  * @param[in]	arg: type of CAN status to get from CAN Central status register
  * 				Should be:
  * 				- CANCR_TX_STS: Central CAN Tx Status
@@ -1029,7 +1674,7 @@ uint32_t CAN_GetCTRLStatus (CAN_TypeDef* CANx, CAN_CTRL_STS_Type arg)
  * 				- CANCR_MS: Central CAN Miscellaneous Status
  * @return 		Current Central Status that you want to get value
  *********************************************************************/
-uint32_t CAN_GetCRStatus (CANCR_TypeDef* CANCRx, CAN_CR_STS_Type arg)
+uint32_t CAN_GetCRStatus (LPC_CANCR_TypeDef* CANCRx, CAN_CR_STS_Type arg)
 {
 	CHECK_PARAM(PARAM_CANCRx(CANCRx));
 	CHECK_PARAM(PARAM_CR_STS_TYPE(arg));
@@ -1038,22 +1683,19 @@ uint32_t CAN_GetCRStatus (CANCR_TypeDef* CANCRx, CAN_CR_STS_Type arg)
 	{
 	case CANCR_TX_STS:
 		return CANCRx->CANTxSR;
-		break;
 
 	case CANCR_RX_STS:
 		return CANCRx->CANRxSR;
-		break;
 
 	default:	// CANCR_MS
 		return CANCRx->CANMSR;
-		break;
 	}
 }
 /********************************************************************//**
  * @brief		Enable/Disable CAN Interrupt
- * @param[in]	CANx pointer to CAN_TypeDef, should be:
- * 				- CAN1: CAN 1
- * 				- CAN2: CAN 2
+ * @param[in]	CANx pointer to LPC_CAN_TypeDef, should be:
+ * 				- LPC_CAN1: CAN1 peripheral
+ * 				- LPC_CAN2: CAN2 peripheral
  * @param[in]	arg: type of CAN interrupt that you want to enable/disable
  * 				Should be:
  * 				- CANINT_RIE: CAN Receiver Interrupt Enable
@@ -1073,7 +1715,7 @@ uint32_t CAN_GetCRStatus (CANCR_TypeDef* CANCRx, CAN_CR_STS_Type arg)
  * 				- DISABLE
  * @return 		none
  *********************************************************************/
-void CAN_IRQCmd (CAN_TypeDef* CANx, CAN_INT_EN_Type arg, FunctionalState NewState)
+void CAN_IRQCmd (LPC_CAN_TypeDef* CANx, CAN_INT_EN_Type arg, FunctionalState NewState)
 {
 	CHECK_PARAM(PARAM_CANx(CANx));
 	CHECK_PARAM(PARAM_INT_EN_TYPE(arg));
@@ -1083,9 +1725,9 @@ void CAN_IRQCmd (CAN_TypeDef* CANx, CAN_INT_EN_Type arg, FunctionalState NewStat
 	{
 		if(arg==CANINT_FCE)
 		{
-			CANAF->AFMR = 0x01;
-			CANAF->FCANIE = 0x01;
-			CANAF->AFMR = 0x04;
+			LPC_CANAF->AFMR = 0x01;
+			LPC_CANAF->FCANIE = 0x01;
+			LPC_CANAF->AFMR = 0x04;
 		}
 		else
 			CANx->IER |= (1 << arg);
@@ -1093,40 +1735,18 @@ void CAN_IRQCmd (CAN_TypeDef* CANx, CAN_INT_EN_Type arg, FunctionalState NewStat
 	else
 	{
 		if(arg==CANINT_FCE){
-			CANAF->AFMR = 0x01;
-			CANAF->FCANIE = 0x01;
-			CANAF->AFMR = 0x00;
+			LPC_CANAF->AFMR = 0x01;
+			LPC_CANAF->FCANIE = 0x01;
+			LPC_CANAF->AFMR = 0x00;
 		}
 		else
 			CANx->IER &= ~(1 << arg);
 	}
 }
-/*********************************************************************//**
- * @brief		Install interrupt call-back function
- * @param[in]	arg: CAN interrupt type, should be:
- * 	  			- CANINT_RIE: CAN Receiver Interrupt Enable
- * 				- CANINT_TIE1: CAN Transmit Interrupt Enable
- * 				- CANINT_EIE: CAN Error Warning Interrupt Enable
- * 				- CANINT_DOIE: CAN Data Overrun Interrupt Enable
- * 				- CANINT_WUIE: CAN Wake-Up Interrupt Enable
- * 				- CANINT_EPIE: CAN Error Passive Interrupt Enable
- * 				- CANINT_ALIE: CAN Arbitration Lost Interrupt Enable
- * 				- CANINT_BEIE: CAN Bus Error Interrupt Enable
- * 				- CANINT_IDIE: CAN ID Ready Interrupt Enable
- * 				- CANINT_TIE2: CAN Transmit Interrupt Enable for Buffer2
- * 				- CANINT_TIE3: CAN Transmit Interrupt Enable for Buffer3
- * 				- CANINT_FCE: FullCAN Interrupt Enable
- * @param[in]	pnCANCbs: pointer point to call-back function
- * @return		None
- **********************************************************************/
-void CAN_SetupCBS(CAN_INT_EN_Type arg,fnCANCbs_Type* pnCANCbs)
-{
-	CHECK_PARAM(PARAM_INT_EN_TYPE(arg));
-	_apfnCANCbs[arg] = pnCANCbs;
-}
+
 /********************************************************************//**
  * @brief		Setting Acceptance Filter mode
- * @param[in]	CANAFx point to CANAF_TypeDef object, should be: CANAF
+ * @param[in]	CANAFx point to LPC_CANAF_TypeDef object, should be: LPC_CANAF
  * @param[in]	AFMode: type of AF mode that you want to set, should be:
  * 				- CAN_Normal: Normal mode
  * 				- CAN_AccOff: Acceptance Filter Off Mode
@@ -1134,7 +1754,7 @@ void CAN_SetupCBS(CAN_INT_EN_Type arg,fnCANCbs_Type* pnCANCbs)
  * 				- CAN_eFCAN: FullCAN Mode Enhancement
  * @return 		none
  *********************************************************************/
-void CAN_SetAFMode (CANAF_TypeDef* CANAFx, CAN_AFMODE_Type AFMode)
+void CAN_SetAFMode (LPC_CANAF_TypeDef* CANAFx, CAN_AFMODE_Type AFMode)
 {
 	CHECK_PARAM(PARAM_CANAFx(CANAFx));
 	CHECK_PARAM(PARAM_AFMODE_TYPE(AFMode));
@@ -1158,9 +1778,9 @@ void CAN_SetAFMode (CANAF_TypeDef* CANAFx, CAN_AFMODE_Type AFMode)
 
 /********************************************************************//**
  * @brief		Enable/Disable CAN Mode
- * @param[in]	CANx pointer to CAN_TypeDef, should be:
- * 				- CAN1: CAN 1
- * 				- CAN2: CAN 2
+ * @param[in]	CANx pointer to LPC_CAN_TypeDef, should be:
+ * 				- LPC_CAN1: CAN1 peripheral
+ * 				- LPC_CAN2: CAN2 peripheral
  * @param[in]	mode: type of CAN mode that you want to enable/disable, should be:
  * 				- CAN_OPERATING_MODE: Normal Operating Mode
  * 				- CAN_RESET_MODE: Reset Mode
@@ -1175,7 +1795,7 @@ void CAN_SetAFMode (CANAF_TypeDef* CANAFx, CAN_AFMODE_Type AFMode)
  * 				- DISABLE
  * @return 		none
  *********************************************************************/
-void CAN_ModeConfig(CAN_TypeDef* CANx, CAN_MODE_Type mode, FunctionalState NewState)
+void CAN_ModeConfig(LPC_CAN_TypeDef* CANx, CAN_MODE_Type mode, FunctionalState NewState)
 {
 	CHECK_PARAM(PARAM_CANx(CANx));
 	CHECK_PARAM(PARAM_MODE_TYPE(mode));
@@ -1193,18 +1813,20 @@ void CAN_ModeConfig(CAN_TypeDef* CANx, CAN_MODE_Type mode, FunctionalState NewSt
 			CANx->MOD &= ~CAN_MOD_RM;
 		break;
 	case CAN_LISTENONLY_MODE:
-		CANx->MOD |=CAN_MOD_RM;
+		CANx->MOD |=CAN_MOD_RM;//Enter Reset mode
 		if(NewState == ENABLE)
 			CANx->MOD |=CAN_MOD_LOM;
 		else
 			CANx->MOD &=~CAN_MOD_LOM;
+		CANx->MOD &=~CAN_MOD_RM;//Release Reset mode
 		break;
 	case CAN_SELFTEST_MODE:
-		CANx->MOD |=CAN_MOD_RM;
+		CANx->MOD |=CAN_MOD_RM;//Enter Reset mode
 		if(NewState == ENABLE)
 			CANx->MOD |=CAN_MOD_STM;
 		else
 			CANx->MOD &=~CAN_MOD_STM;
+		CANx->MOD &=~CAN_MOD_RM;//Release Reset mode
 		break;
 	case CAN_TXPRIORITY_MODE:
 		if(NewState == ENABLE)
@@ -1233,39 +1855,80 @@ void CAN_ModeConfig(CAN_TypeDef* CANx, CAN_MODE_Type mode, FunctionalState NewSt
 	}
 }
 /*********************************************************************//**
- * @brief		Standard CAN interrupt handler, this function will check
- * 				all interrupt status of CAN channels, then execute the call
- * 				back function if they're already installed
- * @param[in]	CANx point to CAN peripheral selected, should be: CAN1 or CAN2
- * @return		None
+ * @brief		Set CAN command request
+ * @param[in]	CANx point to CAN peripheral selected, should be:
+ * 				- LPC_CAN1: CAN1 peripheral
+ * 				- LPC_CAN2: CAN2 peripheral
+ * @param[in]	CMRType	command request type, should be:
+ * 				- CAN_CMR_TR: Transmission request
+ * 				- CAN_CMR_AT: Abort Transmission request
+ * 				- CAN_CMR_RRB: Release Receive Buffer request
+ * 				- CAN_CMR_CDO: Clear Data Overrun request
+ * 				- CAN_CMR_SRR: Self Reception request
+ * 				- CAN_CMR_STB1: Select Tx Buffer 1 request
+ * 				- CAN_CMR_STB2: Select Tx Buffer 2 request
+ * 				- CAN_CMR_STB3: Select Tx Buffer 3 request
+ * @return		CANICR (CAN interrupt and Capture register) value
  **********************************************************************/
-void CAN_IntHandler(CAN_TypeDef* CANx)
+void CAN_SetCommand(LPC_CAN_TypeDef* CANx, uint32_t CMRType)
 {
-	uint8_t t;
-	//scan interrupt pending
-	if(CANAF->FCANIE)
-	{
-		_apfnCANCbs[11]();
-		//clear FCANIE
-		CANAF->AFMR = 0x01;
-		CANAF->FCANIE = 0x00;
-		CANAF->AFMR = 0x04;
-	}
-	else{
-		for(t=0;t<11;t++)
-		{
-			if(((CANx->ICR)>>t)&0x01)
-			{
-				_apfnCANCbs[t]();
-			}
-		}
-	}
+	CHECK_PARAM(PARAM_CANx(CANx));
+	CANx->CMR |= CMRType;
 }
-/**
- * @}
- */
-/**
- * @}
- */
-#endif /* _I2S */
 
+/*********************************************************************//**
+ * @brief		Get CAN interrupt status
+ * @param[in]	CANx point to CAN peripheral selected, should be:
+ * 				- LPC_CAN1: CAN1 peripheral
+ * 				- LPC_CAN2: CAN2 peripheral
+ * @return		CANICR (CAN interrupt and Capture register) value
+ **********************************************************************/
+uint32_t CAN_IntGetStatus(LPC_CAN_TypeDef* CANx)
+{
+	CHECK_PARAM(PARAM_CANx(CANx));
+	return CANx->ICR;
+}
+
+/*********************************************************************//**
+ * @brief		Check if FullCAN interrupt enable or not
+ * @param[in]	CANAFx point to LPC_CANAF_TypeDef object, should be: LPC_CANAF
+ * @return		IntStatus, could be:
+ * 				- SET: if FullCAN interrupt is enable
+ * 				- RESET: if FullCAN interrupt is disable
+ **********************************************************************/
+IntStatus CAN_FullCANIntGetStatus (LPC_CANAF_TypeDef* CANAFx)
+{
+	CHECK_PARAM( PARAM_CANAFx(CANAFx));
+	if (CANAFx->FCANIE)
+		return SET;
+	return RESET;
+}
+
+/*********************************************************************//**
+ * @brief		Get value of FullCAN interrupt and capture register
+ * @param[in]	CANAFx point to LPC_CANAF_TypeDef object, should be: LPC_CANAF
+ * @param[in]	type: FullCAN IC type, should be:
+ * 				- FULLCAN_IC0: FullCAN Interrupt Capture 0
+ * 				- FULLCAN_IC1: FullCAN Interrupt Capture 1
+ * @return		FCANIC0 or FCANIC1 (FullCAN interrupt and Capture register) value
+ **********************************************************************/
+uint32_t CAN_FullCANPendGetStatus(LPC_CANAF_TypeDef* CANAFx, FullCAN_IC_Type type)
+{
+	CHECK_PARAM(PARAM_CANAFx(CANAFx));
+	CHECK_PARAM( PARAM_FULLCAN_IC(type));
+	if (type == FULLCAN_IC0)
+		return CANAFx->FCANIC0;
+	return CANAFx->FCANIC1;
+}
+/* End of Public Variables ---------------------------------------------------------- */
+/**
+ * @}
+ */
+
+#endif /* _CAN */
+
+/**
+ * @}
+ */
+
+/* --------------------------------- End Of File ------------------------------ */

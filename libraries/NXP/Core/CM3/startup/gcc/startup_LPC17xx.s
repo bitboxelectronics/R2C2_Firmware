@@ -4,12 +4,6 @@
 /* Version: CodeSourcery Sourcery G++ Lite (with CS3)                        */
 /*****************************************************************************/
 
-/* mthomas:
-   - replaced CM3 _start with data-copy, bss-init
-   - added syntax unified
-   - moved NMI to UsageFault handlers in reset section to minimize checksum
-     modifications
-*/
 
 /*
 //*** <<< Use Configuration Wizard in Context Menu >>> ***
@@ -22,9 +16,7 @@
 // </h>
 */
 
-.syntax unified
-
-    .equ    Stack_Size, 0x00000300
+    .equ    Stack_Size, 0x00000100
     .section ".stack", "w"
     .align  3
     .globl  __cs3_stack_mem
@@ -70,7 +62,7 @@ __cs3_interrupt_vector_cortex_m:
     .long   MemManage_Handler           /* MPU Fault Handler            */
     .long   BusFault_Handler            /* Bus Fault Handler            */
     .long   UsageFault_Handler          /* Usage Fault Handler          */
-    .long   0                           /* Checksum, see LPC1xxx manual */
+    .long   0                           /* Reserved                     */
     .long   0                           /* Reserved                     */
     .long   0                           /* Reserved                     */
     .long   0                           /* Reserved                     */
@@ -114,6 +106,8 @@ __cs3_interrupt_vector_cortex_m:
     .long   MCPWM_IRQHandler            /* 46: Motor Control PWM            */
     .long   QEI_IRQHandler              /* 47: Quadrature Encoder Interface */
     .long   PLL1_IRQHandler             /* 48: PLL1 Lock (USB PLL)          */
+    .long	USBActivity_IRQHandler		/* 49: USB Activity 				*/
+    .long 	CANActivity_IRQHandler		/* 50: CAN Activity					*/
 
     .size   __cs3_interrupt_vector_cortex_m, . - __cs3_interrupt_vector_cortex_m
 
@@ -128,59 +122,37 @@ __cs3_interrupt_vector_cortex_m:
     .globl  __cs3_reset_cortex_m
     .type   __cs3_reset_cortex_m, %function
 __cs3_reset_cortex_m:
-/* provide _start symbol, in case we use the wrong linker script */
-	.globl	_start
-	.type	_start, %function
-_start:
     .fnstart
-
-/* delay at startup to let JTAG-connection catch-up */
-	/*LDR R0, =startup_delay
-	BLX R0
-	/**/
-
-/* Copy the data segment initializers from flash to SRAM */
-.extern _etext
-.extern _sdata
-.extern _edata
-    ldr   r1, =_etext
-    ldr   r2, =_sdata
-    ldr   r3, =_edata
-1:  cmp   r2, r3
-    ittt  lo
-    ldrlo r0, [r1], #4
-    strlo r0, [r2], #4
-    blo   1b
-
-/* Zero fill the bss segment. */
-.extern _sbss
-.extern _ebss
-    movs  r0, #0
-    ldr   r1, =_sbss
-    ldr   r2, =_ebss
-2:  cmp   r1, r2
-    itt   lo
-    strlo r0, [r1], #4
-    blo   2b
-
-/* call __libc_init_array - needed for C++ support */
-/*    LDR     R0, =__libc_init_array */
-/*    BLX     R0 */
-
-/* call system init in NXP's Device CMSIS code */
+.if (RAM_MODE)
+/* Clear .bss section (Zero init) */
+	MOV     R0, #0
+	LDR     R1, =__bss_start__
+	LDR     R2, =__bss_end__
+	CMP     R1,R2
+	BEQ     BSSIsEmpty
+LoopZI:
+	CMP     R1, R2
+	BHS		BSSIsEmpty
+	STR   	R0, [R1]
+	ADD		R1, #4
+	BLO     LoopZI
+BSSIsEmpty:
     LDR     R0, =SystemInit
     BLX     R0
-
-/* call main() */
     LDR     R0,=main
     BX      R0
-
-    B .
-
+.else
+    LDR     R0, =SystemInit
+    BLX     R0
+	LDR     R0,=main
+    BX      R0
+.endif
     .pool
     .cantunwind
     .fnend
     .size   __cs3_reset_cortex_m,.-__cs3_reset_cortex_m
+
+    .section ".text"
 
 /* Exception Handlers */
 
@@ -213,11 +185,6 @@ BusFault_Handler:
 UsageFault_Handler:
     B       .
     .size   UsageFault_Handler, . - UsageFault_Handler
-
-
-
-
-    .section ".text"
 
     .weak   SVC_Handler
     .type   SVC_Handler, %function
@@ -290,5 +257,7 @@ Default_Handler:
     IRQ     MCPWM_IRQHandler
     IRQ     QEI_IRQHandler
     IRQ     PLL1_IRQHandler
+    IRQ		USBActivity_IRQHandler
+    IRQ		CANActivity_IRQHandler
 
     .end

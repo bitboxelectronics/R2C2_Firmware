@@ -60,8 +60,11 @@ static void HandleUsbReset(U8 bDevStatus)
  */
 BOOL USBInit(void)
 {
+	debug_num(3);
 	// init hardware
 	USBHwInit();
+
+	debug_next();
 	
 	// register bus reset handler
 	USBHwRegisterDevIntHandler(HandleUsbReset);

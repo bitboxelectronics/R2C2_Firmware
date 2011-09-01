@@ -1,105 +1,73 @@
-/***********************************************************************//**
- * @file	: lpc17xx_can.h
- * @brief	: Contains all macro definitions and function prototypes
- * 				support for CAN firmware library on LPC17xx
- * @version	: 1.0
- * @date	: 1.June.2009
- * @author	: NguyenCao
- **************************************************************************
- * Software that is described herein is for illustrative purposes only
- * which provides customers with programming information regarding the
- * products. This software is supplied "AS IS" without any warranties.
- * NXP Semiconductors assumes no responsibility or liability for the
- * use of the software, conveys no license or title under any patent,
- * copyright, or mask work right to the product. NXP Semiconductors
- * reserves the right to make changes in the software without
- * notification. NXP Semiconductors also make no representation or
- * warranty that such application will be suitable for the specified
- * use without further testing or modification.
- **************************************************************************/
+/**********************************************************************
+* $Id$		lpc17xx_can.h			2010-06-18
+*//**
+* @file		lpc17xx_can.h
+* @brief	Contains all macro definitions and function prototypes
+* 			support for CAN firmware library on LPC17xx
+* @version	3.0
+* @date		18. June. 2010
+* @author	NXP MCU SW Application Team
+*
+* Copyright(C) 2010, NXP Semiconductor
+* All rights reserved.
+*
+***********************************************************************
+* Software that is described herein is for illustrative purposes only
+* which provides customers with programming information regarding the
+* products. This software is supplied "AS IS" without any warranties.
+* NXP Semiconductors assumes no responsibility or liability for the
+* use of the software, conveys no license or title under any patent,
+* copyright, or mask work right to the product. NXP Semiconductors
+* reserves the right to make changes in the software without
+* notification. NXP Semiconductors also make no representation or
+* warranty that such application will be suitable for the specified
+* use without further testing or modification.
+**********************************************************************/
+
+/* Peripheral group ----------------------------------------------------------- */
+/** @defgroup CAN CAN
+ * @ingroup LPC1700CMSIS_FwLib_Drivers
+ * @{
+ */
 
 #ifndef LPC17XX_CAN_H_
 #define LPC17XX_CAN_H_
 
+/* Includes ------------------------------------------------------------------- */
 #include "LPC17xx.h"
 #include "lpc_types.h"
-
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-#define ID_11	1
+/* Public Types --------------------------------------------------------------- */
+/** @defgroup CAN_Public_Macros CAN Public Macros
+ * @{
+ */
+#define MSG_ENABLE				((uint8_t)(0))
+#define MSG_DISABLE				((uint8_t)(1))
+#define CAN1_CTRL				((uint8_t)(0))
+#define CAN2_CTRL				((uint8_t)(1))
+#define PARAM_FULLCAN_IC(n)		((n==FULLCAN_IC0)||(n==FULLCAN_IC1))
+#define ID_11					1
 #define MAX_HW_FULLCAN_OBJ 		64
 #define MAX_SW_FULLCAN_OBJ 		32
-/****************************** PRIVATE MACROS ******************************/
-/** @addtogroup PRIVATE_MACROS
- * @{
- */
-
-
-/** @defgroup CAN_PINSEL
- * @{
- */
-/* Pin Configuration selection must be defined in structure following:
- * - Port Number,
- * - Pin Number,
- * - Function Number,
- * - Pin Mode,
- * - Open Drain
- */
-
-/** CAN function pin selection group 0*/
-#define CAN_PINSEL_RD1_P0_0		{0, 0, 1, \
-								PINSEL_PINMODE_PULLUP, \
-								PINSEL_PINMODE_NORMAL}
-
-#define CAN_PINSEL_TD1_P0_1		{0, 1, 1, \
-								PINSEL_PINMODE_PULLUP, \
-								PINSEL_PINMODE_NORMAL}
-
-#define CAN_PINSEL_RD2_P0_4		{0, 4, 2, \
-								PINSEL_PINMODE_PULLUP, \
-								PINSEL_PINMODE_NORMAL}
-
-#define CAN_PINSEL_TD2_P0_5		{0, 5, 2, \
-								PINSEL_PINMODE_PULLUP, \
-								PINSEL_PINMODE_NORMAL}
-
-/** CAN function pin selection group 1*/
-#define CAN_PINSEL_RD1_P0_21	{0, 21, 3, \
-								PINSEL_PINMODE_PULLUP, \
-								PINSEL_PINMODE_NORMAL}
-
-#define CAN_PINSEL_TD1_P0_22	{0, 22, 3, \
-								PINSEL_PINMODE_PULLUP, \
-								PINSEL_PINMODE_NORMAL}
-
-#define CAN_PINSEL_RD2_P2_7		{2, 7, 1, \
-								PINSEL_PINMODE_PULLUP, \
-								PINSEL_PINMODE_NORMAL}
-
-#define CAN_PINSEL_TD2_P2_8		{2, 8, 1, \
-								PINSEL_PINMODE_PULLUP, \
-								PINSEL_PINMODE_NORMAL}
-
-/* Max number of pin on each pin function */
-#define CAN_MAX_RD1_PIN		(2)
-#define CAN_MAX_TD1_PIN		(2)
-
-#define CAN_MAX_RD2_PIN		(2)
-#define CAN_MAX_TD2_PIN		(2)
 
 /**
  * @}
  */
-/*********************************************************************//**
- * Macro defines for CAN Acceptance Filter register
- **********************************************************************/
-/** @defgroup CAN_REGISTER_BIT_DEFINITION
+
+/* Private Macros ------------------------------------------------------------- */
+/** @defgroup CAN_Private_Macros CAN Private Macros
  * @{
  */
+
+/* --------------------- BIT DEFINITIONS -------------------------------------- */
+/*********************************************************************//**
+ * Macro defines for CAN Mode Register
+ **********************************************************************/
 /** CAN Reset mode */
 #define CAN_MOD_RM			((uint32_t)(1))
 /** CAN Listen Only Mode */
@@ -114,6 +82,7 @@ extern "C"
 #define CAN_MOD_RPM			((uint32_t)(1<<5))
 /** CAN Test mode */
 #define CAN_MOD_TM			((uint32_t)(1<<7))
+
 /*********************************************************************//**
  * Macro defines for CAN Command Register
  **********************************************************************/
@@ -423,7 +392,7 @@ extern "C"
 /*********************************************************************//**
  * Macro defines for Acceptance Filter Mode Register
  **********************************************************************/
-/* CAN Acceptance Filter Off mode */
+/** CAN Acceptance Filter Off mode */
 #define CAN_AFMR_AccOff		((uint32_t)(1))
 /** CAN Acceptance File Bypass mode */
 #define CAN_AFMR_AccBP		((uint32_t)(1<<1))
@@ -491,142 +460,215 @@ extern "C"
 #define CAN_FCANIC1_IntPnd(n)	((uint32_t)(1<<(n-32)))
 
 
-/**************************** GLOBAL/PUBLIC TYPES ***************************/
-/** @addtogroup PUBLIC_TYPES
+/* ---------------- CHECK PARAMETER DEFINITIONS ---------------------------- */
+/** Macro to determine if it is valid CAN peripheral or not */
+#define PARAM_CANx(x)			((((uint32_t*)x)==((uint32_t *)LPC_CAN1)) \
+||(((uint32_t*)x)==((uint32_t *)LPC_CAN2)))
+
+/*	Macro to determine if it is valid CANAF or not*/
+#define PARAM_CANAFx(x)			(((uint32_t*)x)== ((uint32_t*)LPC_CANAF))
+
+/*	Macro to determine if it is valid CANAF RAM or not*/
+#define PARAM_CANAFRAMx(x)		(((uint32_t*)x)== (uint32_t*)LPC_CANAF_RAM)
+
+/*	Macro to determine if it is valid CANCR or not*/
+#define PARAM_CANCRx(x)			(((uint32_t*)x)==((uint32_t*)LPC_CANCR))
+
+/** Macro to check Data to send valid */
+#define PARAM_I2S_DATA(data) 	((data>=0)&&(data <= 0xFFFFFFFF))
+
+/** Macro to check frequency value */
+#define PRAM_I2S_FREQ(freq)		((freq>=16000)&&(freq <= 96000))
+
+/** Macro to check Frame Identifier */
+#define PARAM_ID_11(n)			((n>>11)==0) /*-- 11 bit --*/
+#define PARAM_ID_29(n)			((n>>29)==0) /*-- 29 bit --*/
+
+/** Macro to check DLC value */
+#define PARAM_DLC(n)			((n>>4)==0)  /*-- 4 bit --*/
+/** Macro to check ID format type */
+#define PARAM_ID_FORMAT(n)		((n==STD_ID_FORMAT)||(n==EXT_ID_FORMAT))
+
+/** Macro to check Group identifier */
+#define PARAM_GRP_ID(x, y)		((x<=y))
+
+/** Macro to check Frame type */
+#define PARAM_FRAME_TYPE(n)		((n==DATA_FRAME)||(n==REMOTE_FRAME))
+
+/** Macro to check Control/Central Status type parameter */
+#define PARAM_CTRL_STS_TYPE(n)	((n==CANCTRL_GLOBAL_STS)||(n==CANCTRL_INT_CAP) \
+||(n==CANCTRL_ERR_WRN)||(n==CANCTRL_STS))
+
+/** Macro to check CR status type */
+#define PARAM_CR_STS_TYPE(n)	((n==CANCR_TX_STS)||(n==CANCR_RX_STS) \
+||(n==CANCR_MS))
+/** Macro to check AF Mode type parameter */
+#define PARAM_AFMODE_TYPE(n)	((n==CAN_Normal)||(n==CAN_AccOff) \
+||(n==CAN_AccBP)||(n==CAN_eFCAN))
+
+/** Macro to check Operation Mode */
+#define PARAM_MODE_TYPE(n)		((n==CAN_OPERATING_MODE)||(n==CAN_RESET_MODE) \
+||(n==CAN_LISTENONLY_MODE)||(n==CAN_SELFTEST_MODE) \
+||(n==CAN_TXPRIORITY_MODE)||(n==CAN_SLEEP_MODE) \
+||(n==CAN_RXPOLARITY_MODE)||(n==CAN_TEST_MODE))
+
+/** Macro define for struct AF_Section parameter */
+#define PARAM_CTRL(n)	((n==CAN1_CTRL)|(n==CAN2_CTRL))
+
+/** Macro define for struct AF_Section parameter */
+#define PARAM_MSG_DISABLE(n)	((n==MSG_ENABLE)|(n==MSG_DISABLE))
+
+/**Macro to check Interrupt Type parameter */
+#define PARAM_INT_EN_TYPE(n)	((n==CANINT_RIE)||(n==CANINT_TIE1) \
+||(n==CANINT_EIE)||(n==CANINT_DOIE) \
+||(n==CANINT_WUIE)||(n==CANINT_EPIE) \
+||(n==CANINT_ALIE)||(n==CANINT_BEIE) \
+||(n==CANINT_IDIE)||(n==CANINT_TIE2) \
+||(n==CANINT_TIE3)||(n==CANINT_FCE))
+
+/** Macro to check AFLUT Entry type */
+#define PARAM_AFLUT_ENTRY_TYPE(n)	((n==FULLCAN_ENTRY)||(n==EXPLICIT_STANDARD_ENTRY)\
+||(n==GROUP_STANDARD_ENTRY)||(n==EXPLICIT_EXTEND_ENTRY)	\
+||(n==GROUP_EXTEND_ENTRY))
+
+/** Macro to check position */
+#define PARAM_POSITION(n)	((n>=0)&&(n<512))
+
+/**
+ * @}
+ */
+
+/* Public Types --------------------------------------------------------------- */
+/** @defgroup CAN_Public_Types CAN Public Types
  * @{
  */
 
-/** @defgroup CAN_TYPES
- * @{
- */
 /** CAN configuration structure */
 /***********************************************************************
  * CAN device configuration commands (IOCTL commands and arguments)
  **********************************************************************/
-/** CAN ID format definition */
-typedef enum
-{
-	STD_ID_FORMAT = 0, /* Use standard ID format (11 bit ID) */
-	EXT_ID_FORMAT = 1  /* Use extended ID format (29 bit ID) */
-}CAN_ID_FORMAT_Type;
+/**
+ * @brief CAN ID format definition
+ */
+typedef enum {
+	STD_ID_FORMAT = 0, 	/**< Use standard ID format (11 bit ID) */
+	EXT_ID_FORMAT = 1	/**< Use extended ID format (29 bit ID) */
+} CAN_ID_FORMAT_Type;
 
-/** Symbolic names for type of CAN message */
-typedef enum
-{
-	DATA_FRAME = 0, 		/* Data frame */
-	REMOTE_FRAME = 1		/* Remote frame */
+/**
+ * @brief AFLUT Entry type definition
+ */
+typedef enum {
+	FULLCAN_ENTRY = 0,
+	EXPLICIT_STANDARD_ENTRY,
+	GROUP_STANDARD_ENTRY,
+	EXPLICIT_EXTEND_ENTRY,
+	GROUP_EXTEND_ENTRY
+} AFLUT_ENTRY_Type;
+
+/**
+ * @brief Symbolic names for type of CAN message
+ */
+typedef enum {
+	DATA_FRAME = 0, 	/**< Data frame */
+	REMOTE_FRAME = 1	/**< Remote frame */
 } CAN_FRAME_Type;
 
-/** Type definition to hold a FullCAN message */
-typedef struct
-{
-	uint32_t Data1;			/* Full CAN msg information */
-	uint32_t DataA;			/* First 32bit CAN data */
-	uint32_t DataB;			/* Second 32bit CAN data */
-} FULLCAN_MSGFIELD;
-
-/** CAN message object structure                                              */
-typedef struct
-{
-	uint32_t id;                 /* 29 bit identifier, it depend on "format" value
-								 - if format = STD_ID_FORMAT, id should be 11 bit identifier
-								 - if format = EXT_ID_FORMAT, id should be 29 bit identifier*/
-	uint32_t dataA;            	 /* Data field A */
-	uint32_t dataB;				 /* Data field B */
-	uint8_t  len;                /* Length of data field in bytes, should be:
-								 - 0000b-0111b: 0-7 bytes
-								 - 1xxxb: 8 bytes */
-	uint8_t  format;             /* Identifier Format, should be:
-								 - STD_ID_FORMAT: Standard ID - 11 bit format
-								 - EXT_ID_FORMAT: Extended ID - 29 bit format*/
-	uint8_t  type;               /* Remote Frame transmission, should be:
-								 - DATA_FRAME: the number of data bytes called out by the DLC
-								   field are send from the CANxTDA and CANxTDB registers
-								 - REMOTE_FRAME: Remote Frame is sent*/
-	uint8_t  Reserved;			 /* Unused - Fill it to 32-bit width */
-} CAN_MSG_Type;
-
-/** CAN Control status */
-typedef enum
-{
-	CANCTRL_GLOBAL_STS = 0,		/* CAN Global Status */
-	CANCTRL_INT_CAP,			/* CAN Interrupt and Capture */
-	CANCTRL_ERR_WRN,			/* CAN Error Warning Limit */
-	CANCTRL_STS					/* CAN Control Status */
+/**
+ * @brief CAN Control status definition
+ */
+typedef enum {
+	CANCTRL_GLOBAL_STS = 0, /**< CAN Global Status */
+	CANCTRL_INT_CAP, 		/**< CAN Interrupt and Capture */
+	CANCTRL_ERR_WRN, 		/**< CAN Error Warning Limit */
+	CANCTRL_STS				/**< CAN Control Status */
 } CAN_CTRL_STS_Type;
 
-/** Central CAN status type */
-typedef enum
-{
-	CANCR_TX_STS = 0, 			/* Central CAN Tx Status */
-	CANCR_RX_STS,				/* Central CAN Rx Status */
-	CANCR_MS					/* Central CAN Miscellaneous Status */
+/**
+ * @brief Central CAN status type definition
+ */
+typedef enum {
+	CANCR_TX_STS = 0, 	/**< Central CAN Tx Status */
+	CANCR_RX_STS, 		/**< Central CAN Rx Status */
+	CANCR_MS			/**< Central CAN Miscellaneous Status */
 } CAN_CR_STS_Type;
 
-/** CAN interrupt enable type */
-typedef enum
-{
-	CANINT_RIE = 0,				/* CAN Receiver Interrupt Enable */
-	CANINT_TIE1,				/* CAN Transmit Interrupt Enable */
-	CANINT_EIE,					/* CAN Error Warning Interrupt Enable */
-	CANINT_DOIE,				/* CAN Data Overrun Interrupt Enable */
-	CANINT_WUIE,				/* CAN Wake-Up Interrupt Enable */
-	CANINT_EPIE,				/* CAN Error Passive Interrupt Enable */
-	CANINT_ALIE,				/* CAN Arbitration Lost Interrupt Enable */
-	CANINT_BEIE,				/* CAN Bus Error Inter rupt Enable */
-	CANINT_IDIE,				/* CAN ID Ready Interrupt Enable */
-	CANINT_TIE2,				/* CAN Transmit Interrupt Enable for Buffer2 */
-	CANINT_TIE3,				/* CAN Transmit Interrupt Enable for Buffer3 */
-	CANINT_FCE					/* FullCAN Interrupt Enable */
+/**
+ * @brief FullCAN Interrupt Capture type definition
+ */
+typedef enum{
+	FULLCAN_IC0,	/**< FullCAN Interrupt and Capture 0 */
+	FULLCAN_IC1	/**< FullCAN Interrupt and Capture 1 */
+}FullCAN_IC_Type;
+
+/**
+ * @brief CAN interrupt enable type definition
+ */
+typedef enum {
+	CANINT_RIE = 0, 	/**< CAN Receiver Interrupt Enable */
+	CANINT_TIE1, 		/**< CAN Transmit Interrupt Enable */
+	CANINT_EIE, 		/**< CAN Error Warning Interrupt Enable */
+	CANINT_DOIE, 		/**< CAN Data Overrun Interrupt Enable */
+	CANINT_WUIE, 		/**< CAN Wake-Up Interrupt Enable */
+	CANINT_EPIE, 		/**< CAN Error Passive Interrupt Enable */
+	CANINT_ALIE, 		/**< CAN Arbitration Lost Interrupt Enable */
+	CANINT_BEIE, 		/**< CAN Bus Error Inter rupt Enable */
+	CANINT_IDIE, 		/**< CAN ID Ready Interrupt Enable */
+	CANINT_TIE2, 		/**< CAN Transmit Interrupt Enable for Buffer2 */
+	CANINT_TIE3, 		/**< CAN Transmit Interrupt Enable for Buffer3 */
+	CANINT_FCE			/**< FullCAN Interrupt Enable */
 } CAN_INT_EN_Type;
 
-/** Acceptance Filter Mode type */
-typedef enum
-{
-	CAN_Normal = 0,
-	CAN_AccOff, 				/* Acceptance Filter Off Mode */
-	CAN_AccBP,					/* Acceptance Fileter Bypass Mode */
-	CAN_eFCAN					/* FullCAN Mode Enhancement */
-}CAN_AFMODE_Type;
+/**
+ * @brief Acceptance Filter Mode type definition
+ */
+typedef enum {
+	CAN_Normal = 0, 	/**< Normal Mode */
+	CAN_AccOff, 		/**< Acceptance Filter Off Mode */
+	CAN_AccBP, 			/**< Acceptance Fileter Bypass Mode */
+	CAN_eFCAN			/**< FullCAN Mode Enhancement */
+} CAN_AFMODE_Type;
 
-typedef enum
-{
-	CAN_OPERATING_MODE = 0,		/* Operating Mode */
-	CAN_RESET_MODE,				/* Reset Mode */
-	CAN_LISTENONLY_MODE,		/* Listen Only Mode */
-	CAN_SELFTEST_MODE,			/* Seft Test Mode */
-	CAN_TXPRIORITY_MODE,		/* Transmit Priority Mode */
-	CAN_SLEEP_MODE,				/* Sleep Mode */
-	CAN_RXPOLARITY_MODE,		/* Receive Polarity Mode */
-	CAN_TEST_MODE				/* Test Mode */
-}CAN_MODE_Type;
+/**
+ * @brief CAN Mode Type definition
+ */
+typedef enum {
+	CAN_OPERATING_MODE = 0, 	/**< Operating Mode */
+	CAN_RESET_MODE, 			/**< Reset Mode */
+	CAN_LISTENONLY_MODE, 		/**< Listen Only Mode */
+	CAN_SELFTEST_MODE, 			/**< Seft Test Mode */
+	CAN_TXPRIORITY_MODE, 		/**< Transmit Priority Mode */
+	CAN_SLEEP_MODE, 			/**< Sleep Mode */
+	CAN_RXPOLARITY_MODE, 		/**< Receive Polarity Mode */
+	CAN_TEST_MODE				/**< Test Mode */
+} CAN_MODE_Type;
 
-/** Error values that functions can return */
-typedef enum
-{
-	CAN_OK = 1,                       /* No error */
-	CAN_NOT_IMPLEMENTED_ERROR,        /* Function has not been implemented */
-	CAN_BAUDRATE_ERROR,               /* Baudrate was not set */
-	CAN_TX_BUSY_ERROR,                /* Transmitting hardware busy */
-	CAN_OBJECTS_FULL_ERROR,           /* No more rx or tx objects available */
-	CAN_UNEXIST_CTRL_ERROR,           /* CAN Controller does not exist */
-	CAN_INIT_ERROR,					  /* CAN device has not been init */
-	CAN_FULL_OBJ_NOT_RCV,			  /* Full CAN object not received */
-	CAN_NOT_DATA_FRM_ERROR,			  /* Not data frame error */
-	CAN_NO_RECEIVE_DATA,			  /* No have receive data available */
-	CAN_AF_ENTRY_ERROR
-}  CAN_ERROR;
+/**
+ * @brief Error values that functions can return
+ */
+typedef enum {
+	CAN_OK = 1, 				/**< No error */
+	CAN_OBJECTS_FULL_ERROR, 	/**< No more rx or tx objects available */
+	CAN_FULL_OBJ_NOT_RCV, 		/**< Full CAN object not received */
+	CAN_NO_RECEIVE_DATA, 		/**< No have receive data available */
+	CAN_AF_ENTRY_ERROR, 		/**< Entry load in AFLUT is unvalid */
+	CAN_CONFLICT_ID_ERROR, 		/**< Conflict ID occur */
+	CAN_ENTRY_NOT_EXIT_ERROR	/**< Entry remove outo AFLUT is not exit */
+} CAN_ERROR;
 
+/**
+ * @brief Pin Configuration structure
+ */
 typedef struct {
-	uint8_t RD;				/** Serial Inputs, from CAN transceivers, should be:
-							** For CAN1:
-							- CAN_RD1_P0_0: RD pin is on P0.0
-							- CAN_RD1_P0_21 : RD pin is on P0.21
-							** For CAN2:
-							- CAN_RD2_P0_4: RD pin is on P0.4
-							- CAN_RD2_P2_7: RD pin is on P2.7
+	uint8_t RD; 			/**< Serial Inputs, from CAN transceivers, should be:
+							 ** For CAN1:
+							 - CAN_RD1_P0_0: RD pin is on P0.0
+							 - CAN_RD1_P0_21 : RD pin is on P0.21
+							 ** For CAN2:
+							 - CAN_RD2_P0_4: RD pin is on P0.4
+							 - CAN_RD2_P2_7: RD pin is on P2.7
 							 */
-	uint8_t TD;				/** Serial Outputs, To CAN transceivers, should be:
+	uint8_t TD;				/**< Serial Outputs, To CAN transceivers, should be:
 							 ** For CAN1:
 							 - CAN_TD1_P0_1: TD pin is on P0.1
 							 - CAN_TD1_P0_22: TD pin is on P0.22
@@ -634,224 +676,191 @@ typedef struct {
 							 - CAN_TD2_P0_5: TD pin is on P0.5
 							 - CAN_TD2_P2_8: TD pin is on P2.8
 							 */
-	uint8_t Reserved[2];
-}CAN_PinCFG_Type;
+} CAN_PinCFG_Type;
 
-/** Struct definition for AF Lookup Table */
-typedef struct
-{
-	uint8_t controller;
-	uint8_t disable;
-	uint16_t id_11;
-	struct FullCAN_Entry* next;
-}FullCAN_Entry;
+/**
+ * @brief CAN message object structure
+ */
+typedef struct {
+	uint32_t id; 			/**< 29 bit identifier, it depend on "format" value
+								 - if format = STD_ID_FORMAT, id should be 11 bit identifier
+								 - if format = EXT_ID_FORMAT, id should be 29 bit identifier
+							 */
+	uint8_t dataA[4]; 		/**< Data field A */
+	uint8_t dataB[4]; 		/**< Data field B */
+	uint8_t len; 			/**< Length of data field in bytes, should be:
+								 - 0000b-0111b: 0-7 bytes
+								 - 1xxxb: 8 bytes
+							*/
+	uint8_t format; 		/**< Identifier Format, should be:
+								 - STD_ID_FORMAT: Standard ID - 11 bit format
+								 - EXT_ID_FORMAT: Extended ID - 29 bit format
+							*/
+	uint8_t type; 			/**< Remote Frame transmission, should be:
+								 - DATA_FRAME: the number of data bytes called out by the DLC
+								 field are send from the CANxTDA and CANxTDB registers
+								 - REMOTE_FRAME: Remote Frame is sent
+							*/
+} CAN_MSG_Type;
 
-typedef struct
-{
-	uint8_t controller;			/** CAN Controller, should be:
-								- CAN1_CTRL: CAN1 Controller
-								- CAN2_CTRL: CAN2 Controller
-								*/
-	uint8_t disable;			/** Disable bit, should be:
-								- MSG_ENABLE: disable bit = 0
-								- MSG_DISABLE: disable bit = 1
-								*/
-	uint16_t id_11;				/** Standard ID, should be 11-bit value */
-	struct SFF_Entry* next;		/** The pointer point to next SFF_Entry */
-}SFF_Entry;
+/**
+ * @brief FullCAN Entry structure
+ */
+typedef struct {
+	uint8_t controller;		/**< CAN Controller, should be:
+								 - CAN1_CTRL: CAN1 Controller
+								 - CAN2_CTRL: CAN2 Controller
+							*/
+	uint8_t disable;		/**< Disable bit, should be:
+								 - MSG_ENABLE: disable bit = 0
+								 - MSG_DISABLE: disable bit = 1
+							*/
+	uint16_t id_11;			/**< Standard ID, should be 11-bit value */
+} FullCAN_Entry;
 
-typedef struct
-{
-	uint8_t controller1;		/** First CAN Controller, should be:
-								- CAN1_CTRL: CAN1 Controller
-								- CAN2_CTRL: CAN2 Controller
-								*/
-	uint8_t disable1;			/** First Disable bit, should be:
-								- MSG_ENABLE: disable bit = 0
-								- MSG_DISABLE: disable bit = 1
-								*/
-	uint16_t lowerID;			/** ID lower bound, should be 11-bit value */
-	uint8_t controller2;		/** Second CAN Controller, should be:
-								- CAN1_CTRL: CAN1 Controller
-								- CAN2_CTRL: CAN2 Controller
-								*/
-	uint8_t disable2;			/** Second Disable bit, should be:
-								- MSG_ENABLE: disable bit = 0
-								- MSG_DISABLE: disable bit = 1
-								*/
-	uint16_t upperID;			/** ID upper bound, should be 11-bit value and
-								 equal or greater than lowerID*/
-	struct SFF_GPR_Entry *next; /** The pointer point to next SFF_GPR_Entry */
-}SFF_GPR_Entry;
+/**
+ * @brief Standard ID Frame Format Entry structure
+ */
+typedef struct {
+	uint8_t controller; 	/**< CAN Controller, should be:
+								 - CAN1_CTRL: CAN1 Controller
+								 - CAN2_CTRL: CAN2 Controller
+							*/
+	uint8_t disable; 		/**< Disable bit, should be:
+								 - MSG_ENABLE: disable bit = 0
+								 - MSG_DISABLE: disable bit = 1
+							*/
+	uint16_t id_11; 		/**< Standard ID, should be 11-bit value */
+} SFF_Entry;
 
-typedef struct
-{
-	uint8_t controller;			/** CAN Controller, should be:
-								- CAN1_CTRL: CAN1 Controller
-								- CAN2_CTRL: CAN2 Controller
-								*/
-	uint8_t Reserved[3];
-	uint32_t ID_29;				/** Extend ID, shoud be 29-bit value */
-	struct EFF_Entry* next;		/** The pointer point to next EFF_Entry */
-}EFF_Entry;
+/**
+ * @brief Group of Standard ID Frame Format Entry structure
+ */
+typedef struct {
+	uint8_t controller1; 	/**< First CAN Controller, should be:
+								 - CAN1_CTRL: CAN1 Controller
+								 - CAN2_CTRL: CAN2 Controller
+							*/
+	uint8_t disable1; 		/**< First Disable bit, should be:
+								 - MSG_ENABLE: disable bit = 0)
+								 - MSG_DISABLE: disable bit = 1
+							*/
+	uint16_t lowerID; 		/**< ID lower bound, should be 11-bit value */
+	uint8_t controller2; 	/**< Second CAN Controller, should be:
+								 - CAN1_CTRL: CAN1 Controller
+								 - CAN2_CTRL: CAN2 Controller
+							*/
+	uint8_t disable2; 		/**< Second Disable bit, should be:
+								 - MSG_ENABLE: disable bit = 0
+								 - MSG_DISABLE: disable bit = 1
+							*/
+	uint16_t upperID; 		/**< ID upper bound, should be 11-bit value and
+								 equal or greater than lowerID
+							*/
+} SFF_GPR_Entry;
 
-typedef struct
-{
-	uint8_t controller1;		/** First CAN Controller, should be:
-								- CAN1_CTRL: CAN1 Controller
-								- CAN2_CTRL: CAN2 Controller
-								*/
-	uint8_t controller2;		/** Second Disable bit, should be:
-								- MSG_ENABLE: disable bit = 0
-								- MSG_DISABLE: disable bit = 1
-								*/
-	uint8_t Reserved2[2];
-	uint32_t lowerEID;			/** Extended ID lower bound, should be 29-bit value */
-	uint32_t upperEID;			/** Extended ID upper bound, should be 29-bit value */
-	struct EFF_GPR_Entry* next; /** The pointer point to next EFF_GPR_Entry */
-}EFF_GPR_Entry;
+/**
+ * @brief Extended ID Frame Format Entry structure
+ */
+typedef struct {
+	uint8_t controller; 	/**< CAN Controller, should be:
+								 - CAN1_CTRL: CAN1 Controller
+								 - CAN2_CTRL: CAN2 Controller
+							*/
+	uint32_t ID_29; 		/**< Extend ID, shoud be 29-bit value */
+} EFF_Entry;
 
-typedef struct
-{
-	FullCAN_Entry* FullCAN_Sec;   	/* The pointer point to FullCAN_Entry */
-	SFF_Entry* SFF_Sec;				/* The pointer point to SFF_Entry */
-	SFF_GPR_Entry* SFF_GPR_Sec;		/* The pointer point to SFF_GPR_Entry */
-	EFF_Entry* EFF_Sec;				/* The pointer point EFF_Entry */
-	EFF_GPR_Entry* EFF_GPR_Sec;		/* The pointer point EFF_GPR_Entry */
-}AF_SectionDef;
 
-/** CAN call-back function type definitions */
-typedef void (fnCANCbs_Type)();
+/**
+ * @brief Group of Extended ID Frame Format Entry structure
+ */
+typedef struct {
+	uint8_t controller1; 	/**< First CAN Controller, should be:
+								 - CAN1_CTRL: CAN1 Controller
+								 - CAN2_CTRL: CAN2 Controller
+							*/
+	uint8_t controller2; 	/**< Second Disable bit, should be:
+								 - MSG_ENABLE: disable bit = 0(default)
+								 - MSG_DISABLE: disable bit = 1
+							*/
+	uint32_t lowerEID; 		/**< Extended ID lower bound, should be 29-bit value */
+	uint32_t upperEID; 		/**< Extended ID upper bound, should be 29-bit value */
+} EFF_GPR_Entry;
+
+
+/**
+ * @brief Acceptance Filter Section Table structure
+ */
+typedef struct {
+	FullCAN_Entry* FullCAN_Sec; 	/**< The pointer point to FullCAN_Entry */
+	uint8_t FC_NumEntry;			/**< FullCAN Entry Number */
+	SFF_Entry* SFF_Sec; 			/**< The pointer point to SFF_Entry */
+	uint8_t SFF_NumEntry;			/**< Standard ID Entry Number */
+	SFF_GPR_Entry* SFF_GPR_Sec; 	/**< The pointer point to SFF_GPR_Entry */
+	uint8_t SFF_GPR_NumEntry;		/**< Group Standard ID Entry Number */
+	EFF_Entry* EFF_Sec; 			/**< The pointer point to EFF_Entry */
+	uint8_t EFF_NumEntry;			/**< Extended ID Entry Number */
+	EFF_GPR_Entry* EFF_GPR_Sec; 	/**< The pointer point to EFF_GPR_Entry */
+	uint8_t EFF_GPR_NumEntry;		/**< Group Extended ID Entry Number */
+} AF_SectionDef;
+
 /**
  * @}
  */
 
-/**
- * @}
- */
 
-/*************************** GLOBAL/PUBLIC MACROS ***************************/
-/** @addtogroup PUBLIC_MACROS
+/* Public Functions ----------------------------------------------------------- */
+/** @defgroup CAN_Public_Functions CAN Public Functions
  * @{
  */
 
-/** @defgroup I2S_MACROS
- * @{
- */
+/* Init/DeInit CAN peripheral -----------*/
+void CAN_Init(LPC_CAN_TypeDef *CANx, uint32_t baudrate);
+void CAN_DeInit(LPC_CAN_TypeDef *CANx);
 
-/** Macro to determine if it is valid CAN peripheral */
-#define PARAM_CANx(x)			((((uint32_t*)x)==((uint32_t *)CAN1)) \
-								||(((uint32_t*)x)==((uint32_t *)CAN2)))
-#define PARAM_CANAFx(x)			(((uint32_t*)x)== ((uint32_t*)CANAF))
-#define PARAM_CANAFRAMx(x)		(((uint32_t*)x)== (uint32_t*)CANAF_RAM)
-#define PARAM_CANCRx(x)			(((uint32_t*)x)==((uint32_t*)CANCR))
+/* CAN messages functions ---------------*/
+Status CAN_SendMsg(LPC_CAN_TypeDef *CANx, CAN_MSG_Type *CAN_Msg);
+Status CAN_ReceiveMsg(LPC_CAN_TypeDef *CANx, CAN_MSG_Type *CAN_Msg);
+CAN_ERROR FCAN_ReadObj(LPC_CANAF_TypeDef* CANAFx, CAN_MSG_Type *CAN_Msg);
 
-/** Macro to check Data to send valid */
-#define PARAM_I2S_DATA(data) 	((data>=0)&&(data <= 0xFFFFFFFF))
-#define PRAM_I2S_FREQ(freq)		((freq>=16000)&&(freq <= 96000))
+/* CAN configure functions ---------------*/
+void CAN_ModeConfig(LPC_CAN_TypeDef* CANx, CAN_MODE_Type mode,
+		FunctionalState NewState);
+void CAN_SetAFMode(LPC_CANAF_TypeDef* CANAFx, CAN_AFMODE_Type AFmode);
+void CAN_SetCommand(LPC_CAN_TypeDef* CANx, uint32_t CMRType);
 
-/** Macro to check Pin Selection value */
-#define PARAM_RD1_PIN(n)		((n==CAN_RD1_P0_0)||(n==CAN_RD1_P0_21))
-#define PARAM_TD1_PIN(n)		((n==CAN_TD1_P0_1)||(n==CAN_TD1_P0_22))
-#define PARAM_RD2_PIN(n)		((n==CAN_RD2_P0_4)||(n==CAN_RD2_P2_7))
-#define PARAM_TD2_PIN(n)		((n==CAN_TD2_P0_5)||(n==CAN_TD2_P2_8))
+/* AFLUT functions ---------------------- */
+CAN_ERROR CAN_SetupAFLUT(LPC_CANAF_TypeDef* CANAFx, AF_SectionDef* AFSection);
+CAN_ERROR CAN_LoadFullCANEntry(LPC_CAN_TypeDef* CANx, uint16_t ID);
+CAN_ERROR CAN_LoadExplicitEntry(LPC_CAN_TypeDef* CANx, uint32_t ID,
+		CAN_ID_FORMAT_Type format);
+CAN_ERROR CAN_LoadGroupEntry(LPC_CAN_TypeDef* CANx, uint32_t lowerID,
+		uint32_t upperID, CAN_ID_FORMAT_Type format);
+CAN_ERROR CAN_RemoveEntry(AFLUT_ENTRY_Type EntryType, uint16_t position);
 
-/** Macro to check Frame Identifier */
-#define PARAM_ID_11(n)			((n>>11)==0) /*-- 11 bit --*/
-#define PARAM_ID_29(n)			((n>>29)==0) /*-- 29 bit --*/
+/* CAN interrupt functions -----------------*/
+void CAN_IRQCmd(LPC_CAN_TypeDef* CANx, CAN_INT_EN_Type arg, FunctionalState NewState);
+uint32_t CAN_IntGetStatus(LPC_CAN_TypeDef* CANx);
 
-#define PARAM_DLC(n)			((n>>4)==0)  /*-- 4 bit --*/
-#define PARAM_ID_FORMAT(n)		((n==STD_ID_FORMAT)||(n==EXT_ID_FORMAT))
-#define PARAM_GRP_ID(x,y)		((x<=y))
-#define PARAM_FRAME_TYPE(n)		((n==DATA_FRAME)||(n==REMOTE_FRAME))
-
-/** Macro to check Control/Central Status type parameter */
-#define PARAM_CTRL_STS_TYPE(n)	((n==CANCTRL_GLOBAL_STS)||(n==CANCTRL_INT_CAP) \
-							    ||(n==CANCTRL_ERR_WRN)||(n==CANCTRL_STS))
-#define PARAM_CR_STS_TYPE(n)	((n==CANCR_TX_STS)||(n==CANCR_RX_STS) \
-							    ||(n==CANCR_MS))
-/** Macro to check AF Mode type parameter */
-#define PARAM_AFMODE_TYPE(n)	((n==CAN_Normal)||(n==CAN_AccOff) \
-								||(n==CAN_AccBP)||(n==CAN_eFCAN))
-/** Macro to check Operation Mode */
-#define PARAM_MODE_TYPE(n)		((n==CAN_OPERATING_MODE)||(n==CAN_RESET_MODE) \
-								||(n==CAN_LISTENONLY_MODE)||(n==CAN_SELFTEST_MODE) \
-								||(n==CAN_TXPRIORITY_MODE)||(n==CAN_SLEEP_MODE) \
-								||(n==CAN_RXPOLARITY_MODE)||(n==CAN_TEST_MODE))
-
-/** Macro define for struct AF_Section parameter */
-#define CAN1_CTRL				((uint8_t)(0))
-#define CAN2_CTRL				((uint8_t)(1))
-#define PARAM_CTRL(n)			((n==CAN1_CTRL)|(n==CAN2_CTRL))
-
-#define MSG_ENABLE				((uint8_t)(0))
-#define MSG_DISABLE				((uint8_t)(1))
-#define PARAM_MSG_DISABLE(n)	((n==MSG_ENABLE)|(n==MSG_DISABLE))
-
-/**Macro to check Interrupt Type parameter */
-#define PARAM_INT_EN_TYPE(n)	((n==CANINT_RIE)||(n==CANINT_TIE1) \
-								||(n==CANINT_EIE)||(n==CANINT_DOIE) \
-								||(n==CANINT_WUIE)||(n==CANINT_EPIE) \
-								||(n==CANINT_ALIE)||(n==CANINT_BEIE) \
-								||(n==CANINT_IDIE)||(n==CANINT_TIE2) \
-								||(n==CANINT_TIE3)||(n==CANINT_FCE))
-
-/** CAN function pin selection defines */
-#define CAN_RD1_P0_0		((uint8_t)(0))
-#define CAN_RD1_P0_21		((uint8_t)(0))
-#define CAN_TD1_P0_1		((uint8_t)(0))
-#define CAN_TD1_P0_22		((uint8_t)(0))
-
-#define CAN_RD2_P0_4		((uint8_t)(0))
-#define CAN_RD2_P2_7		((uint8_t)(2))
-#define CAN_TD2_P0_5		((uint8_t)(0))
-#define CAN_TD2_P2_8		((uint8_t)(2))
-
-/*********************************************************************//**
- * CAN configuration parameter defines
- **********************************************************************/
+/* CAN get status functions ----------------*/
+IntStatus CAN_FullCANIntGetStatus (LPC_CANAF_TypeDef* CANAFx);
+uint32_t CAN_FullCANPendGetStatus (LPC_CANAF_TypeDef* CANAFx, FullCAN_IC_Type type);
+uint32_t CAN_GetCTRLStatus(LPC_CAN_TypeDef* CANx, CAN_CTRL_STS_Type arg);
+uint32_t CAN_GetCRStatus(LPC_CANCR_TypeDef* CANCRx, CAN_CR_STS_Type arg);
 
 /**
  * @}
  */
 
-/**
- * @}
- */
-
-/************************** GLOBAL/PUBLIC FUNCTIONS *************************/
-/** @addtogroup PUBLIC_FUNCTION_PROTOTYPES
- * @{
- */
-
-/** @defgroup I2S_FUNCTIONS
- * @{
- */
-void CAN_SetBaudRate (CAN_TypeDef *CANx, uint32_t baudrate);
-void CAN_Init(CAN_TypeDef *CANx, uint32_t baudrate);
-CAN_ERROR CAN_LoadID (CAN_TypeDef *CANx,CANAF_RAM_TypeDef* CANAFRAM,uint32_t id, CAN_ID_FORMAT_Type format);
-Status CAN_SendMsg (CAN_TypeDef *CANx, CAN_MSG_Type *CAN_Msg);
-Status CAN_ReceiveMsg (CAN_TypeDef *CANx, CAN_MSG_Type *CAN_Msg);
-CAN_ERROR FCAN_ReadObj (CANAF_TypeDef* CANAFx, CAN_MSG_Type *CAN_Msg);
-uint32_t CAN_GetCTRLStatus (CAN_TypeDef* CANx, CAN_CTRL_STS_Type arg);
-uint32_t CAN_GetCRStatus (CANCR_TypeDef* CANCRx, CAN_CR_STS_Type arg);
-void CAN_IRQCmd (CAN_TypeDef* CANx, CAN_INT_EN_Type arg, FunctionalState NewState);
-void CAN_SetAFMode(CANAF_TypeDef* CANAFx, CAN_AFMODE_Type AFmode);
-void CAN_ModeConfig(CAN_TypeDef* CANx, CAN_MODE_Type mode, FunctionalState NewState);
-CAN_ERROR CAN_SetupAFLUT(CANAF_TypeDef* CANAFx,CANAF_RAM_TypeDef* CANAFRAM, AF_SectionDef* AFSection);
-void CAN_SetupCBS(CAN_INT_EN_Type arg,fnCANCbs_Type* pnCANCbs);
-void CAN_IntHandler(CAN_TypeDef* CANx);
-/**
- * @}
- */
-
-/**
- * @}
- */
 
 #ifdef __cplusplus
 }
 #endif
 
-
 #endif /* LPC17XX_CAN_H_ */
+
+/**
+ * @}
+ */
+
+/* --------------------------------- End Of File ------------------------------ */

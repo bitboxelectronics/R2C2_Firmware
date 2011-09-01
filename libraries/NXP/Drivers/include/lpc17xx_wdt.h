@@ -1,26 +1,39 @@
-/***********************************************************************//**
- * @file	: lpc17xx_wdt.h
- * @brief	: Contains all macro definitions and function prototypes
- * 				support for WDT firmware library on LPC17xx
- * @version	: 1.0
- * @date	: 9. April. 2009
- * @author	: HieuNguyen
- **************************************************************************
- * Software that is described herein is for illustrative purposes only
- * which provides customers with programming information regarding the
- * products. This software is supplied "AS IS" without any warranties.
- * NXP Semiconductors assumes no responsibility or liability for the
- * use of the software, conveys no license or title under any patent,
- * copyright, or mask work right to the product. NXP Semiconductors
- * reserves the right to make changes in the software without
- * notification. NXP Semiconductors also make no representation or
- * warranty that such application will be suitable for the specified
- * use without further testing or modification.
- **************************************************************************/
+/**********************************************************************
+* $Id$		lpc17xx_wdt.h				2010-05-21
+*//**
+* @file		lpc17xx_wdt.h
+* @brief	Contains all macro definitions and function prototypes
+* 			support for WDT firmware library on LPC17xx
+* @version	2.0
+* @date		21. May. 2010
+* @author	NXP MCU SW Application Team
+*
+* Copyright(C) 2010, NXP Semiconductor
+* All rights reserved.
+*
+***********************************************************************
+* Software that is described herein is for illustrative purposes only
+* which provides customers with programming information regarding the
+* products. This software is supplied "AS IS" without any warranties.
+* NXP Semiconductors assumes no responsibility or liability for the
+* use of the software, conveys no license or title under any patent,
+* copyright, or mask work right to the product. NXP Semiconductors
+* reserves the right to make changes in the software without
+* notification. NXP Semiconductors also make no representation or
+* warranty that such application will be suitable for the specified
+* use without further testing or modification.
+**********************************************************************/
+
+/* Peripheral group ----------------------------------------------------------- */
+/** @defgroup WDT WDT
+ * @ingroup LPC1700CMSIS_FwLib_Drivers
+ * @{
+ */
 
 #ifndef LPC17XX_WDT_H_
 #define LPC17XX_WDT_H_
 
+/* Includes ------------------------------------------------------------------- */
 #include "LPC17xx.h"
 #include "lpc_types.h"
 
@@ -30,16 +43,13 @@ extern "C"
 {
 #endif
 
-/***************************PRIVATE MACROS ***************************/
-/** @addtogroup PRIVATE_MACROS
+
+/* Private Macros ------------------------------------------------------------- */
+/** @defgroup WDT_Private_Macros WDT Private Macros
  * @{
  */
 
-
-/** @defgroup WDT_REGISTER_BIT_DEFINITIONS
- * @{
- */
-/************************** WDT Control **************************/
+/* --------------------- BIT DEFINITIONS -------------------------------------- */
 /** WDT interrupt enable bit */
 #define WDT_WDMOD_WDEN			    ((uint32_t)(1<<0))
 /** WDT interrupt enable bit */
@@ -51,7 +61,6 @@ extern "C"
 /** WDT Mode */
 #define WDT_WDMOD(n)				((uint32_t)(1<<1))
 
-/**************************** PRIVATE TYPES ***************************/
 /** Define divider index for microsecond ( us ) */
 #define WDT_US_INDEX	((uint32_t)(1000000))
 /** WDT Time out minimum value */
@@ -59,8 +68,6 @@ extern "C"
 /** WDT Time out maximum value */
 #define WDT_TIMEOUT_MAX	((uint32_t)(0xFFFFFFFF))
 
-
-/**************************** GLOBAL/PUBLIC TYPES ***************************/
 /** Watchdog mode register mask */
 #define WDT_WDMOD_MASK			(uint8_t)(0x02)
 /** Watchdog timer constant register mask */
@@ -75,77 +82,67 @@ extern "C"
 #define WDT_WDCLKSEL_PCLK		(uint8_t)(0x01)
 /** Clock selected from external RTC */
 #define WDT_WDCLKSEL_RTC		(uint8_t)(0x02)
+
+/* ---------------- CHECK PARAMETER DEFINITIONS ---------------------------- */
+/* Macro check clock source selection  */
+#define PARAM_WDT_CLK_OPT(OPTION)  ((OPTION ==WDT_CLKSRC_IRC)||(OPTION ==WDT_CLKSRC_IRC)\
+||(OPTION ==WDT_CLKSRC_IRC))
+
+/* Macro check WDT mode */
+#define PARAM_WDT_MODE_OPT(OPTION)  ((OPTION ==WDT_MODE_INT_ONLY)||(OPTION ==WDT_MODE_RESET))
 /**
  * @}
  */
 
-/**
- * @}
- */
-/***********************************************************************
- * Public WDT enumeration
- **********************************************************************/
-/** @addtogroup PUBLIC_TYPES
+
+/* Public Types --------------------------------------------------------------- */
+/** @defgroup WDT_Public_Types WDT Public Types
  * @{
  */
 
-
-/** @defgroup WDT_TYPES
- * @{
- */
-/** Clock source option for WDT */
+/** @brief Clock source option for WDT */
 typedef enum {
 	WDT_CLKSRC_IRC = 0, /*!< Clock source from Internal RC oscillator */
 	WDT_CLKSRC_PCLK = 1, /*!< Selects the APB peripheral clock (PCLK) */
 	WDT_CLKSRC_RTC = 2 /*!< Selects the RTC oscillator */
 } WDT_CLK_OPT;
-#define PARAM_WDT_CLK_OPT(OPTION)  ((OPTION ==WDT_CLKSRC_IRC)||\
-								  (OPTION ==WDT_CLKSRC_IRC)||\
-								  (OPTION ==WDT_CLKSRC_IRC))
-/** WDT operation mode */
+
+/** @brief WDT operation mode */
 typedef enum {
 	WDT_MODE_INT_ONLY = 0, /*!< Use WDT to generate interrupt only */
 	WDT_MODE_RESET = 1    /*!< Use WDT to generate interrupt and reset MCU */
 } WDT_MODE_OPT;
-#define PARAM_WDT_MODE_OPT(OPTION)  ((OPTION ==WDT_MODE_INT_ONLY)||\
-								  (OPTION ==WDT_MODE_RESET))
-
-/**
- * @}
- */
 
 /**
  * @}
  */
 
 
-/***********************************************************************
- * WDT driver API functions
- **********************************************************************/
-/** @addtogroup PUBLIC_FUNCTION_PROTOTYPES
+/* Public Functions ----------------------------------------------------------- */
+/** @defgroup WDT_Public_Functions WDT Public Functions
  * @{
  */
 
-/** @defgroup WDT_FUNCTIONS
- * @{
- */
-void WDT_Init (uint32_t ClkSrc, uint32_t WDTMode, uint32_t TimeOut);
+void WDT_Init (WDT_CLK_OPT ClkSrc, WDT_MODE_OPT WDTMode);
+void WDT_Start(uint32_t TimeOut);
 void WDT_Feed (void);
+void WDT_UpdateTimeOut ( uint32_t TimeOut);
 FlagStatus WDT_ReadTimeOutFlag (void);
 void WDT_ClrTimeOutFlag (void);
-uint8_t WDT_SetTimeOut (uint8_t clk_source, uint32_t timeout);
-void WDT_Start(void);
 uint32_t WDT_GetCurrentCount(void);
-/**
- * @}
- */
 
 /**
  * @}
  */
+
 #ifdef __cplusplus
 }
 #endif
 
-
 #endif /* LPC17XX_WDT_H_ */
+
+/**
+ * @}
+ */
+
+/* --------------------------------- End Of File ------------------------------ */

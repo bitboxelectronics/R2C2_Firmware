@@ -1,26 +1,39 @@
-/***********************************************************************//**
- * @file	: lpc17xx_spi.h
- * @brief	: Contains all macro definitions and function prototypes
- * 				support for SPI firmware library on LPC17xx
- * @version	: 1.0
- * @date	: 3. April. 2009
- * @author	: HieuNguyen
- **************************************************************************
- * Software that is described herein is for illustrative purposes only
- * which provides customers with programming information regarding the
- * products. This software is supplied "AS IS" without any warranties.
- * NXP Semiconductors assumes no responsibility or liability for the
- * use of the software, conveys no license or title under any patent,
- * copyright, or mask work right to the product. NXP Semiconductors
- * reserves the right to make changes in the software without
- * notification. NXP Semiconductors also make no representation or
- * warranty that such application will be suitable for the specified
- * use without further testing or modification.
- **************************************************************************/
+/**********************************************************************
+* $Id$		lpc17xx_spi.h				2010-05-21
+*//**
+* @file		lpc17xx_spi.h
+* @brief	Contains all macro definitions and function prototypes
+* 			support for SPI firmware library on LPC17xx
+* @version	2.0
+* @date		21. May. 2010
+* @author	NXP MCU SW Application Team
+*
+* Copyright(C) 2010, NXP Semiconductor
+* All rights reserved.
+*
+***********************************************************************
+* Software that is described herein is for illustrative purposes only
+* which provides customers with programming information regarding the
+* products. This software is supplied "AS IS" without any warranties.
+* NXP Semiconductors assumes no responsibility or liability for the
+* use of the software, conveys no license or title under any patent,
+* copyright, or mask work right to the product. NXP Semiconductors
+* reserves the right to make changes in the software without
+* notification. NXP Semiconductors also make no representation or
+* warranty that such application will be suitable for the specified
+* use without further testing or modification.
+**********************************************************************/
+
+/* Peripheral group ----------------------------------------------------------- */
+/** @defgroup SPI SPI
+ * @ingroup LPC1700CMSIS_FwLib_Drivers
+ * @{
+ */
 
 #ifndef LPC17XX_SPI_H_
 #define LPC17XX_SPI_H_
 
+/* Includes ------------------------------------------------------------------- */
 #include "LPC17xx.h"
 #include "lpc_types.h"
 
@@ -30,38 +43,73 @@ extern "C"
 {
 #endif
 
-/****************************** PRIVATE MACROS ******************************/
-/** @addtogroup PRIVATE_MACROS
+/* Public Macros -------------------------------------------------------------- */
+/** @defgroup SPI_Public_Macros SPI Public Macros
  * @{
  */
 
+/*********************************************************************//**
+ * SPI configuration parameter defines
+ **********************************************************************/
+/** Clock phase control bit */
+#define SPI_CPHA_FIRST			((uint32_t)(0))
+#define SPI_CPHA_SECOND			((uint32_t)(1<<3))
 
-/** @defgroup SPI_PINSEL
- * @{
- */
-/** SPI function pin selection group 0 */
-#define SPI_PINSEL_SCK_P0_15	((uint32_t)(15))
-#define SPI_PINFUNC_SCK_P0_15	((uint32_t)(3))
+/** Clock polarity control bit */
+#define SPI_CPOL_HI				((uint32_t)(0))
+#define SPI_CPOL_LO				((uint32_t)(1<<4))
 
-#define SPI_PINSEL_SSEL_P0_16	((uint32_t)(16))
-#define SPI_PINFUNC_SSEL_P0_16	((uint32_t)(3))
+/** SPI master mode enable */
+#define SPI_SLAVE_MODE			((uint32_t)(0))
+#define SPI_MASTER_MODE			((uint32_t)(1<<5))
 
-#define SPI_PINSEL_MISO_P0_17	((uint32_t)(17))
-#define SPI_PINFUNC_MISO_P0_17	((uint32_t)(3))
+/** LSB enable bit */
+#define SPI_DATA_MSB_FIRST		((uint32_t)(0))
+#define SPI_DATA_LSB_FIRST		((uint32_t)(1<<6))
 
-#define SPI_PINSEL_MOSI_P0_18	((uint32_t)(18))
-#define SPI_PINFUNC_MOSI_P0_18	((uint32_t)(3))
+/** SPI data bit number defines */
+#define SPI_DATABIT_16		SPI_SPCR_BITS(0)		/*!< Databit number = 16 */
+#define SPI_DATABIT_8		SPI_SPCR_BITS(0x08) 	/*!< Databit number = 8 */
+#define SPI_DATABIT_9		SPI_SPCR_BITS(0x09) 	/*!< Databit number = 9 */
+#define SPI_DATABIT_10		SPI_SPCR_BITS(0x0A) 	/*!< Databit number = 10 */
+#define SPI_DATABIT_11		SPI_SPCR_BITS(0x0B) 	/*!< Databit number = 11 */
+#define SPI_DATABIT_12		SPI_SPCR_BITS(0x0C) 	/*!< Databit number = 12 */
+#define SPI_DATABIT_13		SPI_SPCR_BITS(0x0D) 	/*!< Databit number = 13 */
+#define SPI_DATABIT_14		SPI_SPCR_BITS(0x0E) 	/*!< Databit number = 14 */
+#define SPI_DATABIT_15		SPI_SPCR_BITS(0x0F) 	/*!< Databit number = 15 */
+
+/*********************************************************************//**
+ * SPI Status Flag defines
+ **********************************************************************/
+/** Slave abort */
+#define SPI_STAT_ABRT		SPI_SPSR_ABRT
+/** Mode fault */
+#define SPI_STAT_MODF		SPI_SPSR_MODF
+/** Read overrun */
+#define SPI_STAT_ROVR		SPI_SPSR_ROVR
+/** Write collision */
+#define SPI_STAT_WCOL		SPI_SPSR_WCOL
+/** SPI transfer complete flag */
+#define SPI_STAT_SPIF		SPI_SPSR_SPIF
+
+/* SPI Status Implementation definitions */
+#define SPI_STAT_DONE		(1UL<<8)		/**< Done */
+#define SPI_STAT_ERROR		(1UL<<9)		/**< Error */
+
 /**
  * @}
  */
 
 
+/* Private Macros ------------------------------------------------------------- */
+/** @defgroup SPI_Private_Macros SPI Private Macros
+ * @{
+ */
+
+/* --------------------- BIT DEFINITIONS -------------------------------------- */
 /*********************************************************************//**
  * Macro defines for SPI Control Register
  **********************************************************************/
-/** @defgroup SPI_REGISTER_BIT_DEFINITION
- * @{
- */
 /** Bit enable, the SPI controller sends and receives the number
  * of bits selected by bits 11:8 */
 #define SPI_SPCR_BIT_EN			((uint32_t)(1<<2))
@@ -81,7 +129,6 @@ number of bits per transfer */
 /** SPI Control bit mask */
 #define SPI_SPCR_BITMASK		((uint32_t)(0xFFC))
 
-
 /*********************************************************************//**
  * Macro defines for  SPI Status Register
  **********************************************************************/
@@ -98,7 +145,6 @@ number of bits per transfer */
 /** SPI Status bit mask */
 #define SPI_SPSR_BITMASK	((uint32_t)(0xF8))
 
-
 /*********************************************************************//**
  * Macro defines for SPI Data Register
  **********************************************************************/
@@ -109,7 +155,6 @@ number of bits per transfer */
 /** SPI Data bit-mask */
 #define SPI_SPDR_BITMASK	((uint32_t)(0xFFFF))
 
-
 /*********************************************************************//**
  * Macro defines for SPI Clock Counter Register
  **********************************************************************/
@@ -118,7 +163,6 @@ number of bits per transfer */
 /** SPI clock counter bit-mask */
 #define SPI_SPCCR_BITMASK		((uint32_t)(0xFF))
 
-
 /***********************************************************************
  * Macro defines for SPI Test Control Register
  **********************************************************************/
@@ -126,8 +170,6 @@ number of bits per transfer */
 #define SPI_SPTCR_TEST_MASK	((uint32_t)(0xFE))
 /** SPI Test register bit mask */
 #define SPI_SPTCR_BITMASK	((uint32_t)(0xFE))
-
-
 
 /*********************************************************************//**
  * Macro defines for SPI Test Status Register
@@ -145,8 +187,6 @@ number of bits per transfer */
 /** SPI Status bit mask */
 #define SPI_SPTSR_MASKBIT	((uint32_t)(0xF8))
 
-
-
 /*********************************************************************//**
  * Macro defines for SPI Interrupt Register
  **********************************************************************/
@@ -155,24 +195,46 @@ number of bits per transfer */
 /** SPI interrupt register bit mask */
 #define SPI_SPINT_BITMASK 	((uint32_t)(0x01))
 
-/**
- * @}
- */
+
+/* ---------------- CHECK PARAMETER DEFINITIONS ---------------------------- */
+/** Macro to determine if it is valid SPI port number */
+#define PARAM_SPIx(n)	(((uint32_t *)n)==((uint32_t *)LPC_SPI))
+
+/** Macro check Clock phase control mode */
+#define PARAM_SPI_CPHA(n) 	((n==SPI_CPHA_FIRST) || (n==SPI_CPHA_SECOND))
+
+/** Macro check Clock polarity control mode */
+#define PARAM_SPI_CPOL(n)	((n==SPI_CPOL_HI) || (n==SPI_CPOL_LO))
+
+/** Macro check master/slave mode */
+#define PARAM_SPI_MODE(n)	((n==SPI_SLAVE_MODE) || (n==SPI_MASTER_MODE))
+
+/** Macro check LSB/MSB mode */
+#define PARAM_SPI_DATA_ORDER(n) ((n==SPI_DATA_MSB_FIRST) || (n==SPI_DATA_LSB_FIRST))
+
+/** Macro check databit value */
+#define PARAM_SPI_DATABIT(n)	((n==SPI_DATABIT_16) || (n==SPI_DATABIT_8) \
+|| (n==SPI_DATABIT_9) || (n==SPI_DATABIT_10) \
+|| (n==SPI_DATABIT_11) || (n==SPI_DATABIT_12) \
+|| (n==SPI_DATABIT_13) || (n==SPI_DATABIT_14) \
+|| (n==SPI_DATABIT_15))
+
+/** Macro check status flag */
+#define PARAM_SPI_STAT(n)	((n==SPI_STAT_ABRT) || (n==SPI_STAT_MODF) \
+|| (n==SPI_STAT_ROVR) || (n==SPI_STAT_WCOL) \
+|| (n==SPI_STAT_SPIF))
 
 /**
  * @}
  */
 
 
-/**************************** GLOBAL/PUBLIC TYPES ***************************/
-/** @addtogroup PUBLIC_TYPES
+/* Public Types --------------------------------------------------------------- */
+/** @defgroup SPI_Public_Types SPI Public Types
  * @{
  */
 
-/** @defgroup SPI_TYPES
- * @{
- */
-/** SPI configuration structure */
+/** @brief SPI configuration structure */
 typedef struct {
 	uint32_t Databit; 		/** Databit number, should be SPI_DATABIT_x,
 							where x is in range from 8 - 16 */
@@ -192,142 +254,56 @@ typedef struct {
 							(SPI peripheral clock)/8 */
 } SPI_CFG_Type;
 
-/** SPI pin configuration structure */
+
+/**
+ * @brief SPI Transfer Type definitions
+ */
+typedef enum {
+	SPI_TRANSFER_POLLING = 0,	/**< Polling transfer */
+	SPI_TRANSFER_INTERRUPT		/**< Interrupt transfer */
+} SPI_TRANSFER_Type;
+
+/**
+ * @brief SPI Data configuration structure definitions
+ */
 typedef struct {
-	uint8_t SCK_Pin;	/** SCK Pin configuration, should be:
-						- SPI_SCK_P0_15: SCK pin is on P0.15 */
-	uint8_t SSEL_Pin;	/** SSEL Pin configuration, should be:
-						- SPI_SSEL_P0_16: SSEL pin is on P0.16 */
-	uint8_t MISO_Pin;	/** SCK Pin configuration, should be:
-						- SPI_MISO_P0_17: MISO pin is on P0.17 */
-	uint8_t MOSI_Pin;	/** SCK Pin configuration, should be:
-						- SPI_MOSI_P0_18: MOSI pin is on P0.18 */
-} SPI_PinCFG_Type;
-
-/**
- * @}
- */
+	void *tx_data;				/**< Pointer to transmit data */
+	void *rx_data;				/**< Pointer to transmit data */
+	uint32_t length;			/**< Length of transfer data */
+	uint32_t counter;			/**< Data counter index */
+	uint32_t status;			/**< Current status of SPI activity */
+} SPI_DATA_SETUP_Type;
 
 /**
  * @}
  */
 
 
-/*************************** GLOBAL/PUBLIC MACROS ***************************/
-/** @addtogroup PUBLIC_MACROS
+/* Public Functions ----------------------------------------------------------- */
+/** @defgroup SPI_Public_Functions SPI Public Functions
  * @{
  */
 
-/** @defgroup SPI_MACROS
- * @{
- */
-/** Macro to determine if it is valid SPI port number */
-#define PARAM_SPIx(n)	(((uint32_t *)n)==((uint32_t *)SPI))
-
-
-/** SPI function pin selection defines */
-#define SPI_SCK_P0_15			((uint8_t)(0))
-#define SPI_SSEL_P0_16			((uint8_t)(0))
-#define SPI_MISO_P0_17			((uint8_t)(0))
-#define SPI_MOSI_P0_18			((uint8_t)(0))
-
-/** Macro to check SPI pin configuration */
-#define PARAM_SPI_SCK(n) ((n==SPI_SCK_P0_15))
-#define PARAM_SPI_SSEL(n) ((n==SPI_SSEL_P0_16))
-#define PARAM_SPI_MISO(n)	((n==SPI_MISO_P0_17))
-#define PARAM_SPI_MOSI(n)	((n==SPI_MOSI_P0_18))
-
-
-/*********************************************************************//**
- * SPI configuration parameter defines
- **********************************************************************/
-/** Clock phase control bit */
-#define SPI_CPHA_FIRST			((uint32_t)(0))
-#define SPI_CPHA_SECOND			SPI_SPCR_CPHA_SECOND
-#define PARAM_SPI_CPHA(n) 	((n==SPI_CPHA_FIRST) || (n==SPI_CPHA_SECOND))
-
-/** Clock polarity control bit */
-#define SPI_CPOL_HI				((uint32_t)(0))
-#define SPI_CPOL_LO				SPI_SPCR_CPOL_LOW
-#define PARAM_SPI_CPOL(n)	((n==SPI_CPOL_HI) || (n==SPI_CPOL_LO))
-
-/** SPI master mode enable */
-#define SPI_SLAVE_MODE			((uint32_t)(0))
-#define SPI_MASTER_MODE			SPI_SPCR_MSTR
-#define PARAM_SPI_MODE(n)	((n==SPI_SLAVE_MODE) || (n==SPI_MASTER_MODE))
-
-/** LSB enable bit */
-#define SPI_DATA_MSB_FIRST		((uint32_t)(0))
-#define SPI_DATA_LSB_FIRST		SPI_SPCR_LSBF
-#define PARAM_SPI_DATA_ORDER(n) ((n==SPI_DATA_MSB_FIRST) || (n==SPI_DATA_LSB_FIRST))
-
-/** SPI data bit number defines */
-#define SPI_DATABIT_16		SPI_SPCR_BITS(0)		/*!< Databit number = 16 */
-#define SPI_DATABIT_8		SPI_SPCR_BITS(0x08) 	/*!< Databit number = 8 */
-#define SPI_DATABIT_9		SPI_SPCR_BITS(0x09) 	/*!< Databit number = 9 */
-#define SPI_DATABIT_10		SPI_SPCR_BITS(0x0A) 	/*!< Databit number = 10 */
-#define SPI_DATABIT_11		SPI_SPCR_BITS(0x0B) 	/*!< Databit number = 11 */
-#define SPI_DATABIT_12		SPI_SPCR_BITS(0x0C) 	/*!< Databit number = 12 */
-#define SPI_DATABIT_13		SPI_SPCR_BITS(0x0D) 	/*!< Databit number = 13 */
-#define SPI_DATABIT_14		SPI_SPCR_BITS(0x0E) 	/*!< Databit number = 14 */
-#define SPI_DATABIT_15		SPI_SPCR_BITS(0x0F) 	/*!< Databit number = 15 */
-#define PARAM_SPI_DATABIT(n)	((n==SPI_DATABIT_16) || (n==SPI_DATABIT_8) \
-							|| (n==SPI_DATABIT_9) || (n==SPI_DATABIT_10) \
-							|| (n==SPI_DATABIT_11) || (n==SPI_DATABIT_12) \
-							|| (n==SPI_DATABIT_13) || (n==SPI_DATABIT_14) \
-							|| (n==SPI_DATABIT_15))
-
-
-/*********************************************************************//**
- * SPI Status Flag defines
- **********************************************************************/
-/** Slave abort */
-#define SPI_STAT_ABRT		SPI_SPSR_ABRT
-/** Mode fault */
-#define SPI_STAT_MODF		SPI_SPSR_MODF
-/** Read overrun */
-#define SPI_STAT_ROVR		SPI_SPSR_ROVR
-/** Write collision */
-#define SPI_STAT_WCOL		SPI_SPSR_WCOL
-/** SPI transfer complete flag */
-#define SPI_STAT_SPIF		SPI_SPSR_SPIF
-#define PARAM_SPI_STAT(n)	((n==SPI_STAT_ABRT) || (n==SPI_STAT_MODF) \
-						|| (n==SPI_STAT_ROVR) || (n==SPI_STAT_WCOL) \
-						|| (n==SPI_STAT_SPIF))
-/**
- * @}
- */
-
-/**
- * @}
- */
-
-
-/************************** GLOBAL/PUBLIC FUNCTIONS *************************/
-/** @addtogroup PUBLIC_FUNCTION_PROTOTYPES
- * @{
- */
-
-/** @defgroup SPI_FUNCTIONS
- * @{
- */
-Status SPI_SetClock (SPI_TypeDef *SPIx, uint32_t target_clock);
-void SPI_PinConfig(SPI_TypeDef *SPIx, SPI_PinCFG_Type *SPIPinCfg, int32_t spiMode);
-void SPI_PinConfigStructInit(SPI_PinCFG_Type *SPI_PinInitStruct);
-void SPI_DeInit(SPI_TypeDef* SPIx);
-void SPI_Init(SPI_TypeDef *SPIx, SPI_CFG_Type *SPI_ConfigStruct);
+/* SPI Init/DeInit functions ---------*/
+void SPI_Init(LPC_SPI_TypeDef *SPIx, SPI_CFG_Type *SPI_ConfigStruct);
+void SPI_DeInit(LPC_SPI_TypeDef *SPIx);
+void SPI_SetClock (LPC_SPI_TypeDef *SPIx, uint32_t target_clock);
 void SPI_ConfigStructInit(SPI_CFG_Type *SPI_InitStruct);
-void SPI_Cmd(SPI_TypeDef* SPIx, FunctionalState NewState);
-void SPI_SendData(SPI_TypeDef* SPIx, uint16_t Data);
-uint16_t SPI_ReceiveData(SPI_TypeDef* SPIx);
-void SPI_IntCmd(SPI_TypeDef *SPIx, FunctionalState NewState);
-IntStatus SPI_GetIntStatus (SPI_TypeDef *SPIx);
-void SPI_ClearIntPending(SPI_TypeDef *SPIx);
-uint32_t SPI_GetStatus(SPI_TypeDef* SPIx);
+
+/* SPI transfer functions ------------*/
+void SPI_SendData(LPC_SPI_TypeDef *SPIx, uint16_t Data);
+uint16_t SPI_ReceiveData(LPC_SPI_TypeDef *SPIx);
+int32_t SPI_ReadWrite (LPC_SPI_TypeDef *SPIx, SPI_DATA_SETUP_Type *dataCfg, SPI_TRANSFER_Type xfType);
+
+/* SPI Interrupt functions ---------*/
+void SPI_IntCmd(LPC_SPI_TypeDef *SPIx, FunctionalState NewState);
+IntStatus SPI_GetIntStatus (LPC_SPI_TypeDef *SPIx);
+void SPI_ClearIntPending(LPC_SPI_TypeDef *SPIx);
+
+/* SPI get information functions-----*/
+uint8_t SPI_GetDataSize (LPC_SPI_TypeDef *SPIx);
+uint32_t SPI_GetStatus(LPC_SPI_TypeDef *SPIx);
 FlagStatus SPI_CheckStatus (uint32_t inputSPIStatus,  uint8_t SPIStatus);
-/**
- * @}
- */
 
 /**
  * @}
@@ -337,5 +313,10 @@ FlagStatus SPI_CheckStatus (uint32_t inputSPIStatus,  uint8_t SPIStatus);
 }
 #endif
 
-
 #endif /* LPC17XX_SPI_H_ */
+
+/**
+ * @}
+ */
+
+/* --------------------------------- End Of File ------------------------------ */

@@ -1,26 +1,39 @@
-/***********************************************************************//**
- * @file	: lpc17xx_gpio.h
- * @brief	: Contains all macro definitions and function prototypes
- * 				support for GPIO firmware library on LPC17xx
- * @version	: 1.0
- * @date	: 23. Apr. 2009
- * @author	: HieuNguyen
- **************************************************************************
- * Software that is described herein is for illustrative purposes only
- * which provides customers with programming information regarding the
- * products. This software is supplied "AS IS" without any warranties.
- * NXP Semiconductors assumes no responsibility or liability for the
- * use of the software, conveys no license or title under any patent,
- * copyright, or mask work right to the product. NXP Semiconductors
- * reserves the right to make changes in the software without
- * notification. NXP Semiconductors also make no representation or
- * warranty that such application will be suitable for the specified
- * use without further testing or modification.
- **************************************************************************/
+/**********************************************************************
+* $Id$		lpc17xx_gpio.h				2010-06-18
+*//**
+* @file		lpc17xx_gpio.h
+* @brief	Contains all macro definitions and function prototypes
+* 			support for GPDMA firmware library on LPC17xx
+* @version	3.0
+* @date		18. June. 2010
+* @author	NXP MCU SW Application Team
+*
+* Copyright(C) 2010, NXP Semiconductor
+* All rights reserved.
+*
+***********************************************************************
+* Software that is described herein is for illustrative purposes only
+* which provides customers with programming information regarding the
+* products. This software is supplied "AS IS" without any warranties.
+* NXP Semiconductors assumes no responsibility or liability for the
+* use of the software, conveys no license or title under any patent,
+* copyright, or mask work right to the product. NXP Semiconductors
+* reserves the right to make changes in the software without
+* notification. NXP Semiconductors also make no representation or
+* warranty that such application will be suitable for the specified
+* use without further testing or modification.
+**********************************************************************/
+
+/* Peripheral group ----------------------------------------------------------- */
+/** @defgroup GPIO GPIO
+ * @ingroup LPC1700CMSIS_FwLib_Drivers
+ * @{
+ */
 
 #ifndef LPC17XX_GPIO_H_
 #define LPC17XX_GPIO_H_
 
+/* Includes ------------------------------------------------------------------- */
 #include "LPC17xx.h"
 #include "lpc_types.h"
 
@@ -30,13 +43,40 @@ extern "C"
 {
 #endif
 
-
-/**************************** GLOBAL/PUBLIC TYPES ***************************/
-/** @addtogroup PUBLIC_TYPES
+/* Public Macros -------------------------------------------------------------- */
+/** @defgroup GPIO_Public_Macros GPIO Public Macros
  * @{
  */
 
-/** @defgroup GPIO_TYPES
+/** Fast GPIO port 0 byte accessible definition */
+#define GPIO0_Byte	((GPIO_Byte_TypeDef *)(LPC_GPIO0_BASE))
+/** Fast GPIO port 1 byte accessible definition */
+#define GPIO1_Byte	((GPIO_Byte_TypeDef *)(LPC_GPIO1_BASE))
+/** Fast GPIO port 2 byte accessible definition */
+#define GPIO2_Byte	((GPIO_Byte_TypeDef *)(LPC_GPIO2_BASE))
+/** Fast GPIO port 3 byte accessible definition */
+#define GPIO3_Byte	((GPIO_Byte_TypeDef *)(LPC_GPIO3_BASE))
+/** Fast GPIO port 4 byte accessible definition */
+#define GPIO4_Byte	((GPIO_Byte_TypeDef *)(LPC_GPIO4_BASE))
+
+
+/** Fast GPIO port 0 half-word accessible definition */
+#define GPIO0_HalfWord	((GPIO_HalfWord_TypeDef *)(LPC_GPIO0_BASE))
+/** Fast GPIO port 1 half-word accessible definition */
+#define GPIO1_HalfWord	((GPIO_HalfWord_TypeDef *)(LPC_GPIO1_BASE))
+/** Fast GPIO port 2 half-word accessible definition */
+#define GPIO2_HalfWord	((GPIO_HalfWord_TypeDef *)(LPC_GPIO2_BASE))
+/** Fast GPIO port 3 half-word accessible definition */
+#define GPIO3_HalfWord	((GPIO_HalfWord_TypeDef *)(LPC_GPIO3_BASE))
+/** Fast GPIO port 4 half-word accessible definition */
+#define GPIO4_HalfWord	((GPIO_HalfWord_TypeDef *)(LPC_GPIO4_BASE))
+
+/**
+ * @}
+ */
+
+/* Public Types --------------------------------------------------------------- */
+/** @defgroup GPIO_Public_Types GPIO Public Types
  * @{
  */
 
@@ -53,7 +93,7 @@ typedef struct {
 } GPIO_Byte_TypeDef;
 
 
-/*
+/**
  * @brief Fast GPIO port half-word type definition
  */
 typedef struct {
@@ -70,63 +110,13 @@ typedef struct {
 	__O  uint16_t FIOCLRU;		/**< FIO clear register upper halfword part */
 } GPIO_HalfWord_TypeDef;
 
-
-/**
- * @}
- */
-
-/**
- * @}
- */
-/*************************** GLOBAL/PUBLIC MACROS ***************************/
-/** @addtogroup PUBLIC_MACROS
- * @{
- */
-/** @defgroup GPIO_MACROS
- * @{
- */
-
-/** Fast GPIO port 0 byte accessible definition */
-#define GPIO0_Byte	((GPIO_Byte_TypeDef *)(GPIO0))
-/** Fast GPIO port 1 byte accessible definition */
-#define GPIO1_Byte	((GPIO_Byte_TypeDef *)(GPIO1))
-/** Fast GPIO port 2 byte accessible definition */
-#define GPIO2_Byte	((GPIO_Byte_TypeDef *)(GPIO2))
-/** Fast GPIO port 3 byte accessible definition */
-#define GPIO3_Byte	((GPIO_Byte_TypeDef *)(GPIO3))
-/** Fast GPIO port 4 byte accessible definition */
-#define GPIO4_Byte	((GPIO_Byte_TypeDef *)(GPIO4))
-
-
-
-/** Fast GPIO port 0 half-word accessible definition */
-#define GPIO0_HalfWord	((GPIO_HalfWord_TypeDef *)(GPIO0))
-/** Fast GPIO port 1 half-word accessible definition */
-#define GPIO1_HalfWord	((GPIO_HalfWord_TypeDef *)(GPIO1))
-/** Fast GPIO port 2 half-word accessible definition */
-#define GPIO2_HalfWord	((GPIO_HalfWord_TypeDef *)(GPIO2))
-/** Fast GPIO port 3 half-word accessible definition */
-#define GPIO3_HalfWord	((GPIO_HalfWord_TypeDef *)(GPIO3))
-/** Fast GPIO port 4 half-word accessible definition */
-#define GPIO4_HalfWord	((GPIO_HalfWord_TypeDef *)(GPIO4))
-
-/**
- * @}
- */
-
 /**
  * @}
  */
 
 
-/************************** GLOBAL/PUBLIC FUNCTIONS *************************/
-
-/**
- * @addtogroup PUBLIC_FUNCTION_PROTOTYPES
- * @{
- */
-
-/** @defgroup GPIO_FUNCTIONS
+/* Public Functions ----------------------------------------------------------- */
+/** @defgroup GPIO_Public_Functions GPIO Public Functions
  * @{
  */
 
@@ -135,6 +125,9 @@ void GPIO_SetDir(uint8_t portNum, uint32_t bitValue, uint8_t dir);
 void GPIO_SetValue(uint8_t portNum, uint32_t bitValue);
 void GPIO_ClearValue(uint8_t portNum, uint32_t bitValue);
 uint32_t GPIO_ReadValue(uint8_t portNum);
+void GPIO_IntCmd(uint8_t portNum, uint32_t bitValue, uint8_t edgeState);
+FunctionalState GPIO_GetIntStatus(uint8_t portNum, uint32_t pinNum, uint8_t edgeState);
+void GPIO_ClearInt(uint8_t portNum, uint32_t bitValue);
 
 /* FIO (word-accessible) style ------------------------------- */
 void FIO_SetDir(uint8_t portNum, uint32_t bitValue, uint8_t dir);
@@ -142,6 +135,9 @@ void FIO_SetValue(uint8_t portNum, uint32_t bitValue);
 void FIO_ClearValue(uint8_t portNum, uint32_t bitValue);
 uint32_t FIO_ReadValue(uint8_t portNum);
 void FIO_SetMask(uint8_t portNum, uint32_t bitValue, uint8_t maskValue);
+void FIO_IntCmd(uint8_t portNum, uint32_t bitValue, uint8_t edgeState);
+FunctionalState FIO_GetIntStatus(uint8_t portNum, uint32_t pinNum, uint8_t edgeState);
+void FIO_ClearInt(uint8_t portNum, uint32_t pinNum);
 
 /* FIO (halfword-accessible) style ------------------------------- */
 void FIO_HalfWordSetDir(uint8_t portNum, uint8_t halfwordNum, uint16_t bitValue, uint8_t dir);
@@ -157,18 +153,19 @@ void FIO_ByteSetValue(uint8_t portNum, uint8_t byteNum, uint8_t bitValue);
 void FIO_ByteClearValue(uint8_t portNum, uint8_t byteNum, uint8_t bitValue);
 uint8_t FIO_ByteReadValue(uint8_t portNum, uint8_t byteNum);
 
-
-
 /**
  * @}
  */
 
-/**
- * @}
- */
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif /* LPC17XX_GPIO_H_ */
+
+/**
+ * @}
+ */
+
+/* --------------------------------- End Of File ------------------------------ */

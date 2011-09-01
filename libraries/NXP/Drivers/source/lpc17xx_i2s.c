@@ -1,25 +1,37 @@
-/**
- * @file	: lpc17xx_i2s.c
- * @brief	: Contains all functions support for I2S firmware library on LPC17xx
- * @version	: 1.0
- * @date	: 13. May. 2009
- * @author	: NguyenCao
- *----------------------------------------------------------------------------
- * Software that is described herein is for illustrative purposes only
- * which provides customers with programming information regarding the
- * products. This software is supplied "AS IS" without any warranties.
- * NXP Semiconductors assumes no responsibility or liability for the
- * use of the software, conveys no license or title under any patent,
- * copyright, or mask work right to the product. NXP Semiconductors
- * reserves the right to make changes in the software without
- * notification. NXP Semiconductors also make no representation or
- * warranty that such application will be suitable for the specified
- * use without further testing or modification.
- **********************************************************************/
+/**********************************************************************
+* $Id$		lpc17xx_i2s.c				2010-09-23
+*//**
+* @file		lpc17xx_gpio.c
+* @brief	Contains all functions support for I2S firmware
+* 			library on LPC17xx
+* @version	3.1
+* @date		23. Sep. 2010
+* @author	NXP MCU SW Application Team
+*
+* Copyright(C) 2010, NXP Semiconductor
+* All rights reserved.
+*
+***********************************************************************
+* Software that is described herein is for illustrative purposes only
+* which provides customers with programming information regarding the
+* products. This software is supplied "AS IS" without any warranties.
+* NXP Semiconductors assumes no responsibility or liability for the
+* use of the software, conveys no license or title under any patent,
+* copyright, or mask work right to the product. NXP Semiconductors
+* reserves the right to make changes in the software without
+* notification. NXP Semiconductors also make no representation or
+* warranty that such application will be suitable for the specified
+* use without further testing or modification.
+**********************************************************************/
 
+/* Peripheral group ----------------------------------------------------------- */
+/** @addtogroup I2S
+ * @{
+ */
+
+/* Includes ------------------------------------------------------------------- */
 #include "lpc17xx_i2s.h"
 #include "lpc17xx_clkpwr.h"
-//#include "lpc17xx_pinsel.h"
 
 
 /* If this source file built with example, the LPC17xx FW library configuration
@@ -35,27 +47,20 @@
 
 #ifdef _I2S
 
-static fnI2SCbs_Type *_apfnI2SCbs[2] = {
-		NULL, 	// I2S transmit Call-back function pointer
-		NULL, 	// I2S receive Call-back function pointer
-};
-/***************************** PRIVATE FUNCTION *****************************/
-/** @addtogroup  Private_Functions
- * @{
- */
+/* Private Functions ---------------------------------------------------------- */
 
-/** @defgroup 	I2S_Private_Functions
- * @{
- */
+static uint8_t i2s_GetWordWidth(LPC_I2S_TypeDef *I2Sx, uint8_t TRMode);
+static uint8_t i2s_GetChannel(LPC_I2S_TypeDef *I2Sx, uint8_t TRMode);
+
 /********************************************************************//**
  * @brief		Get I2S wordwidth value
- * @param[in]	I2Sx: I2S peripheral selected, should be: I2S
+ * @param[in]	I2Sx I2S peripheral selected, should be: LPC_I2S
  * @param[in]	TRMode is the I2S mode, should be:
- * 				- I2S_TX_MODE: transmit mode
- * 				- I2S_RX_MODE: receive mode
+ * 				- I2S_TX_MODE = 0: transmit mode
+ * 				- I2S_RX_MODE = 1: receive mode
  * @return 		The wordwidth value, should be: 8,16 or 32
  *********************************************************************/
-uint8_t I2S_GetWordWidth(I2S_TypeDef *I2Sx, uint8_t TRMode) {
+static uint8_t i2s_GetWordWidth(LPC_I2S_TypeDef *I2Sx, uint8_t TRMode) {
 	uint8_t value;
 
 	CHECK_PARAM(PARAM_I2Sx(I2Sx));
@@ -69,62 +74,56 @@ uint8_t I2S_GetWordWidth(I2S_TypeDef *I2Sx, uint8_t TRMode) {
 	switch (value) {
 	case I2S_WORDWIDTH_8:
 		return 8;
-		break;
 	case I2S_WORDWIDTH_16:
 		return 16;
-		break;
 	default:
 		return 32;
 	}
 }
+
 /********************************************************************//**
  * @brief		Get I2S channel value
- * @param[in]	I2Sx: I2S peripheral selected, should be: I2S
+ * @param[in]	I2Sx I2S peripheral selected, should be: LPC_I2S
  * @param[in]	TRMode is the I2S mode, should be:
- * 				- I2S_TX_MODE: transmit mode
- * 				- I2S_RX_MODE: receive mode
+ * 				- I2S_TX_MODE = 0: transmit mode
+ * 				- I2S_RX_MODE = 1: receive mode
  * @return 		The channel value, should be: 1(mono) or 2(stereo)
  *********************************************************************/
-uint8_t I2S_GetChannel(I2S_TypeDef *I2Sx, uint8_t TRMode) {
+static uint8_t i2s_GetChannel(LPC_I2S_TypeDef *I2Sx, uint8_t TRMode) {
 	uint8_t value;
 
 	CHECK_PARAM(PARAM_I2Sx(I2Sx));
 	CHECK_PARAM(PARAM_I2S_TRX(TRMode));
 
 	if (TRMode == I2S_TX_MODE) {
-		value = (I2Sx->I2SDAO) & 0x04; /* get bit[2] */
+		value = ((I2Sx->I2SDAO) & 0x04)>>2; /* get bit[2] */
 	} else {
-		value = (I2Sx->I2SDAI) & 0x04; /* get bit[2] */
+		value = ((I2Sx->I2SDAI) & 0x04)>>2; /* get bit[2] */
 	}
-	switch (value) {
-	case I2S_MONO:
-		return 1;
-		break;
-	default:
-		return 2;
-	}
+        if(value == I2S_MONO) return 1;
+          return 2;
 }
 
-/************************** GLOBAL/PUBLIC FUNCTIONS *************************/
-/** @addtogroup Public_Functions
+/* End of Private Functions --------------------------------------------------- */
+
+
+/* Public Functions ----------------------------------------------------------- */
+/** @addtogroup I2S_Public_Functions
  * @{
  */
 
-/** @defgroup I2S_Public_Functions
- * @{
- */
 /********************************************************************//**
  * @brief		Initialize I2S
  * 					- Turn on power and clock
- * 					- Setup I2S pin select
- * @param[in]	I2Sx: I2S peripheral selected, should be: I2S
+ * @param[in]	I2Sx I2S peripheral selected, should be: LPC_I2S
  * @return 		none
  *********************************************************************/
-void I2S_Init(I2S_TypeDef *I2Sx) {
+void I2S_Init(LPC_I2S_TypeDef *I2Sx) {
 	CHECK_PARAM(PARAM_I2Sx(I2Sx));
 
 	// Turn on power and clock
 	CLKPWR_ConfigPPWR(CLKPWR_PCONP_PCI2S, ENABLE);
+	LPC_I2S->I2SDAI = LPC_I2S->I2SDAO = 0x00;
 }
 
 /********************************************************************//**
@@ -132,18 +131,17 @@ void I2S_Init(I2S_TypeDef *I2Sx) {
  * 					- master/slave mode
  * 					- wordwidth value
  * 					- channel mode
- * @param[in]	I2Sx: I2S peripheral selected, should be: I2S
- * @param[in]	TRMode: transmit/receive mode, should be:
- * 					- I2S_TX_MODE: transmit mode
- * 					- I2S_RX_MODE: receive mode
+ * @param[in]	I2Sx I2S peripheral selected, should be: LPC_I2S
+ * @param[in]	TRMode transmit/receive mode, should be:
+ * 					- I2S_TX_MODE = 0: transmit mode
+ * 					- I2S_RX_MODE = 1: receive mode
  * @param[in]	ConfigStruct pointer to I2S_CFG_Type structure
  *              which will be initialized.
  * @return 		none
  *********************************************************************/
-void I2S_Config(I2S_TypeDef *I2Sx, uint8_t TRMode, I2S_CFG_Type* ConfigStruct)
+void I2S_Config(LPC_I2S_TypeDef *I2Sx, uint8_t TRMode, I2S_CFG_Type* ConfigStruct)
 {
-	uint16_t ws_value;
-	uint8_t wordwidthvalue, channelvalue;
+	uint32_t bps, config;
 
 	CHECK_PARAM(PARAM_I2Sx(I2Sx));
 
@@ -154,180 +152,41 @@ void I2S_Config(I2S_TypeDef *I2Sx, uint8_t TRMode, I2S_CFG_Type* ConfigStruct)
 	CHECK_PARAM(PARAM_I2S_WS_SEL(ConfigStruct->ws_sel));
 	CHECK_PARAM(PARAM_I2S_MUTE(ConfigStruct->mute));
 
-	//configuration
-	/* setup master/slave */
-	if(TRMode == I2S_RX_MODE)
-	{
-		if ((ConfigStruct->ws_sel) == I2S_MASTER_MODE)
-			I2Sx->I2SDAI &= ~I2S_DAI_SLAVE;
-		else
-			I2Sx->I2SDAI |= I2S_DAI_SLAVE;
-		/* setup wordwidth */
-		I2Sx->I2SDAI &= ~0x03; //clear bit 0:1 of I2SDAI register
-		switch (ConfigStruct->wordwidth) {
-		case I2S_WORDWIDTH_8:
-			I2Sx->I2SDAI |= I2S_DAI_WORDWIDTH_8;
-			wordwidthvalue = 8;
-			break;
+	/* Setup clock */
+	bps = (ConfigStruct->wordwidth +1)*8;
 
-		case I2S_WORDWIDTH_16:
-			I2Sx->I2SDAI |= I2S_DAI_WORDWIDTH_16;
-			wordwidthvalue = 16;
-			break;
+	/* Calculate audio config */
+	config = (bps - 1)<<6 | (ConfigStruct->ws_sel)<<5 | (ConfigStruct->reset)<<4 |
+		(ConfigStruct->stop)<<3 | (ConfigStruct->mono)<<2 | (ConfigStruct->wordwidth);
 
-		case I2S_WORDWIDTH_32:
-			I2Sx->I2SDAI |= I2S_DAI_WORDWIDTH_32;
-			wordwidthvalue = 32;
-			break;
-		}
-		/*setup channel */
-		if ((ConfigStruct->mono) == I2S_MONO) {
-			I2Sx->I2SDAI |= I2S_DAI_MONO;
-			channelvalue = 1;
-		}
-		else
-		{
-			I2Sx->I2SDAI &= ~I2S_DAI_MONO;
-			channelvalue = 2;
-		}
-		/* setup stop mode*/
-		if(ConfigStruct->stop==I2S_STOP_ENABLE)
-		{
-			I2Sx->I2SDAI |= I2S_DAO_STOP;
-		}
-		else
-		{
-			I2Sx->I2SDAI &= ~I2S_DAO_STOP;
-		}
-		/* setup reset mode */
-		if(ConfigStruct->reset==I2S_RESET_ENABLE)
-		{
-			I2Sx->I2SDAI |= I2S_DAI_RESET;
-		}
-		else
-		{
-			I2Sx->I2SDAI &= ~I2S_DAI_RESET;
-		}
-		/* setup mute mode*/
-		if(ConfigStruct->mute==I2S_MUTE_ENABLE)
-		{
-			I2Sx->I2SDAI |= I2S_DAI_MUTE;
-		}
-		else
-		{
-			I2Sx->I2SDAI &= ~I2S_DAI_MUTE;
-		}
-		/* set up ws_halfperiod depend on the wordwidth, channel value
-		 * the formula is:
-		 * ws_halfperiod = wordwidth * channel - 1
-		 */
-		ws_value = wordwidthvalue * channelvalue - 1;
-		I2Sx->I2SDAI &= ~(0x1FF << 6);
-		I2Sx->I2SDAI |= ws_value << 6;
-	}
-	else
-	{
-		if ((ConfigStruct->ws_sel) == I2S_MASTER_MODE)
-			I2Sx->I2SDAO &= ~I2S_DAO_SLAVE;
-		else
-			I2Sx->I2SDAO |= I2S_DAO_SLAVE;
-		/* setup wordwidth */
-		I2Sx->I2SDAO &= ~0x03; //clear bit 0:1 of I2SDAI register
-		switch (ConfigStruct->wordwidth) {
-		case I2S_WORDWIDTH_8:
-			I2Sx->I2SDAO |= I2S_DAO_WORDWIDTH_8;
-			wordwidthvalue = 8;
-			break;
-
-		case I2S_WORDWIDTH_16:
-			I2Sx->I2SDAO |= I2S_DAO_WORDWIDTH_16;
-			wordwidthvalue = 16;
-			break;
-
-		case I2S_WORDWIDTH_32:
-			I2Sx->I2SDAO |= I2S_DAO_WORDWIDTH_32;
-			wordwidthvalue = 32;
-			break;
-		}
-		/*setup channel */
-		if ((ConfigStruct->mono) == I2S_MONO) {
-			I2Sx->I2SDAO |= I2S_DAI_MONO;
-			channelvalue = 1;
-		}
-		else
-		{
-			I2Sx->I2SDAO &= ~I2S_DAI_MONO;
-			channelvalue = 2;
-		}
-		/* setup stop mode*/
-		if(ConfigStruct->stop==I2S_STOP_ENABLE)
-		{
-			I2Sx->I2SDAO |= I2S_DAO_STOP;
-		}
-		else
-		{
-			I2Sx->I2SDAO &= ~I2S_DAO_STOP;
-		}
-		/* setup reset mode */
-		if(ConfigStruct->reset==I2S_RESET_ENABLE)
-		{
-			I2Sx->I2SDAO |= I2S_DAO_RESET;
-		}
-		else
-		{
-			I2Sx->I2SDAO &= ~I2S_DAO_RESET;
-		}
-		/* setup mute mode*/
-		if(ConfigStruct->mute==I2S_MUTE_ENABLE)
-		{
-			I2Sx->I2SDAO |= I2S_DAO_MUTE;
-		}
-		else
-		{
-			I2Sx->I2SDAO &= ~I2S_DAO_MUTE;
-		}
-		/* set up ws_halfperiod depend on the wordwidth, channel value
-		 * the formula is:
-		 * ws_halfperiod = wordwidth * channel  - 1
-		 */
-		ws_value = wordwidthvalue * channelvalue  - 1;
-		I2Sx->I2SDAO &= ~(0x1FF << 6);
-		I2Sx->I2SDAO |= ws_value << 6;
+	if(TRMode == I2S_RX_MODE){
+		LPC_I2S->I2SDAI = config;
+	}else{
+		LPC_I2S->I2SDAO = config;
 	}
 }
 
 /********************************************************************//**
  * @brief		DeInitial both I2S transmit or receive
- * @param[in]	I2Sx: I2S peripheral selected, should be: I2S
+ * @param[in]	I2Sx I2S peripheral selected, should be: LPC_I2S
  * @return 		none
  *********************************************************************/
-void I2S_DeInit(I2S_TypeDef *I2Sx) {
+void I2S_DeInit(LPC_I2S_TypeDef *I2Sx) {
 	CHECK_PARAM(PARAM_I2Sx(I2Sx));
 
 	// Turn off power and clock
 	CLKPWR_ConfigPPWR(CLKPWR_PCONP_PCI2S, DISABLE);
 }
-//
-///********************************************************************//**
-// * @brief		Get Interrupt Status
-// * @param[in]	I2Sx: I2S peripheral selected, should be: I2S
-// * @return 		IntStatus, could be: SET/RESET
-// *********************************************************************/
-//IntStatus I2S_GetIntStatus(I2S_TypeDef *I2Sx) {
-//	CHECK_PARAM(PARAM_I2Sx(I2Sx));
-//
-//	return (((I2Sx->I2SSTATE & I2S_STATE_IRQ) == 1) ? SET : RESET);
-//
-//}
+
 /********************************************************************//**
  * @brief		Get I2S Buffer Level
- * @param[in]	I2Sx: I2S peripheral selected, should be: I2S
- * @param[in]	TRMode: Transmit/receive mode, should be:
- * 					- I2S_TX_MODE: transmit mode
- * 					- I2S_RX_MODE: receive mode
+ * @param[in]	I2Sx I2S peripheral selected, should be: LPC_I2S
+ * @param[in]	TRMode Transmit/receive mode, should be:
+ * 					- I2S_TX_MODE = 0: transmit mode
+ * 					- I2S_RX_MODE = 1: receive mode
  * @return 		current level of Transmit/Receive Buffer
  *********************************************************************/
-uint8_t I2S_GetLevel(I2S_TypeDef *I2Sx, uint8_t TRMode)
+uint8_t I2S_GetLevel(LPC_I2S_TypeDef *I2Sx, uint8_t TRMode)
 {
 	CHECK_PARAM(PARAM_I2Sx(I2Sx));
 	CHECK_PARAM(PARAM_I2S_TRX(TRMode));
@@ -341,12 +200,13 @@ uint8_t I2S_GetLevel(I2S_TypeDef *I2Sx, uint8_t TRMode)
 		return ((I2Sx->I2SSTATE >> 8) & 0xFF);
 	}
 }
+
 /********************************************************************//**
  * @brief		I2S Start: clear all STOP,RESET and MUTE bit, ready to operate
- * @param[in]	I2Sx: I2S peripheral selected, should be: I2S
+ * @param[in]	I2Sx I2S peripheral selected, should be: LPC_I2S
  * @return 		none
  *********************************************************************/
-void I2S_Start(I2S_TypeDef *I2Sx)
+void I2S_Start(LPC_I2S_TypeDef *I2Sx)
 {
 	//Clear STOP,RESET and MUTE bit
 	I2Sx->I2SDAO &= ~I2S_DAI_RESET;
@@ -355,39 +215,40 @@ void I2S_Start(I2S_TypeDef *I2Sx)
 	I2Sx->I2SDAI &= ~I2S_DAI_STOP;
 	I2Sx->I2SDAO &= ~I2S_DAI_MUTE;
 }
+
 /********************************************************************//**
  * @brief		I2S Send data
- * @param[in]	I2Sx: I2S peripheral selected, should be: I2S
+ * @param[in]	I2Sx I2S peripheral selected, should be: LPC_I2S
  * @param[in]	BufferData pointer to uint32_t is the data will be send
  * @return 		none
  *********************************************************************/
-void I2S_Send(I2S_TypeDef *I2Sx, uint32_t BufferData) {
+void I2S_Send(LPC_I2S_TypeDef *I2Sx, uint32_t BufferData) {
 	CHECK_PARAM(PARAM_I2Sx(I2Sx));
-	CHECK_PARAM(PARAM_I2S_DATA(BufferData));
 
 	I2Sx->I2STXFIFO = BufferData;
 }
 
 /********************************************************************//**
  * @brief		I2S Receive Data
- * @param[in]	I2Sx pointer to I2S_TypeDef
+ * @param[in]	I2Sx pointer to LPC_I2S_TypeDef
  * @return 		received value
  *********************************************************************/
-uint32_t I2S_Receive(I2S_TypeDef* I2Sx) {
+uint32_t I2S_Receive(LPC_I2S_TypeDef* I2Sx) {
 	CHECK_PARAM(PARAM_I2Sx(I2Sx));
 
 	return (I2Sx->I2SRXFIFO);
 
 }
+
 /********************************************************************//**
  * @brief		I2S Pause
- * @param[in]	I2Sx: I2S peripheral selected, should be: I2S
+ * @param[in]	I2Sx I2S peripheral selected, should be: LPC_I2S
  * @param[in]	TRMode is transmit/receive mode, should be:
- * 				- I2S_TX_MODE: transmit mode
- * 				- I2S_RX_MODE: receive mode
+ * 				- I2S_TX_MODE = 0: transmit mode
+ * 				- I2S_RX_MODE = 1: receive mode
  * @return 		none
  *********************************************************************/
-void I2S_Pause(I2S_TypeDef *I2Sx, uint8_t TRMode) {
+void I2S_Pause(LPC_I2S_TypeDef *I2Sx, uint8_t TRMode) {
 	CHECK_PARAM(PARAM_I2Sx(I2Sx));
 	CHECK_PARAM(PARAM_I2S_TRX(TRMode));
 
@@ -399,15 +260,16 @@ void I2S_Pause(I2S_TypeDef *I2Sx, uint8_t TRMode) {
 		I2Sx->I2SDAI |= I2S_DAI_STOP;
 	}
 }
+
 /********************************************************************//**
  * @brief		I2S Mute
- * @param[in]	I2Sx: I2S peripheral selected, should be: I2S
+ * @param[in]	I2Sx I2S peripheral selected, should be: LPC_I2S
  * @param[in]	TRMode is transmit/receive mode, should be:
- * 				- I2S_TX_MODE: transmit mode
- * 				- I2S_RX_MODE: receive mode
+ * 				- I2S_TX_MODE = 0: transmit mode
+ * 				- I2S_RX_MODE = 1: receive mode
  * @return 		none
  *********************************************************************/
-void I2S_Mute(I2S_TypeDef *I2Sx, uint8_t TRMode) {
+void I2S_Mute(LPC_I2S_TypeDef *I2Sx, uint8_t TRMode) {
 	CHECK_PARAM(PARAM_I2Sx(I2Sx));
 	CHECK_PARAM(PARAM_I2S_TRX(TRMode));
 
@@ -422,13 +284,13 @@ void I2S_Mute(I2S_TypeDef *I2Sx, uint8_t TRMode) {
 
 /********************************************************************//**
  * @brief		I2S Stop
- * @param[in]	I2Sx: I2S peripheral selected, should be: I2S
+ * @param[in]	I2Sx I2S peripheral selected, should be: LPC_I2S
  * @param[in]	TRMode is transmit/receive mode, should be:
- * 				- I2S_TX_MODE: transmit mode
- * 				- I2S_RX_MODE: receive mode
+ * 				- I2S_TX_MODE = 0: transmit mode
+ * 				- I2S_RX_MODE = 1: receive mode
  * @return 		none
  *********************************************************************/
-void I2S_Stop(I2S_TypeDef *I2Sx, uint8_t TRMode) {
+void I2S_Stop(LPC_I2S_TypeDef *I2Sx, uint8_t TRMode) {
 	CHECK_PARAM(PARAM_I2Sx(I2Sx));
 	CHECK_PARAM(PARAM_I2S_TRX(TRMode));
 
@@ -446,47 +308,38 @@ void I2S_Stop(I2S_TypeDef *I2Sx, uint8_t TRMode) {
 
 /********************************************************************//**
  * @brief		Set frequency for I2S
- * @param[in]	I2Sx: I2S peripheral selected, should be: I2S
+ * @param[in]	I2Sx I2S peripheral selected, should be: LPC_I2S
  * @param[in]	Freq is the frequency for I2S will be set. It can range
  * 				from 16-96 kHz(16, 22.05, 32, 44.1, 48, 96kHz)
  * @param[in]	TRMode is transmit/receive mode, should be:
- * 				- I2S_TX_MODE: transmit mode
- * 				- I2S_RX_MODE: receive mode
+ * 				- I2S_TX_MODE = 0: transmit mode
+ * 				- I2S_RX_MODE = 1: receive mode
  * @return 		Status: ERROR or SUCCESS
  *********************************************************************/
-Status I2S_FreqConfig(I2S_TypeDef *I2Sx, uint32_t Freq, uint8_t TRMode) {
+Status I2S_FreqConfig(LPC_I2S_TypeDef *I2Sx, uint32_t Freq, uint8_t TRMode) {
 
-	/* Calculate bit rate
-	 * The formula is:
-	 *      bit_rate = channel*wordwidth - 1
-	 * 48kHz sample rate for 16 bit stereo date requires
-	 * a bit rate of 48000*16*2=1536MHz (MCLK)
-	 */
-	uint32_t i2sPclk;
-	uint64_t divider;
+	uint32_t i2sMclk;
 	uint8_t bitrate, channel, wordwidth;
-	uint32_t x, y;
-	uint16_t dif;
-	uint16_t error;
-	uint8_t x_divide, y_divide;
-	uint16_t ErrorOptimal = 0xFFFF;
 
 	CHECK_PARAM(PARAM_I2Sx(I2Sx));
 	CHECK_PARAM(PRAM_I2S_FREQ(Freq));
 	CHECK_PARAM(PARAM_I2S_TRX(TRMode));
 
-	i2sPclk = CLKPWR_GetPCLK(CLKPWR_PCLKSEL_I2S);
+	//set i2s reference is i2s_pclk/2 as default
+	i2sMclk = CLKPWR_GetPCLK(CLKPWR_PCLKSEL_I2S)/2;
+	I2Sx->I2STXRATE = 1  | (1<<8);
+	I2Sx->I2SRXRATE = 1  | (1<<8);
 	if(TRMode == I2S_TX_MODE)
 	{
-		channel = I2S_GetChannel(I2Sx,I2S_TX_MODE);
-		wordwidth = I2S_GetWordWidth(I2Sx,I2S_TX_MODE);
+		channel = i2s_GetChannel(I2Sx,I2S_TX_MODE);
+		wordwidth = i2s_GetWordWidth(I2Sx,I2S_TX_MODE);
 	}
 	else
 	{
-		channel = I2S_GetChannel(I2Sx,I2S_RX_MODE);
-		wordwidth = I2S_GetWordWidth(I2Sx,I2S_RX_MODE);
+		channel = i2s_GetChannel(I2Sx,I2S_RX_MODE);
+		wordwidth = i2s_GetWordWidth(I2Sx,I2S_RX_MODE);
 	}
-	bitrate = channel * wordwidth - 1;
+	bitrate = i2sMclk/(Freq * channel * wordwidth) - 1;
 	if (TRMode == I2S_TX_MODE)// Transmitter
 	{
 		I2Sx->I2STXBITRATE = bitrate;
@@ -494,56 +347,20 @@ Status I2S_FreqConfig(I2S_TypeDef *I2Sx, uint32_t Freq, uint8_t TRMode) {
 	{
 		I2Sx->I2SRXBITRATE = bitrate;
 	}
-	/* Calculate X and Y divider
-	 * The MCLK rate for the I2S transmitter is determined by the value
-	 * in the I2STXRATE/I2SRXRATE register. The required I2STXRATE/I2SRXRATE
-	 * setting depends on the desired audio sample rate desired, the format
-	 * (stereo/mono) used, and the data size.
-	 * The formula is:
-	 * 		I2S_MCLK = PCLK * (X/Y) / 2
-	 * We have:
-	 * 		I2S_MCLK = Freq * bit_rate;
-	 * So: (X/Y) = (Freq * bit_rate)/PCLK*2
-	 * We use a loop function to chose the most suitable X,Y value
-	 */
-
-	divider = ((uint64_t)(Freq *( bitrate+1)* 2)<<16) / i2sPclk;
-	for (y = 255; y > 0; y--) {
-		x = y * divider;
-		dif = x & 0xFFFF;
-		if(dif>0x8000) error = 0x10000-dif;
-		else error = dif;
-		if (error == 0)
-		{
-			y_divide = y;
-			break;
-		}
-		else if (error < ErrorOptimal)
-		{
-			ErrorOptimal = error;
-			y_divide = y;
-		}
-	}
-	x_divide = (y_divide * Freq *( bitrate+1)* 2)/i2sPclk;
-	if (TRMode == I2S_TX_MODE)// Transmitter
-	{
-		I2Sx->I2STXRATE = y_divide | (x_divide << 8);
-	} else //Receiver
-	{
-		I2Sx->I2SRXRATE = y_divide | (x_divide << 8);
-	}
 	return SUCCESS;
 }
+
 /********************************************************************//**
  * @brief		I2S set bitrate
- * @param[in]	I2Sx: I2S peripheral selected, should be: I2S
+ * @param[in]	I2Sx I2S peripheral selected, should be: LPC_I2S
  * @param[in]	bitrate value will be set
+ * 				bitrate value should be in range: 0 .. 63
  * @param[in]	TRMode is transmit/receive mode, should be:
- * 				- I2S_TX_MODE: transmit mode
- * 				- I2S_RX_MODE: receive mode
+ * 				- I2S_TX_MODE = 0: transmit mode
+ * 				- I2S_RX_MODE = 1: receive mode
  * @return 		none
  *********************************************************************/
-void I2S_SetBitRate(I2S_TypeDef *I2Sx, uint8_t bitrate, uint8_t TRMode)
+void I2S_SetBitRate(LPC_I2S_TypeDef *I2Sx, uint8_t bitrate, uint8_t TRMode)
 {
 	CHECK_PARAM(PARAM_I2Sx(I2Sx));
 	CHECK_PARAM(PARAM_I2S_BITRATE(bitrate));
@@ -551,24 +368,25 @@ void I2S_SetBitRate(I2S_TypeDef *I2Sx, uint8_t bitrate, uint8_t TRMode)
 
 	if(TRMode == I2S_TX_MODE)
 	{
-		I2Sx->I2STXBITRATE = (bitrate -1);
+		I2Sx->I2STXBITRATE = bitrate;
 	}
 	else
 	{
-		I2Sx->I2SRXBITRATE = (bitrate -1);
+		I2Sx->I2SRXBITRATE = bitrate;
 	}
 }
+
 /********************************************************************//**
  * @brief		Configuration operating mode for I2S
- * @param[in]	I2Sx: I2S peripheral selected, should be: I2S
+ * @param[in]	I2Sx I2S peripheral selected, should be: LPC_I2S
  * @param[in]	ModeConfig pointer to I2S_MODEConf_Type will be used to
- * 				configure, should be:
+ * 				configure
  * @param[in]	TRMode is transmit/receive mode, should be:
- * 				- I2S_TX_MODE: transmit mode
- * 				- I2S_RX_MODE: receive mode
+ * 				- I2S_TX_MODE = 0: transmit mode
+ * 				- I2S_RX_MODE = 1: receive mode
  * @return 		none
  *********************************************************************/
-void I2S_ModeConfig(I2S_TypeDef *I2Sx, I2S_MODEConf_Type* ModeConfig,
+void I2S_ModeConfig(LPC_I2S_TypeDef *I2Sx, I2S_MODEConf_Type* ModeConfig,
 		uint8_t TRMode)
 {
 	CHECK_PARAM(PARAM_I2Sx(I2Sx));
@@ -579,7 +397,7 @@ void I2S_ModeConfig(I2S_TypeDef *I2Sx, I2S_MODEConf_Type* ModeConfig,
 
 	if (TRMode == I2S_TX_MODE) {
 		I2Sx->I2STXMODE &= ~0x0F; //clear bit 3:0 in I2STXMODE register
-		if (ModeConfig->clksel == I2S_CLKSEL_1) {
+		if (ModeConfig->clksel == I2S_CLKSEL_MCLK) {
 			I2Sx->I2STXMODE |= 0x02;
 		}
 		if (ModeConfig->fpin == I2S_4PIN_ENABLE) {
@@ -590,7 +408,7 @@ void I2S_ModeConfig(I2S_TypeDef *I2Sx, I2S_MODEConf_Type* ModeConfig,
 		}
 	} else {
 		I2Sx->I2SRXMODE &= ~0x0F; //clear bit 3:0 in I2STXMODE register
-		if (ModeConfig->clksel == I2S_CLKSEL_1) {
+		if (ModeConfig->clksel == I2S_CLKSEL_MCLK) {
 			I2Sx->I2SRXMODE |= 0x02;
 		}
 		if (ModeConfig->fpin == I2S_4PIN_ENABLE) {
@@ -604,14 +422,14 @@ void I2S_ModeConfig(I2S_TypeDef *I2Sx, I2S_MODEConf_Type* ModeConfig,
 
 /********************************************************************//**
  * @brief		Configure DMA operation for I2S
- * @param[in]	I2Sx: I2S peripheral selected, should be: I2S
+ * @param[in]	I2Sx I2S peripheral selected, should be: LPC_I2S
  * @param[in]	DMAConfig pointer to I2S_DMAConf_Type will be used to configure
  * @param[in]	TRMode is transmit/receive mode, should be:
- * 				- I2S_TX_MODE: transmit mode
- * 				- I2S_RX_MODE: receive mode
+ * 				- I2S_TX_MODE = 0: transmit mode
+ * 				- I2S_RX_MODE = 1: receive mode
  * @return 		none
  *********************************************************************/
-void I2S_DMAConfig(I2S_TypeDef *I2Sx, I2S_DMAConf_Type* DMAConfig,
+void I2S_DMAConfig(LPC_I2S_TypeDef *I2Sx, I2S_DMAConf_Type* DMAConfig,
 		uint8_t TRMode)
 {
 	CHECK_PARAM(PARAM_I2Sx(I2Sx));
@@ -621,34 +439,34 @@ void I2S_DMAConfig(I2S_TypeDef *I2Sx, I2S_DMAConf_Type* DMAConfig,
 
 	if (TRMode == I2S_RX_MODE) {
 		if (DMAConfig->DMAIndex == I2S_DMA_1) {
-			I2S->I2SDMA1 = (DMAConfig->depth) << 8;
+			LPC_I2S->I2SDMA1 = (DMAConfig->depth) << 8;
 		} else {
-			I2S->I2SDMA2 = (DMAConfig->depth) << 8;
+			LPC_I2S->I2SDMA2 = (DMAConfig->depth) << 8;
 		}
 	} else {
 		if (DMAConfig->DMAIndex == I2S_DMA_1) {
-			I2S->I2SDMA1 = (DMAConfig->depth) << 16;
+			LPC_I2S->I2SDMA1 = (DMAConfig->depth) << 16;
 		} else {
-			I2S->I2SDMA2 = (DMAConfig->depth) << 16;
+			LPC_I2S->I2SDMA2 = (DMAConfig->depth) << 16;
 		}
 	}
 }
 
 /********************************************************************//**
  * @brief		Enable/Disable DMA operation for I2S
- * @param[in]	I2Sx: I2S peripheral selected, should be: I2S
+ * @param[in]	I2Sx: I2S peripheral selected, should be: LPC_I2S
  * @param[in]	DMAIndex chose what DMA is used, should be:
- * 				- I2S_DMA_1: DMA1
- * 				- I2S_DMA_2: DMA2
+ * 				- I2S_DMA_1 = 0: DMA1
+ * 				- I2S_DMA_2 = 1: DMA2
  * @param[in]	TRMode is transmit/receive mode, should be:
- * 				- I2S_TX_MODE: transmit mode
- * 				- I2S_RX_MODE: receive mode
+ * 				- I2S_TX_MODE = 0: transmit mode
+ * 				- I2S_RX_MODE = 1: receive mode
  * @param[in]	NewState is new state of DMA operation, should be:
  * 				- ENABLE
  * 				- DISABLE
  * @return 		none
  *********************************************************************/
-void I2S_DMACmd(I2S_TypeDef *I2Sx, uint8_t DMAIndex, uint8_t TRMode,
+void I2S_DMACmd(LPC_I2S_TypeDef *I2Sx, uint8_t DMAIndex, uint8_t TRMode,
 		FunctionalState NewState)
 {
 	CHECK_PARAM(PARAM_I2Sx(I2Sx));
@@ -685,15 +503,14 @@ void I2S_DMACmd(I2S_TypeDef *I2Sx, uint8_t DMAIndex, uint8_t TRMode,
 
 /********************************************************************//**
  * @brief		Configure IRQ for I2S
- * @param[in]	I2Sx: I2S peripheral selected, should be: I2S
+ * @param[in]	I2Sx I2S peripheral selected, should be: LPC_I2S
  * @param[in]	TRMode is transmit/receive mode, should be:
- * 				- I2S_TX_MODE: transmit mode
- * 				- I2S_RX_MODE: receive mode
- * @param[in]	level: is the FIFO level that triggers IRQ request
- * @param[in]	pfnI2SCbs: the pointer to call-back function handle this interrupt
+ * 				- I2S_TX_MODE = 0: transmit mode
+ * 				- I2S_RX_MODE = 1: receive mode
+ * @param[in]	level is the FIFO level that triggers IRQ request
  * @return 		none
  *********************************************************************/
-void I2S_IRQConfig(I2S_TypeDef *I2Sx, uint8_t TRMode, uint8_t level,  fnI2SCbs_Type *pfnI2SCbs) {
+void I2S_IRQConfig(LPC_I2S_TypeDef *I2Sx, uint8_t TRMode, uint8_t level) {
 	CHECK_PARAM(PARAM_I2Sx(I2Sx));
 	CHECK_PARAM(PARAM_I2S_TRX(TRMode));
 	CHECK_PARAM(PARAM_I2S_IRQ_LEVEL(level));
@@ -703,22 +520,20 @@ void I2S_IRQConfig(I2S_TypeDef *I2Sx, uint8_t TRMode, uint8_t level,  fnI2SCbs_T
 	} else {
 		I2Sx->I2SIRQ |= (level << 16);
 	}
-	//setup Call-Back funtion for receive interrupt
-	_apfnI2SCbs[TRMode] = pfnI2SCbs;
 }
 
 /********************************************************************//**
  * @brief		Enable/Disable IRQ for I2S
- * @param[in]	I2Sx: I2S peripheral selected, should be: I2S
+ * @param[in]	I2Sx I2S peripheral selected, should be: LPC_I2S
  * @param[in]	TRMode is transmit/receive mode, should be:
- * 				- I2S_TX_MODE: transmit mode
- * 				- I2S_RX_MODE: receive mode
+ * 				- I2S_TX_MODE = 0: transmit mode
+ * 				- I2S_RX_MODE = 1: receive mode
  * @param[in]	NewState is new state of DMA operation, should be:
  * 				- ENABLE
  * 				- DISABLE
  * @return 		none
  *********************************************************************/
-void I2S_IRQCmd(I2S_TypeDef *I2Sx, uint8_t TRMode, FunctionalState NewState) {
+void I2S_IRQCmd(LPC_I2S_TypeDef *I2Sx, uint8_t TRMode, FunctionalState NewState) {
 	CHECK_PARAM(PARAM_I2Sx(I2Sx));
 	CHECK_PARAM(PARAM_FUNCTIONALSTATE(NewState));
 
@@ -736,47 +551,51 @@ void I2S_IRQCmd(I2S_TypeDef *I2Sx, uint8_t TRMode, FunctionalState NewState) {
 			I2Sx->I2SIRQ &= ~0x02;
 	}
 }
-/*********************************************************************//**
- * @brief		Standard I2S interrupt handler, this function will check
- * 				all interrupt status of I2S channels, then execute the call
- * 				back function if they're already installed
- * @param[in]	None
- * @return		None
- **********************************************************************/
-void I2S_IntHandler(void)
+
+/********************************************************************//**
+ * @brief		Get I2S interrupt status
+ * @param[in]	I2Sx I2S peripheral selected, should be: LPC_I2S
+ * @param[in]	TRMode is transmit/receive mode, should be:
+ * 				- I2S_TX_MODE = 0: transmit mode
+ * 				- I2S_RX_MODE = 1: receive mode
+ * @return 		FunctionState	should be:
+ * 				- ENABLE: interrupt is enable
+ * 				- DISABLE: interrupt is disable
+ *********************************************************************/
+FunctionalState I2S_GetIRQStatus(LPC_I2S_TypeDef *I2Sx,uint8_t TRMode)
 {
-	uint8_t rx_level,
-			tx_level,
-			tx_depth_irq,
-			rx_depth_irq;
+	CHECK_PARAM(PARAM_I2Sx(I2Sx));
+	if(TRMode == I2S_TX_MODE)
+		return ((FunctionalState)((I2Sx->I2SIRQ >> 1)&0x01));
+	else
+		return ((FunctionalState)((I2Sx->I2SIRQ)&0x01));
+}
 
-
-	if((I2S->I2SIRQ)& 0x01){ //receive interrupt
-		rx_level = ((I2S->I2SSTATE)>>8)&0xFF;
-		rx_depth_irq = ((I2S->I2SIRQ)>>8)&0xFF;
-
-		if (rx_level >= rx_depth_irq)//receive interrupt
-		{
-			_apfnI2SCbs[1]();
-		}
-	}
-	else if(((I2S->I2SIRQ)>>1)& 0x01)
-	{
-		tx_level = ((I2S->I2SSTATE)>>16)&0xFF;
-		tx_depth_irq = ((I2S->I2SIRQ)>>16)&0xFF;
-		if(tx_level <= tx_depth_irq)//transmit interrupt
-		{
-			_apfnI2SCbs[0]();
-		}
-	}
+/********************************************************************//**
+ * @brief		Get I2S interrupt depth
+ * @param[in]	I2Sx I2S peripheral selected, should be: LPC_I2S
+ * @param[in]	TRMode is transmit/receive mode, should be:
+ * 				- I2S_TX_MODE = 0: transmit mode
+ * 				- I2S_RX_MODE = 1: receive mode
+ * @return 		depth of FIFO level on which to create an irq request
+ *********************************************************************/
+uint8_t I2S_GetIRQDepth(LPC_I2S_TypeDef *I2Sx,uint8_t TRMode)
+{
+	CHECK_PARAM(PARAM_I2Sx(I2Sx));
+	if(TRMode == I2S_TX_MODE)
+		return (((I2Sx->I2SIRQ)>>16)&0xFF);
+	else
+		return (((I2Sx->I2SIRQ)>>8)&0xFF);
 }
 /**
  * @}
  */
+
+#endif /* _I2S */
+
 /**
  * @}
  */
 
-
-#endif /* _I2S */
+/* --------------------------------- End Of File ------------------------------ */
 

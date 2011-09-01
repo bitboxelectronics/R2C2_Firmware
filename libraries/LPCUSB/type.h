@@ -49,8 +49,8 @@ typedef int					BOOL;	/**< #TRUE or #FALSE */
 #endif
 
 /* some other useful macros */
-#define MIN(x,y)	((x)<(y)?(x):(y))	/**< MIN */
-#define MAX(x,y)	((x)>(y)?(x):(y))	/**< MAX */
+// #define MIN(x,y)	((x)<(y)?(x):(y))	/**< MIN */
+// #define MAX(x,y)	((x)>(y)?(x):(y))	/**< MAX */
 
 
 #endif /* _TYPE_H_ */

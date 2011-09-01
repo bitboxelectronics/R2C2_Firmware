@@ -44,7 +44,7 @@ MEMORY
  */
 EXTERN(__cs3_reset_cortex_m)
 EXTERN(__cs3_interrupt_vector_cortex_m)
-EXTERN(__cs3_start_c main __cs3_stack __cs3_stack_size __cs3_heap_end)
+EXTERN(main __cs3_stack __cs3_stack_size __cs3_heap_end)
 
 PROVIDE(__cs3_stack = __cs3_region_start_ram + __cs3_region_size_ram);
 PROVIDE(__cs3_stack_size = __cs3_region_start_ram + __cs3_region_size_ram - _end);

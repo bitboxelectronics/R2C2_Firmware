@@ -1,34 +1,41 @@
-/*
- * @file	: lpc17xx_nvic.c
- * @brief	: Contains all expansion functions support for
- * 				NVIC firmware library on LPC17xx. The main
- * 				NVIC functions are defined in core_cm3.h
- * @version	: 1.0
- * @date	: 18. Mar. 2009
- * @author	: HieuNguyen
- *----------------------------------------------------------------------------
- * Software that is described herein is for illustrative purposes only
- * which provides customers with programming information regarding the
- * products. This software is supplied "AS IS" without any warranties.
- * NXP Semiconductors assumes no responsibility or liability for the
- * use of the software, conveys no license or title under any patent,
- * copyright, or mask work right to the product. NXP Semiconductors
- * reserves the right to make changes in the software without
- * notification. NXP Semiconductors also make no representation or
- * warranty that such application will be suitable for the specified
- * use without further testing or modification.
- **********************************************************************/
+/**********************************************************************
+* $Id$		lpc17xx_nvic.c				2010-05-21
+*//**
+* @file		lpc17xx_nvic.c
+* @brief	Contains all expansion functions support for
+* 			NVIC firmware library on LPC17xx. The main
+* 			NVIC functions are defined in core_cm3.h
+* @version	2.0
+* @date		21. May. 2010
+* @author	NXP MCU SW Application Team
+*
+* Copyright(C) 2010, NXP Semiconductor
+* All rights reserved.
+*
+***********************************************************************
+* Software that is described herein is for illustrative purposes only
+* which provides customers with programming information regarding the
+* products. This software is supplied "AS IS" without any warranties.
+* NXP Semiconductors assumes no responsibility or liability for the
+* use of the software, conveys no license or title under any patent,
+* copyright, or mask work right to the product. NXP Semiconductors
+* reserves the right to make changes in the software without
+* notification. NXP Semiconductors also make no representation or
+* warranty that such application will be suitable for the specified
+* use without further testing or modification.
+**********************************************************************/
 
+/* Peripheral group ----------------------------------------------------------- */
+/** @addtogroup NVIC
+ * @{
+ */
+
+/* Includes ------------------------------------------------------------------- */
 #include "lpc17xx_nvic.h"
 
 
-
-/***************************** PRIVATE MACROS *****************************/
-/** @addtogroup PRIVATE_MACROS
-  * @{
-  */
-
-/** @defgroup NVIC_MACROS
+/* Private Macros ------------------------------------------------------------- */
+/** @addtogroup NVIC_Private_Macros
  * @{
  */
 
@@ -39,17 +46,9 @@
  * @}
  */
 
-/**
- * @}
- */
-/***************************** PRIVATE FUNCTION *****************************/
-/************************** GLOBAL/PUBLIC FUNCTIONS *************************/
 
-/** @addtogroup Public_Functions
-  * @{
-  */
-
-/** @defgroup NVIC_Public_Functions
+/* Public Functions ----------------------------------------------------------- */
+/** @addtogroup NVIC_Public_Functions
  * @{
  */
 
@@ -128,11 +127,16 @@ void NVIC_SCBDeInit(void)
  *******************************************************************************/
 void NVIC_SetVTOR(uint32_t offset)
 {
-	SCB->VTOR  = (offset & NVIC_VTOR_MASK);
+//	SCB->VTOR  = (offset & NVIC_VTOR_MASK);
+	SCB->VTOR  = offset;
 }
+
 /**
  * @}
  */
+
 /**
  * @}
  */
+
+/* --------------------------------- End Of File ------------------------------ */

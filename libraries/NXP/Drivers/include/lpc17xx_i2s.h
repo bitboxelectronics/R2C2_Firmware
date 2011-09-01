@@ -1,26 +1,39 @@
-/***********************************************************************//**
- * @file	: lpc17xx_i2s.h
- * @brief	: Contains all macro definitions and function prototypes
- * 				support for I2S firmware library on LPC17xx
- * @version	: 1.0
- * @date	: 13. May. 2009
- * @author	: NguyenCao
- **************************************************************************
- * Software that is described herein is for illustrative purposes only
- * which provides customers with programming information regarding the
- * products. This software is supplied "AS IS" without any warranties.
- * NXP Semiconductors assumes no responsibility or liability for the
- * use of the software, conveys no license or title under any patent,
- * copyright, or mask work right to the product. NXP Semiconductors
- * reserves the right to make changes in the software without
- * notification. NXP Semiconductors also make no representation or
- * warranty that such application will be suitable for the specified
- * use without further testing or modification.
- **************************************************************************/
+/**********************************************************************
+* $Id$		lpc17xx_i2s.h				2011-06-06
+*//**
+* @file		lpc17xx_i2s.h
+* @brief	Contains all macro definitions and function prototypes
+* 			support for I2S firmware library on LPC17xx
+* @version	3.1
+* @date		06. June. 2011
+* @author	NXP MCU SW Application Team
+*
+* Copyright(C) 2011, NXP Semiconductor
+* All rights reserved.
+*
+***********************************************************************
+* Software that is described herein is for illustrative purposes only
+* which provides customers with programming information regarding the
+* products. This software is supplied "AS IS" without any warranties.
+* NXP Semiconductors assumes no responsibility or liability for the
+* use of the software, conveys no license or title under any patent,
+* copyright, or mask work right to the product. NXP Semiconductors
+* reserves the right to make changes in the software without
+* notification. NXP Semiconductors also make no representation or
+* warranty that such application will be suitable for the specified
+* use without further testing or modification.
+**********************************************************************/
+
+/* Peripheral group ----------------------------------------------------------- */
+/** @defgroup I2S I2S
+ * @ingroup LPC1700CMSIS_FwLib_Drivers
+ * @{
+ */
 
 #ifndef LPC17XX_I2S_H_
 #define LPC17XX_I2S_H_
 
+/* Includes ------------------------------------------------------------------- */
 #include "LPC17xx.h"
 #include "lpc_types.h"
 
@@ -30,107 +43,61 @@ extern "C"
 {
 #endif
 
-
-/****************************** PRIVATE MACROS ******************************/
-/** @addtogroup PRIVATE_MACROS
+/* Public Macros -------------------------------------------------------------- */
+/** @defgroup I2S_Public_Macros I2S Public Macros
  * @{
  */
 
-
-/** @defgroup I2S_PINSEL
- * @{
- */
-/* Pin Configuration selection must be defined in structure following:
- * - Port Number,
- * - Pin Number,
- * - Function Number,
- * - Pin Mode,
- * - Open Drain
- */
-
-/** I2S Receive function pin selection group 0*/
-#define I2S_PINSEL_SRX_CLK_P0_4		{0, 4, 1, \
-									PINSEL_PINMODE_PULLUP, \
-									PINSEL_PINMODE_NORMAL}
-
-#define I2S_PINSEL_SRX_WS_P0_5		{0, 5, 1, \
-									PINSEL_PINMODE_PULLUP, \
-									PINSEL_PINMODE_NORMAL}
-
-#define I2S_PINSEL_SRX_SDA_P0_6		{0, 6, 1, \
-									PINSEL_PINMODE_PULLUP, \
-									PINSEL_PINMODE_NORMAL}
-
-/** I2S Receive function pin selection group 1*/
-#define I2S_PINSEL_SRX_CLK_P0_23	{0, 23, 2, \
-									PINSEL_PINMODE_PULLUP, \
-									PINSEL_PINMODE_NORMAL}
-
-#define I2S_PINSEL_SRX_WS_P0_24		{0, 24, 2, \
-									PINSEL_PINMODE_PULLUP, \
-									PINSEL_PINMODE_NORMAL}
-
-#define I2S_PINSEL_SRX_SDA_P0_25	{0, 25, 2, \
-									PINSEL_PINMODE_PULLUP, \
-									PINSEL_PINMODE_NORMAL}
-
-/** I2S RX_MCLK for two receive group */
-#define I2S_PINSEL_RX_MCLK_P4_28	{4, 28, 1, \
-									PINSEL_PINMODE_PULLUP, \
-									PINSEL_PINMODE_NORMAL}
-
-/** I2S Transmit function pin selection group 0*/
-#define I2S_PINSEL_STX_CLK_P0_7		{0, 7, 1, \
-									PINSEL_PINMODE_PULLUP, \
-									PINSEL_PINMODE_NORMAL}
-
-#define I2S_PINSEL_STX_WS_P0_8		{0, 8, 1, \
-									PINSEL_PINMODE_PULLUP, \
-									PINSEL_PINMODE_NORMAL}
-
-#define I2S_PINSEL_STX_SDA_P0_9		{0, 9, 1, \
-									PINSEL_PINMODE_PULLUP, \
-									PINSEL_PINMODE_NORMAL}
-
-/** I2S Transmit function pin selection group 1*/
-#define I2S_PINSEL_STX_CLK_P2_11	{2, 11, 3, \
-									PINSEL_PINMODE_PULLUP, \
-									PINSEL_PINMODE_NORMAL}
-
-#define I2S_PINSEL_STX_WS_P2_12		{2, 12, 3, \
-									PINSEL_PINMODE_PULLUP, \
-									PINSEL_PINMODE_NORMAL}
-
-#define I2S_PINSEL_STX_SDA_P2_13	{2, 13, 3, \
-									PINSEL_PINMODE_PULLUP, \
-									PINSEL_PINMODE_NORMAL}
-
-/** I2S TX_MCLK for two transmit group */
-#define I2S_PINSEL_TX_MCLK_P4_29	{4, 29, 1, \
-									PINSEL_PINMODE_PULLUP, \
-									PINSEL_PINMODE_NORMAL}
-
-/* Max number of pin on each pin function */
-#define I2S_MAX_SRX_CLK_PIN		(2)
-#define I2S_MAX_SRX_WS_PIN		(2)
-#define I2S_MAX_SRX_SDA_PIN		(2)
-#define I2S_MAX_RX_MCLK_PIN		(1)
-
-#define I2S_MAX_STX_CLK_PIN		(2)
-#define I2S_MAX_STX_WS_PIN		(2)
-#define I2S_MAX_STX_SDA_PIN		(2)
-#define I2S_MAX_TX_MCLK_PIN		(1)
-
+/*********************************************************************//**
+ * I2S configuration parameter defines
+ **********************************************************************/
+/** I2S Wordwidth bit */
+#define I2S_WORDWIDTH_8		((uint32_t)(0))
+#define I2S_WORDWIDTH_16	((uint32_t)(1))
+#define I2S_WORDWIDTH_32	((uint32_t)(3))
+/** I2S Channel bit */
+#define I2S_STEREO			((uint32_t)(0))
+#define I2S_MONO			((uint32_t)(1))
+/** I2S Master/Slave mode bit */
+#define I2S_MASTER_MODE		((uint8_t)(0))
+#define I2S_SLAVE_MODE		((uint8_t)(1))
+/** I2S Stop bit */
+#define I2S_STOP_ENABLE		((uint8_t)(1))
+#define I2S_STOP_DISABLE	((uint8_t)(0))
+/** I2S Reset bit */
+#define I2S_RESET_ENABLE	((uint8_t)(1))
+#define I2S_RESET_DISABLE	((uint8_t)(0))
+/** I2S Mute bit */
+#define I2S_MUTE_ENABLE		((uint8_t)(1))
+#define I2S_MUTE_DISABLE	((uint8_t)(0))
+/** I2S Transmit/Receive bit */
+#define I2S_TX_MODE			((uint8_t)(0))
+#define I2S_RX_MODE			((uint8_t)(1))
+/** I2S Clock Select bit */
+#define I2S_CLKSEL_FRDCLK	((uint8_t)(0))
+#define I2S_CLKSEL_MCLK		((uint8_t)(2))
+/** I2S 4-pin Mode bit */
+#define I2S_4PIN_ENABLE 	((uint8_t)(1))
+#define I2S_4PIN_DISABLE 	((uint8_t)(0))
+/** I2S MCLK Enable bit */
+#define I2S_MCLK_ENABLE		((uint8_t)(1))
+#define I2S_MCLK_DISABLE	((uint8_t)(0))
+/** I2S select DMA bit */
+#define I2S_DMA_1			((uint8_t)(0))
+#define I2S_DMA_2			((uint8_t)(1))
 
 /**
  * @}
  */
+
+/* Private Macros ------------------------------------------------------------- */
+/** @defgroup I2S_Private_Macros I2S Private Macros
+ * @{
+ */
+
 /*********************************************************************//**
  * Macro defines for DAO-Digital Audio Output register
  **********************************************************************/
-/** @defgroup I2S_REGISTER_BIT_DEFINITION
- * @{
- */
 /** I2S wordwide - the number of bytes in data*/
 #define I2S_DAO_WORDWIDTH_8		((uint32_t)(0))		/** 8 bit	*/
 #define I2S_DAO_WORDWIDTH_16	((uint32_t)(1))		/** 16 bit	*/
@@ -252,36 +219,57 @@ extern "C"
 /** I2S Receive control the TX_MCLK output */
 #define I2S_RXMODE_MCENA		((uint32_t)(1<<3))
 
-/**************************** GLOBAL/PUBLIC TYPES ***************************/
-/** @addtogroup PUBLIC_TYPES
+
+/* ---------------- CHECK PARAMETER DEFINITIONS ---------------------------- */
+/** Macro to determine if it is valid I2S peripheral */
+#define PARAM_I2Sx(n)	(((uint32_t *)n)==((uint32_t *)LPC_I2S))
+/** Macro to check Data to send valid */
+#define PRAM_I2S_FREQ(freq)		((freq>=16000)&&(freq <= 96000))
+/* Macro check I2S word width type */
+#define PARAM_I2S_WORDWIDTH(n)	((n==I2S_WORDWIDTH_8)||(n==I2S_WORDWIDTH_16)\
+||(n==I2S_WORDWIDTH_32))
+/* Macro check I2S channel type */
+#define PARAM_I2S_CHANNEL(n)	((n==I2S_STEREO)||(n==I2S_MONO))
+/* Macro check I2S master/slave mode */
+#define PARAM_I2S_WS_SEL(n)		((n==I2S_MASTER_MODE)||(n==I2S_SLAVE_MODE))
+/* Macro check I2S stop mode */
+#define PARAM_I2S_STOP(n)	((n==I2S_STOP_ENABLE)||(n==I2S_STOP_DISABLE))
+/* Macro check I2S reset mode */
+#define PARAM_I2S_RESET(n)	((n==I2S_RESET_ENABLE)||(n==I2S_RESET_DISABLE))
+/* Macro check I2S reset mode */
+#define PARAM_I2S_MUTE(n)	((n==I2S_MUTE_ENABLE)||(n==I2S_MUTE_DISABLE))
+/* Macro check I2S transmit/receive mode */
+#define PARAM_I2S_TRX(n) 		((n==I2S_TX_MODE)||(n==I2S_RX_MODE))
+/* Macro check I2S clock select mode */
+#define PARAM_I2S_CLKSEL(n)		((n==I2S_CLKSEL_FRDCLK)||(n==I2S_CLKSEL_MCLK))
+/* Macro check I2S 4-pin mode */
+#define PARAM_I2S_4PIN(n)	((n==I2S_4PIN_ENABLE)||(n==I2S_4PIN_DISABLE))
+/* Macro check I2S MCLK mode */
+#define PARAM_I2S_MCLK(n)	((n==I2S_MCLK_ENABLE)||(n==I2S_MCLK_DISABLE))
+/* Macro check I2S DMA mode */
+#define PARAM_I2S_DMA(n)		((n==I2S_DMA_1)||(n==I2S_DMA_2))
+/* Macro check I2S DMA depth value */
+#define PARAM_I2S_DMA_DEPTH(n)	(n<=31)
+/* Macro check I2S irq level value */
+#define PARAM_I2S_IRQ_LEVEL(n)	(n<=31)
+/* Macro check I2S half-period value */
+#define PARAM_I2S_HALFPERIOD(n)	(n<512)
+/* Macro check I2S bit-rate value */
+#define PARAM_I2S_BITRATE(n)	(n<=63)
+/**
+ * @}
+ */
+
+
+
+/* Public Types --------------------------------------------------------------- */
+/** @defgroup I2S_Public_Types I2S Public Types
  * @{
  */
 
-/** @defgroup I2S_TYPES
- * @{
+/**
+ * @brief I2S configuration structure definition
  */
-/** I2S configuration structure */
-typedef struct {
-	uint8_t CLK_Pin;		/** Clock Pin, should be:
-							- I2S_SRX_CLK_P0_4: RX_CLK pin is on P0.4
-							- I2S_SRX_CLK_P0_23: RX_CLK pin is on P0.23
-							- I2S_STX_CLK_P0_7: TX_CLK pin is on P0.7
-							- I2S_STX_CLK_P2_11: TX_CLK pin is on P2.11 */
-	uint8_t WS_Pin;			/** Word Select, should be:
-							- I2S_SRX_WS_P0_5: RX_WS pin is on P0.5
-							- I2S_SRX_WS_P0_24: RX_WS pin is on P0.24
-							- I2S_STX_WS_P0_8: TX_WS pin is on P0.8
-							- I2S_STX_WS_P2_12: TX_WS pin is on P2.12 */
-	uint8_t SDA_Pin;		/** Data, should be:
-							- I2S_SRX_SDA_P0_6: RX_SDA pin is on P0.6
-							- I2S_SRX_SDA_P0_25: RX_SDA pin is on P0.25
-							- I2S_STX_SDA_P0_9: TX_SDA pin is on P0.8
-							- I2S_STX_SDA_P2_13: TX_SDA pin is on P2.13 */
-	uint8_t MCLK_Pin;		/** Master Clock output, should be:
-							- I2S_RX_MCLK_P4_28: RX_MCLK pin is on P4.28
-							- I2S_TX_MCLK_P4_29: TX_MCLK pin is on P4.29*/
-}I2S_PinCFG_Type;
-
 typedef struct {
 	uint8_t wordwidth;		/** the number of bytes in data as follow:
 							-I2S_WORDWIDTH_8: 8 bit data
@@ -305,6 +293,9 @@ typedef struct {
 	uint8_t Reserved0[2];
 } I2S_CFG_Type;
 
+/**
+ * @brief I2S DMA configuration structure definition
+ */
 typedef struct {
 	uint8_t DMAIndex;		/** Select DMA1 or DMA2, should be:
 							- I2S_DMA_1: DMA1
@@ -313,10 +304,13 @@ typedef struct {
 	uint8_t Reserved0[2];
 }I2S_DMAConf_Type;
 
+/**
+ * @brief I2S mode configuration structure definition
+ */
 typedef struct{
 	uint8_t clksel;			/** Clock source selection, should be:
-							- I2S_CLKSEL_0: Select the fractional rate divider clock output
-							- I2S_CLKSEL_2: Select the MCLK signal as the clock source */
+							- I2S_CLKSEL_FRDCLK: Select the fractional rate divider clock output
+							- I2S_CLKSEL_MCLK: Select the MCLK signal as the clock source */
 	uint8_t fpin;			/** Select four pin mode, should be:
 							- I2S_4PIN_ENABLE: 4-pin enable
 							- I2S_4PIN_DISABLE: 4-pin disable */
@@ -326,175 +320,49 @@ typedef struct{
 	uint8_t Reserved;
 }I2S_MODEConf_Type;
 
-/** I2S call-back function type definitions */
-typedef void (fnI2SCbs_Type)();
-/**
- * @}
- */
 
 /**
  * @}
  */
 
-/*************************** GLOBAL/PUBLIC MACROS ***************************/
-/** @addtogroup PUBLIC_MACROS
+
+/* Public Functions ----------------------------------------------------------- */
+/** @defgroup I2S_Public_Functions I2S Public Functions
  * @{
  */
+/* I2S Init/DeInit functions ---------*/
+void I2S_Init(LPC_I2S_TypeDef *I2Sx);
+void I2S_DeInit(LPC_I2S_TypeDef *I2Sx);
 
-/** @defgroup I2S_MACROS
- * @{
- */
-/** Macro to determine if it is valid I2S peripheral */
-#define PARAM_I2Sx(n)	(((uint32_t *)n)==((uint32_t *)I2S))
+/* I2S configuration functions --------*/
+void I2S_Config(LPC_I2S_TypeDef *I2Sx, uint8_t TRMode, I2S_CFG_Type* ConfigStruct);
+Status I2S_FreqConfig(LPC_I2S_TypeDef *I2Sx, uint32_t Freq, uint8_t TRMode);
+void I2S_SetBitRate(LPC_I2S_TypeDef *I2Sx, uint8_t bitrate, uint8_t TRMode);
+void I2S_ModeConfig(LPC_I2S_TypeDef *I2Sx, I2S_MODEConf_Type* ModeConfig, uint8_t TRMode);
+uint8_t I2S_GetLevel(LPC_I2S_TypeDef *I2Sx, uint8_t TRMode);
 
-/** Macro to check Data to send valid */
-#define PARAM_I2S_DATA(data) 	((data>=0)&&(data <= 0xFFFFFFFF))
-#define PRAM_I2S_FREQ(freq)		((freq>=16000)&&(freq <= 96000))
+/* I2S operate functions -------------*/
+void I2S_Send(LPC_I2S_TypeDef *I2Sx, uint32_t BufferData);
+uint32_t I2S_Receive(LPC_I2S_TypeDef* I2Sx);
+void I2S_Start(LPC_I2S_TypeDef *I2Sx);
+void I2S_Pause(LPC_I2S_TypeDef *I2Sx, uint8_t TRMode);
+void I2S_Mute(LPC_I2S_TypeDef *I2Sx, uint8_t TRMode);
+void I2S_Stop(LPC_I2S_TypeDef *I2Sx, uint8_t TRMode);
 
-/** SSP0 function pin selection defines */
-#define I2S_SRX_CLK_P0_4	((uint8_t)(0))
-#define I2S_SRX_WS_P0_5		((uint8_t)(0))
-#define I2S_SRX_SDA_P0_6	((uint8_t)(0))
-#define I2S_STX_CLK_P0_7	((uint8_t)(0))
-#define I2S_STX_WS_P0_8		((uint8_t)(0))
-#define I2S_STX_SDA_P0_9	((uint8_t)(0))
+/* I2S DMA functions ----------------*/
+void I2S_DMAConfig(LPC_I2S_TypeDef *I2Sx, I2S_DMAConf_Type* DMAConfig, uint8_t TRMode);
+void I2S_DMACmd(LPC_I2S_TypeDef *I2Sx, uint8_t DMAIndex,uint8_t TRMode, FunctionalState NewState);
 
-
-#define I2S_SRX_CLK_P0_23	((uint8_t)(0))
-#define I2S_SRX_WS_P0_24	((uint8_t)(0))
-#define I2S_SRX_SDA_P0_25	((uint8_t)(0))
-
-#define I2S_STX_CLK_P2_11	((uint8_t)(2))
-#define I2S_STX_WS_P2_12	((uint8_t)(2))
-#define I2S_STX_SDA_P2_13	((uint8_t)(2))
-
-#define I2S_TX_MCLK_P4_29	((uint8_t)(4))
-#define I2S_RX_MCLK_P4_28	((uint8_t)(4))
-
-/** Macro to check PIN parameter */
-#define PARAM_RX_CLK_PIN(n)	((n==I2S_SRX_CLK_P0_4)||(n==I2S_SRX_CLK_P0_23))
-#define PARAM_TX_CLK_PIN(n)	((n==I2S_STX_CLK_P0_7)||(n==I2S_STX_CLK_P2_11))
-
-#define PARAM_RX_WS_PIN(n)	((n==I2S_SRX_WS_P0_5)||(n==I2S_SRX_WS_P0_24))
-#define PARAM_TX_WS_PIN(n)	((n==I2S_STX_WS_P0_8)||(n==I2S_STX_WS_P2_12))
-
-#define PARAM_RX_SDA_PIN(n) ((n==I2S_SRX_SDA_P0_6)||(n==I2S_SRX_SDA_P0_25))
-#define PARAM_TX_SDA_PIN(n) ((n==I2S_STX_SDA_P0_9)||(n==I2S_STX_SDA_P2_13))
-
-#define PARAM_RX_MCLK_PIN(n) (n==I2S_RX_MCLK_P4_28)
-#define PARAM_TX_MCLK_PIN(n) (n==I2S_TX_MCLK_P4_29)
-
-/*********************************************************************//**
- * I2S configuration parameter defines
- **********************************************************************/
-/** I2S Wordwidth bit */
-#define I2S_WORDWIDTH_8			I2S_DAO_WORDWIDTH_8
-#define I2S_WORDWIDTH_16		I2S_DAO_WORDWIDTH_16
-#define I2S_WORDWIDTH_32		I2S_DAO_WORDWIDTH_32
-#define PARAM_I2S_WORDWIDTH(n)	((n==I2S_WORDWIDTH_8)||(n==I2S_WORDWIDTH_16)\
-								 ||	(n==I2S_WORDWIDTH_32))
-
-/** I2S Channel bit */
-#define I2S_STEREO				((uint32_t)(0))
-#define I2S_MONO				((uint32_t)(1))
-#define PARAM_I2S_CHANNEL(n)	((n==I2S_STEREO)||(n==I2S_MONO))
-
-/** I2S Master/Slave mode bit */
-#define I2S_MASTER_MODE			((uint8_t)(0))
-#define I2S_SLAVE_MODE			((uint8_t)(1))
-#define PARAM_I2S_WS_SEL(n)		((n==I2S_MASTER_MODE)||(n=I2S_SLAVE_MODE))
-
-/** I2S Stop bit */
-#define I2S_STOP_ENABLE		((uint8_t)(1))
-#define I2S_STOP_DISABLE	((uint8_t)(0))
-#define PARAM_I2S_STOP(n)	((n==I2S_STOP_ENABLE)||(n==I2S_STOP_DISABLE))
-
-/** I2S Reset bit */
-#define I2S_RESET_ENABLE	((uint8_t)(1))
-#define I2S_RESET_DISABLE	((uint8_t)(0))
-#define PARAM_I2S_RESET(n)	((n==I2S_RESET_ENABLE)||(n==I2S_RESET_DISABLE))
-
-/** I2S Mute bit */
-#define I2S_MUTE_ENABLE		((uint8_t)(1))
-#define I2S_MUTE_DISABLE	((uint8_t)(0))
-#define PARAM_I2S_MUTE(n)	((n==I2S_MUTE_ENABLE)||(n==I2S_MUTE_DISABLE))
-
-/** I2S Transmit/Receive bit */
-#define I2S_TX_MODE		((uint8_t)(0))
-#define I2S_RX_MODE		((uint8_t)(1))
-#define PARAM_I2S_TRX(n) 		((n==I2S_TX_MODE)||(n==I2S_RX_MODE))
-
-/** I2S Clock Select bit */
-#define I2S_CLKSEL_0	((uint8_t)(0))
-#define I2S_CLKSEL_1	((uint8_t)(2))
-#define PARAM_I2S_CLKSEL(n)		((n==I2S_CLKSEL_0)||(n==I2S_CLKSEL_1))
-
-/** I2S 4-pin Mode bit */
-#define I2S_4PIN_ENABLE 	((uint8_t)(1))
-#define I2S_4PIN_DISABLE 	((uint8_t)(0))
-#define PARAM_I2S_4PIN(n)	((n==I2S_4PIN_ENABLE)||(n==I2S_4PIN_DISABLE))
-
-/** I2S MCLK Enable bit */
-#define I2S_MCLK_ENABLE		((uint8_t)(1))
-#define I2S_MCLK_DISABLE	((uint8_t)(0))
-#define PARAM_I2S_MCLK(n)	((n==I2S_MCLK_ENABLE)||(n==I2S_MCLK_DISABLE))
-
-/** I2S select DMA bit */
-#define I2S_DMA_1	((uint8_t)(0))
-#define I2S_DMA_2	((uint8_t)(1))
-#define PARAM_I2S_DMA(n)		((n==I2S_DMA_1)||(n==I2S_DMA_2))
-
-#define PARAM_I2S_DMA_DEPTH(n)	((n>=0)||(n<=31))
-#define PARAM_I2S_IRQ_LEVEL(n)	((n>=0)||(n<=31))
-
-#define PARAM_I2S_HALFPERIOD(n)	((n>0)&&(n<512))
-
-#define PARAM_I2S_BITRATE(n)	((n>=1)&&(n<=64))
+/* I2S IRQ functions ----------------*/
+void I2S_IRQCmd(LPC_I2S_TypeDef *I2Sx,uint8_t TRMode, FunctionalState NewState);
+void I2S_IRQConfig(LPC_I2S_TypeDef *I2Sx, uint8_t TRMode, uint8_t level);
+FunctionalState I2S_GetIRQStatus(LPC_I2S_TypeDef *I2Sx,uint8_t TRMode);
+uint8_t I2S_GetIRQDepth(LPC_I2S_TypeDef *I2Sx,uint8_t TRMode);
 
 /**
  * @}
  */
 
-/**
- * @}
- */
-
-/************************** GLOBAL/PUBLIC FUNCTIONS *************************/
-/** @addtogroup PUBLIC_FUNCTION_PROTOTYPES
- * @{
- */
-
-/** @defgroup I2S_FUNCTIONS
- * @{
- */
-void I2S_Init(I2S_TypeDef *I2Sx);
-void I2S_DeInit(I2S_TypeDef *I2Sx);
-
-void I2S_Config(I2S_TypeDef *I2Sx, uint8_t TRMode, I2S_CFG_Type* ConfigStruct);
-Status I2S_FreqConfig(I2S_TypeDef *I2Sx, uint32_t Freq, uint8_t TRMode);
-void I2S_SetBitRate(I2S_TypeDef *I2Sx, uint8_t bitrate, uint8_t TRMode);
-void I2S_ModeConfig(I2S_TypeDef *I2Sx, I2S_MODEConf_Type* ModeConfig, uint8_t TRMode);
-
-void I2S_Send(I2S_TypeDef *I2Sx, uint32_t BufferData);
-uint32_t I2S_Receive(I2S_TypeDef* I2Sx);
-void I2S_Start(I2S_TypeDef *I2Sx);
-void I2S_Pause(I2S_TypeDef *I2Sx, uint8_t TRMode);
-void I2S_Mute(I2S_TypeDef *I2Sx, uint8_t TRMode);
-void I2S_Stop(I2S_TypeDef *I2Sx, uint8_t TRMode);
-
-void I2S_DMAConfig(I2S_TypeDef *I2Sx, I2S_DMAConf_Type* DMAConfig, uint8_t TRMode);
-void I2S_DMACmd(I2S_TypeDef *I2Sx, uint8_t DMAIndex,uint8_t TRMode, FunctionalState NewState);
-void I2S_IRQConfig(I2S_TypeDef *I2Sx, uint8_t TRMode, uint8_t level, fnI2SCbs_Type *pfnI2SCbs);
-void I2S_IRQCmd(I2S_TypeDef *I2Sx,uint8_t TRMode, FunctionalState NewState);
-void I2S_IntHandler(void);
-uint8_t I2S_GetLevel(I2S_TypeDef *I2Sx, uint8_t TRMode);
-/**
- * @}
- */
-
-/**
- * @}
- */
 
 #ifdef __cplusplus
 }
@@ -502,3 +370,9 @@ uint8_t I2S_GetLevel(I2S_TypeDef *I2Sx, uint8_t TRMode);
 
 
 #endif /* LPC17XX_SSP_H_ */
+
+/**
+ * @}
+ */
+
+/* --------------------------------- End Of File ------------------------------ */

@@ -1,32 +1,40 @@
-/**
- * @file	: lpc17xx_clkpwr.c
- * @brief	: Contains all functions support for Clock and Power Control
- * 				firmware library on LPC17xx
- * @version	: 1.0
- * @date	: 18. Mar. 2009
- * @author	: HieuNguyen
- *----------------------------------------------------------------------------
- * Software that is described herein is for illustrative purposes only
- * which provides customers with programming information regarding the
- * products. This software is supplied "AS IS" without any warranties.
- * NXP Semiconductors assumes no responsibility or liability for the
- * use of the software, conveys no license or title under any patent,
- * copyright, or mask work right to the product. NXP Semiconductors
- * reserves the right to make changes in the software without
- * notification. NXP Semiconductors also make no representation or
- * warranty that such application will be suitable for the specified
- * use without further testing or modification.
- **********************************************************************/
+/**********************************************************************
+* $Id$		lpc17xx_clkpwr.c				2010-06-18
+*//**
+* @file		lpc17xx_clkpwr.c
+* @brief	Contains all functions support for Clock and Power Control
+* 			firmware library on LPC17xx
+* @version	3.0
+* @date		18. June. 2010
+* @author	NXP MCU SW Application Team
+*
+* Copyright(C) 2010, NXP Semiconductor
+* All rights reserved.
+*
+***********************************************************************
+* Software that is described herein is for illustrative purposes only
+* which provides customers with programming information regarding the
+* products. This software is supplied "AS IS" without any warranties.
+* NXP Semiconductors assumes no responsibility or liability for the
+* use of the software, conveys no license or title under any patent,
+* copyright, or mask work right to the product. NXP Semiconductors
+* reserves the right to make changes in the software without
+* notification. NXP Semiconductors also make no representation or
+* warranty that such application will be suitable for the specified
+* use without further testing or modification.
+**********************************************************************/
 
+/* Peripheral group ----------------------------------------------------------- */
+/** @addtogroup CLKPWR
+ * @{
+ */
+
+/* Includes ------------------------------------------------------------------- */
 #include "lpc17xx_clkpwr.h"
 
 
-/************************** GLOBAL/PUBLIC FUNCTIONS *************************/
-/** @addtogroup Public_Functions
-  * @{
-  */
-
-/** @defgroup CLKPWR_Public_Functions
+/* Public Functions ----------------------------------------------------------- */
+/** @addtogroup CLKPWR_Public_Functions
  * @{
  */
 
@@ -79,23 +87,19 @@ void CLKPWR_SetPCLKDiv (uint32_t ClkType, uint32_t DivVal)
 	if (ClkType < 32)
 	{
 		/* Clear two bit at bit position */
-		//SC->PCLKSEL0 &= (~(CLKPWR_PCLKSEL_BITMASK(bitpos))) & CLKPWR_PCLKSEL0_BITMASK;
-		SC->PCLKSEL0 &= (~(CLKPWR_PCLKSEL_BITMASK(bitpos)));
+		LPC_SC->PCLKSEL0 &= (~(CLKPWR_PCLKSEL_BITMASK(bitpos)));
 
 		/* Set two selected bit */
-		//SC->PCLKSEL0 |= (CLKPWR_PCLKSEL_SET(bitpos, DivVal)) & CLKPWR_PCLKSEL0_BITMASK;
-		SC->PCLKSEL0 |= (CLKPWR_PCLKSEL_SET(bitpos, DivVal));
+		LPC_SC->PCLKSEL0 |= (CLKPWR_PCLKSEL_SET(bitpos, DivVal));
 	}
 	/* PCLKSEL1 selected */
 	else
 	{
 		/* Clear two bit at bit position */
-		//SC->PCLKSEL1 &= (~(CLKPWR_PCLKSEL_BITMASK(bitpos))) & CLKPWR_PCLKSEL1_BITMASK;
-		SC->PCLKSEL1 &= ~(CLKPWR_PCLKSEL_BITMASK(bitpos));
+		LPC_SC->PCLKSEL1 &= ~(CLKPWR_PCLKSEL_BITMASK(bitpos));
 
 		/* Set two selected bit */
-		//SC->PCLKSEL1 |= (CLKPWR_PCLKSEL_SET(bitpos, DivVal)) & CLKPWR_PCLKSEL1_BITMASK;
-		SC->PCLKSEL1 |= (CLKPWR_PCLKSEL_SET(bitpos, DivVal));
+		LPC_SC->PCLKSEL1 |= (CLKPWR_PCLKSEL_SET(bitpos, DivVal));
 	}
 }
 
@@ -141,12 +145,12 @@ uint32_t CLKPWR_GetPCLKSEL (uint32_t ClkType)
 	if (ClkType < 32)
 	{
 		bitpos = ClkType;
-		retval = SC->PCLKSEL0;
+		retval = LPC_SC->PCLKSEL0;
 	}
 	else
 	{
 		bitpos = ClkType - 32;
-		retval = SC->PCLKSEL1;
+		retval = LPC_SC->PCLKSEL1;
 	}
 
 	retval = CLKPWR_PCLKSEL_GET(bitpos, retval);
@@ -193,7 +197,7 @@ uint32_t CLKPWR_GetPCLK (uint32_t ClkType)
 {
 	uint32_t retval, div;
 
-	retval = SystemFrequency;
+	retval = SystemCoreClock;
 	div = CLKPWR_GetPCLKSEL(ClkType);
 
 	switch (div)
@@ -263,13 +267,72 @@ void CLKPWR_ConfigPPWR (uint32_t PPType, FunctionalState NewState)
 {
 	if (NewState == ENABLE)
 	{
-		SC->PCONP |= PPType & CLKPWR_PCONP_BITMASK;
+		LPC_SC->PCONP |= PPType & CLKPWR_PCONP_BITMASK;
 	}
 	else if (NewState == DISABLE)
 	{
-		SC->PCONP &= (~PPType) & CLKPWR_PCONP_BITMASK;
+		LPC_SC->PCONP &= (~PPType) & CLKPWR_PCONP_BITMASK;
 	}
 }
+
+
+/*********************************************************************//**
+ * @brief 		Enter Sleep mode with co-operated instruction by the Cortex-M3.
+ * @param[in]	None
+ * @return		None
+ **********************************************************************/
+void CLKPWR_Sleep(void)
+{
+	LPC_SC->PCON = 0x00;
+	/* Sleep Mode*/
+	__WFI();
+}
+
+
+/*********************************************************************//**
+ * @brief 		Enter Deep Sleep mode with co-operated instruction by the Cortex-M3.
+ * @param[in]	None
+ * @return		None
+ **********************************************************************/
+void CLKPWR_DeepSleep(void)
+{
+    /* Deep-Sleep Mode, set SLEEPDEEP bit */
+	SCB->SCR = 0x4;
+	LPC_SC->PCON = 0x8;
+	/* Deep Sleep Mode*/
+	__WFI();
+}
+
+
+/*********************************************************************//**
+ * @brief 		Enter Power Down mode with co-operated instruction by the Cortex-M3.
+ * @param[in]	None
+ * @return		None
+ **********************************************************************/
+void CLKPWR_PowerDown(void)
+{
+    /* Deep-Sleep Mode, set SLEEPDEEP bit */
+	SCB->SCR = 0x4;
+	LPC_SC->PCON = 0x09;
+	/* Power Down Mode*/
+	__WFI();
+}
+
+
+/*********************************************************************//**
+ * @brief 		Enter Deep Power Down mode with co-operated instruction by the Cortex-M3.
+ * @param[in]	None
+ * @return		None
+ **********************************************************************/
+void CLKPWR_DeepPowerDown(void)
+{
+    /* Deep-Sleep Mode, set SLEEPDEEP bit */
+	SCB->SCR = 0x4;
+	LPC_SC->PCON = 0x03;
+	/* Deep Power Down Mode*/
+	__WFI();
+}
+
 /**
  * @}
  */
@@ -277,3 +340,5 @@ void CLKPWR_ConfigPPWR (uint32_t PPType, FunctionalState NewState)
 /**
  * @}
  */
+
+/* --------------------------------- End Of File ------------------------------ */

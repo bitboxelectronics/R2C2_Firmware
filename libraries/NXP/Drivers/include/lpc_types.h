@@ -1,57 +1,48 @@
-/***********************************************************************
- * $Id:: lpc_types.h 2512 2009-11-12 06:33:10Z gerritdewaard           $
- *
- * Project: Common Include Files
- *
- * Description:
- *     lpc_types.h contains the NXP ABL typedefs for C standard types.
- *     It is intended to be used in ISO C conforming development
- *     environments and checks for this insofar as it is possible
- *     to do so.
- *
- *     lpc_types.h ensures that the name used to define types correctly
- *     identifies a representation size, and by direct inference the
- *     storage size, in bits. E.g., UNS_32 identifies an unsigned
- *     integer type stored in 32 bits.
- *
- *     It requires that the basic storage unit (char) be stored in
- *     8 bits.
- *
- *     No assumptions about Endianess are made or implied.
- *
- *     lpc_types.h also contains NXP ABL Global Macros:
- *         _BIT
- *         _SBF
- *         _BITMAP
- *     These #defines are not strictly types, but rather Preprocessor
- *     Macros that have been found to be generally useful.
- *
- ***********************************************************************
- * Software that is described herein is for illustrative purposes only
- * which provides customers with programming information regarding the
- * products. This software is supplied "AS IS" without any warranties.
- * NXP Semiconductors assumes no responsibility or liability for the
- * use of the software, conveys no license or title under any patent,
- * copyright, or mask work right to the product. NXP Semiconductors
- * reserves the right to make changes in the software without
- * notification. NXP Semiconductors also make no representation or
- * warranty that such application will be suitable for the specified
- * use without further testing or modification.
- **********************************************************************/
+/**********************************************************************
+* $Id$		lpc_types.h		2008-07-27
+*//**
+* @file		lpc_types.h
+* @brief	Contains the NXP ABL typedefs for C standard types.
+*     		It is intended to be used in ISO C conforming development
+*     		environments and checks for this insofar as it is possible
+*     		to do so.
+* @version	2.0
+* @date		27 Jul. 2008
+* @author	NXP MCU SW Application Team
+*
+* Copyright(C) 2008, NXP Semiconductor
+* All rights reserved.
+*
+***********************************************************************
+* Software that is described herein is for illustrative purposes only
+* which provides customers with programming information regarding the
+* products. This software is supplied "AS IS" without any warranties.
+* NXP Semiconductors assumes no responsibility or liability for the
+* use of the software, conveys no license or title under any patent,
+* copyright, or mask work right to the product. NXP Semiconductors
+* reserves the right to make changes in the software without
+* notification. NXP Semiconductors also make no representation or
+* warranty that such application will be suitable for the specified
+* use without further testing or modification.
+**********************************************************************/
+
+/* Type group ----------------------------------------------------------- */
+/** @defgroup LPC_Types LPC_Types
+ * @ingroup LPC1700CMSIS_FwLib_Drivers
+ * @{
+ */
 
 #ifndef LPC_TYPES_H
 #define LPC_TYPES_H
 
-
-/***********************************************************************
- * Use existing typedef in standard C library
- **********************************************************************/
+/* Includes ------------------------------------------------------------------- */
 #include <stdint.h>
 
 
-/***********************************************************************
- * Global typedefs
- **********************************************************************/
+/* Public Types --------------------------------------------------------------- */
+/** @defgroup LPC_Types_Public_Types LPC_Types Public Types
+ * @{
+ */
 
 /**
  * @brief Boolean Type definition
@@ -62,6 +53,7 @@ typedef enum {FALSE = 0, TRUE = !FALSE} Bool;
  * @brief Flag Status and Interrupt Flag Status type definition
  */
 typedef enum {RESET = 0, SET = !RESET} FlagStatus, IntStatus, SetState;
+#define PARAM_SETSTATE(State) ((State==RESET) || (State==SET))
 
 /**
  * @brief Functional State Definition
@@ -81,7 +73,7 @@ typedef enum {ERROR = 0, SUCCESS = !ERROR} Status;
 typedef enum
 {
 	NONE_BLOCKING = 0,		/**< None Blocking type */
-	BLOCKING,				/**< Blocking type */
+	BLOCKING				/**< Blocking type */
 } TRANSFER_BLOCK_Type;
 
 
@@ -91,11 +83,15 @@ typedef void (*PFV)();
 /** Pointer to Function returning int32_t (any number of parameters) */
 typedef int32_t(*PFI)();
 
+/**
+ * @}
+ */
 
 
-/***********************************************************************
- * Global Macros
- **********************************************************************/
+/* Public Macros -------------------------------------------------------------- */
+/** @defgroup LPC_Types_Public_Macros  LPC_Types Public Macros
+ * @{
+ */
 
 /* _BIT(n) sets the bit at position "n"
  * _BIT(n) is intended to be used in "OR" and "AND" expressions:
@@ -143,126 +139,64 @@ typedef int32_t(*PFI)();
 /* External data/function define */
 #define EXTERN extern
 
+#define MAX(a, b) (((a) > (b)) ? (a) : (b))
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
-#if 1
-//------------ Old Type Definition compatible
-/* SMA type for character type */
+/**
+ * @}
+ */
+
+
+/* Old Type Definition compatibility ------------------------------------------ */
+/** @addtogroup LPC_Types_Public_Types LPC_Types Public Types
+ * @{
+ */
+
+/** SMA type for character type */
 typedef char CHAR;
 
-/* SMA type for 8 bit unsigned value */
+/** SMA type for 8 bit unsigned value */
 typedef uint8_t UNS_8;
 
-/* SMA type for 8 bit signed value */
+/** SMA type for 8 bit signed value */
 typedef int8_t INT_8;
 
-/* SMA type for 16 bit unsigned value */
+/** SMA type for 16 bit unsigned value */
 typedef	uint16_t UNS_16;
 
-/* SMA type for 16 bit signed value */
+/** SMA type for 16 bit signed value */
 typedef	int16_t INT_16;
 
-/* SMA type for 32 bit unsigned value */
+/** SMA type for 32 bit unsigned value */
 typedef	uint32_t UNS_32;
 
-/* SMA type for 32 bit signed value */
+/** SMA type for 32 bit signed value */
 typedef	int32_t INT_32;
 
-/* SMA type for 64 bit signed value */
+/** SMA type for 64 bit signed value */
 typedef int64_t INT_64;
 
-/* SMA type for 64 bit unsigned value */
+/** SMA type for 64 bit unsigned value */
 typedef uint64_t UNS_64;
 
-/* 32 bit boolean type */
+/** 32 bit boolean type */
 typedef Bool BOOL_32;
 
-/* 16 bit boolean type */
+/** 16 bit boolean type */
 typedef Bool BOOL_16;
 
-/* 8 bit boolean type */
+/** 8 bit boolean type */
 typedef Bool BOOL_8;
-#endif
-
-
-/* ------------------------- For doxygen generation ---------------------------*/
-
-/** @defgroup PRIVATE_MACROS
- * @{
- */
 
 /**
  * @}
  */
 
-/** @defgroup PUBLIC_MACROS
- * @{
- */
 
-/**
- * @}
- */
-
-/** @defgroup PUBLIC_TYPES
- * @{
- */
-
-/**
- * @}
- */
-
-/** @defgroup PUBLIC_FUNCTION_PROTOTYPES
- * @{
- */
-
-/**
- * @}
- */
-
-/** @defgroup Private_Includes
- * @{
- */
-
-/**
- * @}
- */
-
-/** @defgroup Private_Types
- * @{
- */
-
-/**
- * @}
- */
-
-/** @defgroup Private_Variables
- * @{
- */
-
-/**
- * @}
- */
-
-/** @defgroup Private_FunctionPrototypes
- * @{
- */
-
-/**
- * @}
- */
-
-/** @defgroup Private_Functions
- * @{
- */
-
-/**
- * @}
- */
-
-/** @defgroup Public_Functions
- * @{
- */
-
-/**
- * @}
- */
 #endif /* LPC_TYPES_H */
+
+/**
+ * @}
+ */
+
+/* --------------------------------- End Of File ------------------------------ */

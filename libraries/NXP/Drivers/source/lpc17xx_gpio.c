@@ -1,22 +1,35 @@
-/**
- * @file	: lpc17xx_gpio.c
- * @brief	: Contains all functions support for GPIO firmware library on LPC17xx
- * @version	: 1.0
- * @date	: 11. Jun. 2009
- * @author	: HieuNguyen
- *----------------------------------------------------------------------------
- * Software that is described herein is for illustrative purposes only
- * which provides customers with programming information regarding the
- * products. This software is supplied "AS IS" without any warranties.
- * NXP Semiconductors assumes no responsibility or liability for the
- * use of the software, conveys no license or title under any patent,
- * copyright, or mask work right to the product. NXP Semiconductors
- * reserves the right to make changes in the software without
- * notification. NXP Semiconductors also make no representation or
- * warranty that such application will be suitable for the specified
- * use without further testing or modification.
- **********************************************************************/
+/**********************************************************************
+* $Id$		lpc17xx_gpio.c				2010-05-21
+*//**
+* @file		lpc17xx_gpio.c
+* @brief	Contains all functions support for GPIO firmware
+* 			library on LPC17xx
+* @version	2.0
+* @date		21. May. 2010
+* @author	NXP MCU SW Application Team
+*
+* Copyright(C) 2010, NXP Semiconductor
+* All rights reserved.
+*
+***********************************************************************
+* Software that is described herein is for illustrative purposes only
+* which provides customers with programming information regarding the
+* products. This software is supplied "AS IS" without any warranties.
+* NXP Semiconductors assumes no responsibility or liability for the
+* use of the software, conveys no license or title under any patent,
+* copyright, or mask work right to the product. NXP Semiconductors
+* reserves the right to make changes in the software without
+* notification. NXP Semiconductors also make no representation or
+* warranty that such application will be suitable for the specified
+* use without further testing or modification.
+**********************************************************************/
 
+/* Peripheral group ----------------------------------------------------------- */
+/** @addtogroup GPIO
+ * @{
+ */
+
+/* Includes ------------------------------------------------------------------- */
 #include "lpc17xx_gpio.h"
 
 /* If this source file built with example, the LPC17xx FW library configuration
@@ -29,41 +42,39 @@
 #include "lpc17xx_libcfg_default.h"
 #endif /* __BUILD_WITH_EXAMPLE__ */
 
+
 #ifdef _GPIO
 
-/***************************** PRIVATE FUNCTION *****************************/
-/** @addtogroup  Private_Functions
-  * @{
-  */
+/* Private Functions ---------------------------------------------------------- */
 
-/** @defgroup 	GPIO_Private_Functions
- * @{
- */
+static LPC_GPIO_TypeDef *GPIO_GetPointer(uint8_t portNum);
+static GPIO_HalfWord_TypeDef *FIO_HalfWordGetPointer(uint8_t portNum);
+static GPIO_Byte_TypeDef *FIO_ByteGetPointer(uint8_t portNum);
 
 /*********************************************************************//**
  * @brief		Get pointer to GPIO peripheral due to GPIO port
  * @param[in]	portNum		Port Number value, should be in range from 0 to 4.
  * @return		Pointer to GPIO peripheral
  **********************************************************************/
-static GPIO_TypeDef *GPIO_GetPointer(uint8_t portNum)
+static LPC_GPIO_TypeDef *GPIO_GetPointer(uint8_t portNum)
 {
-	GPIO_TypeDef *pGPIO = NULL;
+	LPC_GPIO_TypeDef *pGPIO = NULL;
 
 	switch (portNum) {
 	case 0:
-		pGPIO = GPIO0;
+		pGPIO = LPC_GPIO0;
 		break;
 	case 1:
-		pGPIO = GPIO1;
+		pGPIO = LPC_GPIO1;
 		break;
 	case 2:
-		pGPIO = GPIO2;
+		pGPIO = LPC_GPIO2;
 		break;
 	case 3:
-		pGPIO = GPIO3;
+		pGPIO = LPC_GPIO3;
 		break;
 	case 4:
-		pGPIO = GPIO4;
+		pGPIO = LPC_GPIO4;
 		break;
 	default:
 		break;
@@ -138,21 +149,11 @@ static GPIO_Byte_TypeDef *FIO_ByteGetPointer(uint8_t portNum)
 	return pFIO;
 }
 
-/**
- * @}
- */
-
-/**
- * @}
- */
+/* End of Private Functions --------------------------------------------------- */
 
 
-/************************** GLOBAL/PUBLIC FUNCTIONS *************************/
-/** @addtogroup Public_Functions
-  * @{
-  */
-
-/** @defgroup UART_Public_Functions
+/* Public Functions ----------------------------------------------------------- */
+/** @addtogroup GPIO_Public_Functions
  * @{
  */
 
@@ -175,7 +176,7 @@ static GPIO_Byte_TypeDef *FIO_ByteGetPointer(uint8_t portNum)
  **********************************************************************/
 void GPIO_SetDir(uint8_t portNum, uint32_t bitValue, uint8_t dir)
 {
-	GPIO_TypeDef *pGPIO = GPIO_GetPointer(portNum);
+	LPC_GPIO_TypeDef *pGPIO = GPIO_GetPointer(portNum);
 
 	if (pGPIO != NULL) {
 		// Enable Output
@@ -206,7 +207,7 @@ void GPIO_SetDir(uint8_t portNum, uint32_t bitValue, uint8_t dir)
  **********************************************************************/
 void GPIO_SetValue(uint8_t portNum, uint32_t bitValue)
 {
-	GPIO_TypeDef *pGPIO = GPIO_GetPointer(portNum);
+	LPC_GPIO_TypeDef *pGPIO = GPIO_GetPointer(portNum);
 
 	if (pGPIO != NULL) {
 		pGPIO->FIOSET = bitValue;
@@ -229,7 +230,7 @@ void GPIO_SetValue(uint8_t portNum, uint32_t bitValue)
  **********************************************************************/
 void GPIO_ClearValue(uint8_t portNum, uint32_t bitValue)
 {
-	GPIO_TypeDef *pGPIO = GPIO_GetPointer(portNum);
+	LPC_GPIO_TypeDef *pGPIO = GPIO_GetPointer(portNum);
 
 	if (pGPIO != NULL) {
 		pGPIO->FIOCLR = bitValue;
@@ -246,13 +247,83 @@ void GPIO_ClearValue(uint8_t portNum, uint32_t bitValue)
  **********************************************************************/
 uint32_t GPIO_ReadValue(uint8_t portNum)
 {
-	GPIO_TypeDef *pGPIO = GPIO_GetPointer(portNum);
+	LPC_GPIO_TypeDef *pGPIO = GPIO_GetPointer(portNum);
 
 	if (pGPIO != NULL) {
 		return pGPIO->FIOPIN;
 	}
 
 	return (0);
+}
+
+/*********************************************************************//**
+ * @brief		Enable GPIO interrupt (just used for P0.0-P0.30, P2.0-P2.13)
+ * @param[in]	portNum		Port number to read value, should be: 0 or 2
+ * @param[in]	bitValue	Value that contains all bits on GPIO to enable,
+ * 							in range from 0 to 0xFFFFFFFF.
+ * @param[in]	edgeState	state of edge, should be:
+ * 							- 0: Rising edge
+ * 							- 1: Falling edge
+ * @return		None
+ **********************************************************************/
+void GPIO_IntCmd(uint8_t portNum, uint32_t bitValue, uint8_t edgeState)
+{
+	if((portNum == 0)&&(edgeState == 0))
+		LPC_GPIOINT->IO0IntEnR = bitValue;
+	else if ((portNum == 2)&&(edgeState == 0))
+		LPC_GPIOINT->IO2IntEnR = bitValue;
+	else if ((portNum == 0)&&(edgeState == 1))
+		LPC_GPIOINT->IO0IntEnF = bitValue;
+	else if ((portNum == 2)&&(edgeState == 1))
+		LPC_GPIOINT->IO2IntEnF = bitValue;
+	else
+		//Error
+		while(1);
+}
+
+/*********************************************************************//**
+ * @brief		Get GPIO Interrupt Status (just used for P0.0-P0.30, P2.0-P2.13)
+ * @param[in]	portNum		Port number to read value, should be: 0 or 2
+ * @param[in]	pinNum		Pin number, should be: 0..30(with port 0) and 0..13
+ * 							(with port 2)
+ * @param[in]	edgeState	state of edge, should be:
+ * 							- 0: Rising edge
+ * 							- 1: Falling edge
+ * @return		Bool	could be:
+ * 						- ENABLE: Interrupt has been generated due to a rising
+ * 								edge on P0.0
+ * 						- DISABLE: A rising edge has not been detected on P0.0
+ **********************************************************************/
+FunctionalState GPIO_GetIntStatus(uint8_t portNum, uint32_t pinNum, uint8_t edgeState)
+{
+	if((portNum == 0) && (edgeState == 0))//Rising Edge
+		return ((FunctionalState)(((LPC_GPIOINT->IO0IntStatR)>>pinNum)& 0x1));
+	else if ((portNum == 2) && (edgeState == 0))
+		return ((FunctionalState)(((LPC_GPIOINT->IO2IntStatR)>>pinNum)& 0x1));
+	else if ((portNum == 0) && (edgeState == 1))//Falling Edge
+		return ((FunctionalState)(((LPC_GPIOINT->IO0IntStatF)>>pinNum)& 0x1));
+	else if ((portNum == 2) && (edgeState == 1))
+		return ((FunctionalState)(((LPC_GPIOINT->IO2IntStatF)>>pinNum)& 0x1));
+	else
+		//Error
+		while(1);
+}
+/*********************************************************************//**
+ * @brief		Clear GPIO interrupt (just used for P0.0-P0.30, P2.0-P2.13)
+ * @param[in]	portNum		Port number to read value, should be: 0 or 2
+ * @param[in]	bitValue	Value that contains all bits on GPIO to enable,
+ * 							in range from 0 to 0xFFFFFFFF.
+ * @return		None
+ **********************************************************************/
+void GPIO_ClearInt(uint8_t portNum, uint32_t bitValue)
+{
+	if(portNum == 0)
+		LPC_GPIOINT->IO0IntClr = bitValue;
+	else if (portNum == 2)
+		LPC_GPIOINT->IO2IntClr = bitValue;
+	else
+		//Invalid portNum
+		while(1);
 }
 
 /* FIO word accessible ----------------------------------------------------------------- */
@@ -290,7 +361,29 @@ uint32_t FIO_ReadValue(uint8_t portNum)
 	return (GPIO_ReadValue(portNum));
 }
 
+/**
+ * @brief The same with GPIO_IntCmd()
+ */
+void FIO_IntCmd(uint8_t portNum, uint32_t bitValue, uint8_t edgeState)
+{
+	GPIO_IntCmd(portNum, bitValue, edgeState);
+}
 
+/**
+ * @brief The same with GPIO_GetIntStatus()
+ */
+FunctionalState FIO_GetIntStatus(uint8_t portNum, uint32_t pinNum, uint8_t edgeState)
+{
+	return (GPIO_GetIntStatus(portNum, pinNum, edgeState));
+}
+
+/**
+ * @brief The same with GPIO_ClearInt()
+ */
+void FIO_ClearInt(uint8_t portNum, uint32_t bitValue)
+{
+	GPIO_ClearInt(portNum, bitValue);
+}
 /*********************************************************************//**
  * @brief		Set mask value for bits in FIO port
  * @param[in]	portNum		Port number, in range from 0 to 4
@@ -311,7 +404,7 @@ uint32_t FIO_ReadValue(uint8_t portNum)
  **********************************************************************/
 void FIO_SetMask(uint8_t portNum, uint32_t bitValue, uint8_t maskValue)
 {
-	GPIO_TypeDef *pFIO = GPIO_GetPointer(portNum);
+	LPC_GPIO_TypeDef *pFIO = GPIO_GetPointer(portNum);
 	if(pFIO != NULL) {
 		// Mask
 		if (maskValue){
@@ -378,8 +471,8 @@ void FIO_HalfWordSetDir(uint8_t portNum, uint8_t halfwordNum, uint16_t bitValue,
  * @param[in]	bitValue	Value that contains all bits in to set,
  * 							in range from 0 to 0xFFFF.
  * @param[in]	maskValue	Mask value contains state value for each bit:
- * 							- 0: not mask.
- * 							- 1: mask.
+ * 					- 0: not mask.
+ * 					- 1: mask.
  * @return		None
  *
  * Note:
@@ -528,13 +621,13 @@ void FIO_ByteSetDir(uint8_t portNum, uint8_t byteNum, uint8_t bitValue, uint8_t 
 	if(pFIO != NULL) {
 		// Output direction
 		if (dir) {
-			if ((byteNum >= 0) && (byteNum <= 3)) {
+			if (byteNum <= 3) {
 				pFIO->FIODIR[byteNum] |= bitValue;
 			}
 		}
 		// Input direction
 		else {
-			if ((byteNum >= 0) && (byteNum <= 3)) {
+			if (byteNum <= 3) {
 				pFIO->FIODIR[byteNum] &= ~bitValue;
 			}
 		}
@@ -566,13 +659,13 @@ void FIO_ByteSetMask(uint8_t portNum, uint8_t byteNum, uint8_t bitValue, uint8_t
 	if(pFIO != NULL) {
 		// Mask
 		if (maskValue) {
-			if ((byteNum >= 0) && (byteNum <= 3)) {
+			if (byteNum <= 3) {
 				pFIO->FIOMASK[byteNum] |= bitValue;
 			}
 		}
 		// Un-mask
 		else {
-			if ((byteNum >= 0) && (byteNum <= 3)) {
+			if (byteNum <= 3) {
 				pFIO->FIOMASK[byteNum] &= ~bitValue;
 			}
 		}
@@ -598,7 +691,7 @@ void FIO_ByteSetValue(uint8_t portNum, uint8_t byteNum, uint8_t bitValue)
 {
 	GPIO_Byte_TypeDef *pFIO = FIO_ByteGetPointer(portNum);
 	if (pFIO != NULL) {
-		if ((byteNum >= 0) && (byteNum <= 3)){
+		if (byteNum <= 3){
 			pFIO->FIOSET[byteNum] = bitValue;
 		}
 	}
@@ -623,7 +716,7 @@ void FIO_ByteClearValue(uint8_t portNum, uint8_t byteNum, uint8_t bitValue)
 {
 	GPIO_Byte_TypeDef *pFIO = FIO_ByteGetPointer(portNum);
 	if (pFIO != NULL) {
-		if ((byteNum >= 0) && (byteNum <= 3)){
+		if (byteNum <= 3){
 			pFIO->FIOCLR[byteNum] = bitValue;
 		}
 	}
@@ -643,7 +736,7 @@ uint8_t FIO_ByteReadValue(uint8_t portNum, uint8_t byteNum)
 {
 	GPIO_Byte_TypeDef *pFIO = FIO_ByteGetPointer(portNum);
 	if (pFIO != NULL) {
-		if ((byteNum >= 0) && (byteNum <= 3)){
+		if (byteNum <= 3){
 			return (pFIO->FIOPIN[byteNum]);
 		}
 	}
@@ -654,8 +747,10 @@ uint8_t FIO_ByteReadValue(uint8_t portNum, uint8_t byteNum)
  * @}
  */
 
+#endif /* _GPIO */
+
 /**
  * @}
  */
 
-#endif /* _GPIO */
+/* --------------------------------- End Of File ------------------------------ */

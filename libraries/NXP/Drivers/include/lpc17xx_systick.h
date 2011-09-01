@@ -1,9 +1,9 @@
 /**********************************************************************
-* $Id$		lpc17xx_rit.h				2010-05-21
+* $Id$		lpc17xx_systick.h				2010-05-21
 *//**
-* @file		lpc17xx_rit.h
+* @file		lpc17xx_systick.h
 * @brief	Contains all macro definitions and function prototypes
-* 			support for RIT firmware library on LPC17xx
+* 			support for SYSTICK firmware library on LPC17xx
 * @version	2.0
 * @date		21. May. 2010
 * @author	NXP MCU SW Application Team
@@ -25,13 +25,13 @@
 **********************************************************************/
 
 /* Peripheral group ----------------------------------------------------------- */
-/** @defgroup RIT RIT
+/** @defgroup SYSTICK SYSTICK
  * @ingroup LPC1700CMSIS_FwLib_Drivers
  * @{
  */
 
-#ifndef LPC17XX_RIT_H_
-#define LPC17XX_RIT_H_
+#ifndef LPC17XX_SYSTICK_H_
+#define LPC17XX_SYSTICK_H_
 
 /* Includes ------------------------------------------------------------------- */
 #include "LPC17xx.h"
@@ -45,59 +45,66 @@ extern "C"
 
 
 /* Private Macros ------------------------------------------------------------- */
-/** @defgroup RIT_Private_Macros RIT Private Macros
+/** @defgroup SYSTICK_Private_Macros SYSTICK Private Macros
  * @{
  */
-
-/* --------------------- BIT DEFINITIONS -------------------------------------- */
 /*********************************************************************//**
- * Macro defines for RIT control register
+ * Macro defines for System Timer Control and status (STCTRL) register
  **********************************************************************/
-/**	Set interrupt flag when the counter value equals the masked compare value */
-#define RIT_CTRL_INTEN	((uint32_t) (1))
-/** Set timer enable clear to 0 when the counter value equals the masked compare value  */
-#define RIT_CTRL_ENCLR 	((uint32_t) _BIT(1))
-/** Set timer enable on debug */
-#define RIT_CTRL_ENBR	((uint32_t) _BIT(2))
-/** Set timer enable */
-#define RIT_CTRL_TEN	((uint32_t) _BIT(3))
+#define ST_CTRL_ENABLE		((uint32_t)(1<<0))
+#define ST_CTRL_TICKINT		((uint32_t)(1<<1))
+#define ST_CTRL_CLKSOURCE	((uint32_t)(1<<2))
+#define ST_CTRL_COUNTFLAG	((uint32_t)(1<<16))
 
-/** Macro to determine if it is valid RIT peripheral */
-#define PARAM_RITx(n)	(((uint32_t *)n)==((uint32_t *)LPC_RIT))
+/*********************************************************************//**
+ * Macro defines for System Timer Reload value (STRELOAD) register
+ **********************************************************************/
+#define ST_RELOAD_RELOAD(n)		((uint32_t)(n & 0x00FFFFFF))
+
+/*********************************************************************//**
+ * Macro defines for System Timer Current value (STCURRENT) register
+ **********************************************************************/
+#define ST_RELOAD_CURRENT(n)	((uint32_t)(n & 0x00FFFFFF))
+
+/*********************************************************************//**
+ * Macro defines for System Timer Calibration value (STCALIB) register
+ **********************************************************************/
+#define ST_CALIB_TENMS(n)		((uint32_t)(n & 0x00FFFFFF))
+#define ST_CALIB_SKEW			((uint32_t)(1<<30))
+#define ST_CALIB_NOREF			((uint32_t)(1<<31))
+
+#define CLKSOURCE_EXT			((uint32_t)(0))
+#define CLKSOURCE_CPU			((uint32_t)(1))
+
 /**
  * @}
  */
-
 
 
 /* Public Functions ----------------------------------------------------------- */
-/** @defgroup RIT_Public_Functions RIT Public Functions
+/** @defgroup SYSTICK_Public_Functions SYSTICK Public Functions
  * @{
  */
-/* RIT Init/DeInit functions */
-void RIT_Init(LPC_RIT_TypeDef *RITx);
-void RIT_DeInit(LPC_RIT_TypeDef *RITx);
 
-/* RIT config timer functions */
-void RIT_TimerConfig(LPC_RIT_TypeDef *RITx, uint32_t time_interval);
+void SYSTICK_InternalInit(uint32_t time);
+void SYSTICK_ExternalInit(uint32_t freq, uint32_t time);
 
-/* Enable/Disable RIT functions */
-void RIT_TimerClearCmd(LPC_RIT_TypeDef *RITx, FunctionalState NewState);
-void RIT_Cmd(LPC_RIT_TypeDef *RITx, FunctionalState NewState);
-void RIT_TimerDebugCmd(LPC_RIT_TypeDef *RITx, FunctionalState NewState);
-
-/* RIT Interrupt functions */
-IntStatus RIT_GetIntStatus(LPC_RIT_TypeDef *RITx);
+void SYSTICK_Cmd(FunctionalState NewState);
+void SYSTICK_IntCmd(FunctionalState NewState);
+uint32_t SYSTICK_GetCurrentValue(void);
+void SYSTICK_ClearCounterFlag(void);
 
 /**
  * @}
  */
+
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* LPC17XX_RIT_H_ */
+
+#endif /* LPC17XX_SYSTICK_H_ */
 
 /**
  * @}

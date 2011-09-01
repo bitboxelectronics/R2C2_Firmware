@@ -1,52 +1,53 @@
-LIBNAME	= usbstack
+OUTPUT=liblpcusb.a
 
-# Package definitions
-PKG_NAME	= target
-DATE		= $$(date +%Y%m%d)
+CSRC = usbcontrol.c usbhw_lpc.c usbinit.c usbstdreq.c
 
-# Tool definitions
-CC      = arm-elf-gcc
-LD      = arm-elf-ld -v
-AR      = arm-elf-ar
-AS      = arm-elf-as
-CP      = arm-elf-objcopy
-OD		= arm-elf-objdump
-RM		= rm
-TAR		= tar
+ASRC =
 
-CFLAGS  = -I./ -I../ -c -W -Wall -Os -g -DDEBUG -mcpu=arm7tdmi
-ARFLAGS = -rcs
+INC = \
+	../NXP/Core/CM3 \
+	../NXP/Drivers/include \
 
-LIBSRCS = usbhw_lpc.c usbcontrol.c usbstdreq.c usbinit.c
-LIBOBJS = $(LIBSRCS:.c=.o)
+PREFIX=arm-none-eabi-
 
-all: depend lib examples
+CC=$(PREFIX)gcc
+AS=$(PREFIX)as
+LD=$(PREFIX)ld
+AR=$(PREFIX)ar
 
+CFLAGS=-mcpu=cortex-m3 -mthumb -std=gnu99 -ffunction-sections -Os -g -Wall $(patsubst %,-I%,$(INC))
+ASFLAGS=--defsym RAM_MODE=0 --defsym FLASH_MODE=1
+LDFLAGS=-print-gc-sections -gc-sections
+
+ALLSRC = $(CSRC) $(ASRC)
+ALLSRCBASE = $(notdir $(basename $(ALLSRC)))
+
+ALLOBJ = $(addsuffix .o, $(ALLSRCBASE))
+
+all: $(OUTPUT)
 clean:
-	$(RM) -f $(LIBNAME).a $(LIBOBJS) .depend
-	make -C examples clean
+	rm -f $(ALLOBJ)
+	rm -f $(notdir $(CSRC:.c=.al))
+	rm -f $(OUTPUT)
 
-examples:
-	make -C examples
+%.a: $(ALLOBJ)
+	@echo "  AR        $@"
+	@$(AR) rcs $@ $^
 
-# build lib
-lib: $(LIBNAME).a
+%.elf: $(ALLOBJ)
+	@echo "  LINK      $@"
+	@$(LD) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-$(LIBNAME).a: $(LIBOBJS)
-	$(AR) $(ARFLAGS) $@ $^
+define	COMPILE_TEMPLATE
+$(notdir $(basename $(1))).o: $(1)
+	@echo "  CC        $$@"
+	@$(CC) $(CFLAGS) -c -Wa,-adhlns=$$(@:.o=.al) -o $$@ $$<
+endef
+$(foreach src, $(CSRC), $(eval $(call COMPILE_TEMPLATE, $(src))))
 
-# Builds release tar file
-dist: clean
-	cd .. && $(TAR) --exclude={CVS,cvs,.svn} -cvzf $(PKG_NAME)-$(DATE).tar.gz $(PKG_NAME)
-
-# recompile if the Makefile changes
-$(LIBOBJS): Makefile
-
-# dependency checking
-depend: $(LIBSRCS)
-	$(CC) $(CFLAGS) -MM $^ > .depend || rm -f .depend
-
-# phony targets
-.PHONY: all clean examples depend
-
--include .depend
+define	ASSEMBLE_TEMPLATE
+$(notdir $(basename $(1))).o: $(1)
+	@echo "  AS        $$@"
+	@$(AS) $(ASFLAGS) -o $$@ $$<
+endef
+$(foreach src, $(ASRC), $(eval $(call ASSEMBLE_TEMPLATE, $(src))))

@@ -572,6 +572,23 @@ bool process_gcode_command()
 			sersendf("FIRMWARE_NAME:Teacup_R2C2 FIRMWARE_URL:http%%3A//github.com/bitboxelectronics/R2C2 PROTOCOL_VERSION:1.0 MACHINE_TYPE:Mendel\r\n");
 		break;
 
+      case 119:
+      // M119 - Get Endstop Status
+      #if (X_MIN_PIN > -1)
+        serial_writestr ("x_min:");
+        serial_writestr ( x_min() ? "H ":"L ");
+      #endif
+      #if (Y_MIN_PIN > -1)
+        serial_writestr ("y_min:");
+        serial_writestr ( y_min() ? "H ":"L ");
+      #endif
+      #if (Z_MIN_PIN > -1)
+        serial_writestr ("z_min:");
+        serial_writestr ( z_min() ? "H ":"L ");
+      #endif
+      serial_writestr ("\r\n");
+      break;
+
       // M130- heater P factor
       case 130:
       //if (next_target.seen_S)

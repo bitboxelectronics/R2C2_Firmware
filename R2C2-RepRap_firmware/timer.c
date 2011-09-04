@@ -150,10 +150,15 @@ void SysTick_Handler(void)
     {
       if (pTimer->Current > 0)
         pTimer->Current--;
+
       if (pTimer->Current == 0)
       {
-        pTimer->Running = 0;
-        pTimer->Expired = 0;
+        if (pTimer->AutoReload)
+          pTimer->Current = pTimer->Reload;
+        else 
+          pTimer->Running = 0;
+        
+        pTimer->Expired = 1;
         if (pTimer->timerCallback)
           pTimer->timerCallback(pTimer);
       }

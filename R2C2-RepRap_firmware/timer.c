@@ -33,14 +33,15 @@
 #include "dda_queue.h"
 #include "ios.h"
 #include "sdcard.h"
-#include "buzzer.h"
+#include "timer.h"
 
 unsigned char clock_counter_250ms = 0;
 unsigned char clock_counter_1s = 0;
 volatile unsigned char clock_flag = 0;
 long millis_ticks;
-volatile uint8_t buzzer_state = 0;
-uint16_t duration;
+
+tTimer *SlowTimerHead;
+tTimer *SlowTimerTail;
 
 void TIMER0_IRQHandler(void)
 {
@@ -127,6 +128,7 @@ void SysTickTimer_Init(void)
 void SysTick_Handler(void)
 {
   static uint8_t counter = 0;
+  tTimer *pTimer;
 
   millis_ticks++;
 
@@ -139,14 +141,24 @@ void SysTick_Handler(void)
   }
   /***********************************************************************/
 
-  /* Buzzer soft timer ***************************************************/
-  if (buzzer_state) /* if buzzer in on... */
+  
+  // process the slow timer list
+  pTimer = SlowTimerHead;
+  while (pTimer)
   {
-    if (!--duration) /* decrement and test the duration time that buzzer should be on */
+    if (pTimer->Running)
     {
-      buzzer_pwm_stop();
-      buzzer_state = 0;
+      if (pTimer->Current > 0)
+        pTimer->Current--;
+      if (pTimer->Current == 0)
+      {
+        pTimer->Running = 0;
+        pTimer->Expired = 0;
+        if (pTimer->timerCallback)
+          pTimer->timerCallback(pTimer);
+      }
     }
+    pTimer = pTimer->pNext;
   }
   /***********************************************************************/
 }
@@ -178,9 +190,35 @@ void delay(int d){
   delayMicrosecondsInterruptible(d & 0xFFFF);
 }
 
-void buzzer_start (uint16_t duration_ms)
+
+// Slow timers
+bool AddSlowTimer (tTimer *pTimer)
 {
-  duration = duration_ms;
-  buzzer_state = 1;
+  pTimer->pNext = NULL;
+  if (SlowTimerHead == NULL)
+  {
+    SlowTimerHead = pTimer;
+    SlowTimerTail = pTimer;
+  }
+  else
+  {
+    SlowTimerTail->pNext = pTimer;
+    SlowTimerTail = pTimer;
+  }
+
+  return true;
 }
 
+void StartSlowTimer (tTimer *pTimer, uint32_t intervalMillis, tTimerCallback timerCallback)
+{
+  pTimer->Reload = intervalMillis;
+  pTimer->Current = pTimer->Reload;
+  pTimer->timerCallback = timerCallback;
+  pTimer->Expired = 0;
+  pTimer->Running = 1;
+}
+
+void StopSlowTimer (tTimer *pTimer)
+{
+  pTimer->Running = false;
+}

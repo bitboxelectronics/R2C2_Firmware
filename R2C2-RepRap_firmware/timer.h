@@ -30,6 +30,7 @@
 #ifndef	_TIMER_H
 #define	_TIMER_H
 
+#include <stdbool.h>
 #include "machine.h"
 
 // time-related constants
@@ -39,7 +40,23 @@
 // #define	DEFAULT_TICK	(100 US)
 #define	WAITING_DELAY 10000 // (10 * MS)
 
-void setTimer(long delay);
+typedef struct tTimer tTimer; // incomplete type
+
+typedef void (*tTimerCallback)(tTimer *);
+
+struct tTimer
+{
+  tTimer            *pNext;
+  tTimerCallback    timerCallback;
+  uint32_t          Current;
+  uint32_t          Reload;
+  volatile uint8_t  Running:1;
+  volatile uint8_t  Expired:1;
+  volatile uint8_t  AutoReload:1;
+};
+
+
+void setTimer(uint32_t delay);
 void setupTimerInterrupt();
 void enableTimerInterrupt();
 void disableTimerInterrupt();
@@ -50,4 +67,11 @@ void delayMicrosecondsInterruptible(int us);
 #define	delay_us(d) delayMicrosecondsInterruptible(d)
 long millis(void);
 
+// Slow (i.e. +/-1ms resolution timers
+bool AddSlowTimer (tTimer *pTimer);
+void StartSlowTimer (tTimer *pTimer, uint32_t intervalMillis, tTimerCallback timerCallback);
+void StopSlowTimer (tTimer *pTimer);
+#define IsSlowTimerExpired (pTimer)  ((pTimer)->Expired)
+
 #endif	/* _TIMER_H */
+

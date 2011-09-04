@@ -30,15 +30,15 @@
 #ifndef _BUZZER_
 #define _BUZZER_
 
-extern volatile uint8_t buzzer_state;
 
 void buzzer_init (void);
-void buzzer_pwm_stop (void);
 
 /* put a PWM signal of 50% duty cycle, with a specified frequency and duration.
  * 20Hz <= frequency <= 20000
  * 10ms <= duration <= (2^16 - 1)ms
  */
 void buzzer_play (uint16_t frequency, uint16_t duration);
+void buzzer_wait(void);
 
 #endif  /* _BUZZER_ */
+

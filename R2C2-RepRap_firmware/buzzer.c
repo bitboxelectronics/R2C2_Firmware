@@ -31,24 +31,15 @@
 #include "lpc17xx_pinsel.h"
 #include "lpc17xx_pwm.h"
 
-extern void buzzer_start (uint16_t duration_ms);
+#include "timer.h"
 
-void buzzer_init (void)
-{
-  PINSEL_CFG_Type PinCfg;
+static tTimer buzzerTimer;
 
-  /*
-   * Initialize P2.2 PWM1[3] pin
-   */
-  PinCfg.Funcnum = PINSEL_FUNC_1;
-  PinCfg.OpenDrain = PINSEL_PINMODE_NORMAL;
-  PinCfg.Pinmode = PINSEL_PINMODE_PULLUP;
-  PinCfg.Portnum = 2;
-  PinCfg.Pinnum = 2;
-  PINSEL_ConfigPin(&PinCfg);
-}
+//
+// Internal functions
+//
 
-void buzzer_pwm_set_frequency (uint16_t frequency)
+static void buzzer_pwm_set_frequency (uint16_t frequency)
 {
   uint32_t match_value = (((float) 1/frequency)) * 1000000;
 
@@ -98,7 +89,7 @@ void buzzer_pwm_set_frequency (uint16_t frequency)
   PWM_ChannelCmd(LPC_PWM1, 3, ENABLE);
 }
 
-void buzzer_pwm_start (void)
+static void buzzer_pwm_start (void)
 {
   /* Reset and Start counter */
   PWM_ResetCounter(LPC_PWM1);
@@ -108,7 +99,7 @@ void buzzer_pwm_start (void)
   PWM_Cmd(LPC_PWM1, ENABLE);
 }
 
-void buzzer_pwm_stop (void)
+static void buzzer_pwm_stop (void)
 {
   /* Stop counter */
   PWM_CounterCmd(LPC_PWM1, DISABLE);
@@ -117,9 +108,46 @@ void buzzer_pwm_stop (void)
   PWM_Cmd(LPC_PWM1, DISABLE);
 }
 
+static void buzzerTimerCallback (tTimer *pTimer)
+{
+  (void)pTimer; // not used
+
+  buzzer_pwm_stop();
+}
+
+//
+// Public functions
+//
+
 void buzzer_play (uint16_t frequency, uint16_t duration)
 {
   buzzer_pwm_set_frequency(frequency);
   buzzer_pwm_start();
-  buzzer_start(duration);
+  
+  StartSlowTimer (&buzzerTimer, duration, buzzerTimerCallback); 
 }
+
+void buzzer_wait(void)
+{
+  while (buzzerTimer.Running)
+      {};
+  
+}
+
+void buzzer_init (void)
+{
+  PINSEL_CFG_Type PinCfg;
+
+  /*
+   * Initialize P2.2 PWM1[3] pin
+   */
+  PinCfg.Funcnum = PINSEL_FUNC_1;
+  PinCfg.OpenDrain = PINSEL_PINMODE_NORMAL;
+  PinCfg.Pinmode = PINSEL_PINMODE_PULLUP;
+  PinCfg.Portnum = 2;
+  PinCfg.Pinnum = 2;
+  PINSEL_ConfigPin(&PinCfg);
+  
+  AddSlowTimer (&buzzerTimer);
+}
+

@@ -115,9 +115,9 @@ int main_reprap (void)
   long timer1 = 0;
 
   buzzer_init();
-  buzzer_play(1500, 100); /* beep during the next 1 second */
-	do {} while (buzzer_state != 0);
-  buzzer_play(2500, 200); /* beep during the next 1 second */
+  buzzer_play(1500, 100); /* low beep */
+	buzzer_wait();
+  buzzer_play(2500, 200); /* high beep */
 
   init();
 

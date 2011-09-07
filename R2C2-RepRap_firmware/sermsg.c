@@ -50,8 +50,8 @@ void serwrite_hex16(uint16_t v) {
 }
 
 void serwrite_hex32(uint32_t v) {
-	serwrite_hex8(v >> 16);
-	serwrite_hex8(v & 0xFFFF);
+	serwrite_hex16(v >> 16);
+	serwrite_hex16(v & 0xFFFF);
 }
 
 void serwrite_uint32(uint32_t v) {

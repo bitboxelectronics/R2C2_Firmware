@@ -538,7 +538,7 @@ bool process_gcode_command()
 
       // M112- immediate stop
       case 112:
-      disableTimerInterrupt();
+      disableHwTimer(0);
       queue_flush();
       power_off();
       break;

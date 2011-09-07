@@ -35,29 +35,88 @@
 #include "sdcard.h"
 #include "timer.h"
 
-unsigned char clock_counter_250ms = 0;
-unsigned char clock_counter_1s = 0;
-volatile unsigned char clock_flag = 0;
-long millis_ticks;
+#include "lpc17xx_gpio.h"
 
-tTimer *SlowTimerHead;
-tTimer *SlowTimerTail;
+//unsigned char clock_counter_250ms = 0;
+//unsigned char clock_counter_1s = 0;
+//volatile unsigned char clock_flag = 0;
+
+
+static long millis_ticks;
+
+static tTimer *SlowTimerHead;
+static tTimer *SlowTimerTail;
+
+
+static tHwTimer HwTimer [NUM_HARDWARE_TIMERS];
+
+static LPC_TIM_TypeDef *pTimerRegs [NUM_HARDWARE_TIMERS] = 
+  {LPC_TIM0, LPC_TIM1, LPC_TIM2, LPC_TIM3 };
+
+struct tTimerConfig 
+  {
+    uint32_t      ClkPwr_PClkSel;  
+    uint32_t      TimerIrq;  
+  };
+
+static const struct tTimerConfig 
+  TimerConfig [NUM_HARDWARE_TIMERS] =
+  {
+    { CLKPWR_PCLKSEL_TIMER0, TIMER0_IRQn},
+    { CLKPWR_PCLKSEL_TIMER1, TIMER1_IRQn},
+    { CLKPWR_PCLKSEL_TIMER2, TIMER2_IRQn},
+    { CLKPWR_PCLKSEL_TIMER3, TIMER3_IRQn},
+  };
+
+static inline void TIMER_IRQHandlerGeneric (uint16_t timerNum)
+{
+  uint32_t int_mask;
+
+  int_mask = pTimerRegs[timerNum]->IR;
+
+  // clear ALL pending timer interrupts 
+  pTimerRegs[timerNum]->IR = int_mask;
+
+  if (HwTimer[timerNum].timerCallback)
+      HwTimer[timerNum].timerCallback (&HwTimer[timerNum], int_mask);
+}
+
+// IRQ handlers referenced in startup.S
 
 void TIMER0_IRQHandler(void)
 {
-  queue_step();
 
-  TIM_ClearIntPending(LPC_TIM0, TIM_MR0_INT);
+  TIMER_IRQHandlerGeneric (0);
 }
 
-/* Ticks are in 1/100MHz = 10ns ticks, minimum of 200 ticks = 2us
- * Maximum time of 2^32*10ns = 42.94967296 seconds. */
-void setTimer(uint32_t ticks)
+void TIMER1_IRQHandler(void)
 {
-  LPC_TIM0->MR0 = ticks;
+  TIMER_IRQHandlerGeneric (1);
 }
 
-void setupTimerInterrupt(void)
+void TIMER2_IRQHandler(void)
+{
+  TIMER_IRQHandlerGeneric (2);
+}
+
+void TIMER3_IRQHandler(void)
+{
+  TIMER_IRQHandlerGeneric (3);
+}
+
+/* Set the timer interval. With default setup,
+ * ticks are in 1/100MHz = 10ns ticks, minimum of 200 ticks = 2us
+ * Maximum time of 2^32*10ns = 42.94967296 seconds. */
+void setHwTimerInterval (uint16_t timerNum, uint32_t ticks)
+{
+  pTimerRegs[timerNum]->MR0 = ticks;
+}
+
+// setup hardware timer timerNum
+// timerCallback: if not-NULL, will be called on any timer interrupt. Default is Match0
+// For convenience various default values are setup: a default reload/Match0 period of 
+// 10us is set, this can be changed by setHwTimerInterval.
+void setupHwTimer (uint16_t timerNum, tHwTimerCallback timerCallback)
 {
   TIM_TIMERCFG_Type TIM_ConfigStruct;
   TIM_MATCHCFG_Type TIM_MatchConfigStruct ;
@@ -65,10 +124,10 @@ void setupTimerInterrupt(void)
   // Prescale in absolute value
   TIM_ConfigStruct.PrescaleOption = TIM_PRESCALE_TICKVAL;
   TIM_ConfigStruct.PrescaleValue  = 1;
-  TIM_Init(LPC_TIM0, TIM_TIMER_MODE,&TIM_ConfigStruct);
+  TIM_Init (pTimerRegs[timerNum], TIM_TIMER_MODE, &TIM_ConfigStruct);
 
-  /* Configure Timer0 to have the same clock as CPU: 100MHz */
-  CLKPWR_SetPCLKDiv(CLKPWR_PCLKSEL_TIMER0, CLKPWR_PCLKSEL_CCLK_DIV_1);
+  /* Configure Timer to have the same clock as CPU: 100MHz */
+  CLKPWR_SetPCLKDiv (TimerConfig[timerNum].ClkPwr_PClkSel, CLKPWR_PCLKSEL_CCLK_DIV_1);
 
   // use channel 0, MR0
   TIM_MatchConfigStruct.MatchChannel = 0;
@@ -82,36 +141,60 @@ void setupTimerInterrupt(void)
   TIM_MatchConfigStruct.ExtMatchOutputType = TIM_EXTMATCH_NOTHING;
   // Set Match value, count value of 100000000 (100000000 * 10ns = 100000000ns = 1s --> 1 Hz)
   TIM_MatchConfigStruct.MatchValue   = 1000;
-  TIM_ConfigMatch(LPC_TIM0,&TIM_MatchConfigStruct);
+  TIM_ConfigMatch (pTimerRegs[timerNum], &TIM_MatchConfigStruct);
 
   /* Set to have highest priority = 0 */
-  NVIC_SetPriority(TIMER0_IRQn, 0);
+  NVIC_SetPriority(TimerConfig[timerNum].TimerIrq, 0);
+
+  // store the callback address for later use
+  HwTimer[timerNum].timerCallback = timerCallback;
+
 }
 
-void enableTimerInterrupt(void)
-{
-  /* Enable interrupt for timer 0 */
-  NVIC_EnableIRQ(TIMER0_IRQn);
 
-  /* Start timer 0 */
-  TIM_Cmd(LPC_TIM0, ENABLE);
+
+// start the timer and enable interrupts
+void enableHwTimer (uint16_t timerNum)
+{
+  /* Enable interrupt for timer */
+  NVIC_EnableIRQ (TimerConfig[timerNum].TimerIrq);
+
+  /* Start timer*/
+  TIM_Cmd (pTimerRegs[timerNum], ENABLE);
 }
 
-void disableTimerInterrupt(void)
+// stop the timer and disable interrupts
+void disableHwTimer (uint16_t timerNum)
 {
-  /* Stop timer 0 */
-  TIM_Cmd(LPC_TIM0, DISABLE);
+  /* Stop timer*/
+  TIM_Cmd(pTimerRegs[timerNum], DISABLE);
 
-  /* Clear timer 0 pending interrupt */
-  TIM_ClearIntPending(LPC_TIM0, TIM_MR0_INT);
+  /* Clear timer pending interrupt */
+  TIM_ClearIntPending(pTimerRegs[timerNum], TIM_MR0_INT);
 
-  /* Disable interrupt for timer 0 */
-  NVIC_DisableIRQ(TIMER0_IRQn);
+  /* Disable interrupt for timer*/
+  NVIC_DisableIRQ(TimerConfig[timerNum].TimerIrq);
 }
 
-uint8_t timerInterruptIsEnabled(void)
+uint8_t isHwTimerEnabled(uint16_t timerNum)
 {
-  return NVIC->ISER[((uint32_t)(TIMER0_IRQn) >> 5)] & (1 << ((uint32_t)(TIMER0_IRQn) & 0x1F));
+  return NVIC->ISER[((uint32_t)(TimerConfig[timerNum].TimerIrq) >> 5)] & (1 << ((uint32_t)(TimerConfig[timerNum].TimerIrq) & 0x1F));
+}
+
+// set and enable a MatchX value and interrupt. If set, the timer callback will be called
+// when timer is enabled
+void setHwTimerMatch (uint16_t timerNum, uint16_t matchReg, uint32_t interval)
+{
+  TIM_MATCHCFG_Type TIM_MatchConfigStruct ;
+
+  TIM_MatchConfigStruct.MatchChannel = matchReg;
+  // Enable interrupt when value matches the value in TC register
+  TIM_MatchConfigStruct.IntOnMatch   = 1;
+  // Do not toggle pin if timer matches it
+  TIM_MatchConfigStruct.ExtMatchOutputType = TIM_EXTMATCH_NOTHING;
+  // Set Match value 
+  TIM_MatchConfigStruct.MatchValue   = interval;
+  TIM_ConfigMatch (pTimerRegs[timerNum], &TIM_MatchConfigStruct);
 }
 
 void SysTickTimer_Init(void)
@@ -227,3 +310,5 @@ void StopSlowTimer (tTimer *pTimer)
 {
   pTimer->Running = false;
 }
+// END
+

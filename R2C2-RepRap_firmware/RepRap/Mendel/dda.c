@@ -77,6 +77,9 @@ uint8_t steptimeout = 0;
 TARGET startpoint;
 TARGET current_position;
 
+//
+volatile uint8_t step_requested;
+
 /*
         utility functions
 */
@@ -278,8 +281,8 @@ void dda_start(DDA *dda) {
                 dda->live = 1;
 
                 // set timeout for first step
-                setTimer(dda->c >> 8);
-                enableTimerInterrupt();
+                setHwTimerInterval (0, dda->c >> 8);
+                enableHwTimer(0);
         }
 }
 
@@ -291,6 +294,8 @@ void dda_step(DDA *dda) {
   // called from interrupt context! keep it as simple as possible
   uint8_t did_step = 0;
 
+  step_requested = 0;
+
   if (dda->endpoint.options.g28 == 1)
   {
     if ((current_position.X != dda->endpoint.X) && (!(x_min() && (dda->x_direction == 0))))
@@ -298,7 +303,8 @@ void dda_step(DDA *dda) {
       dda->x_counter -= dda->x_delta;
       if (dda->x_counter < 0)
       {
-        x_step();
+        x_unstep();
+        step_requested |= 1;
         did_step = 1;
         if (dda->x_direction)
           current_position.X++;
@@ -316,7 +322,8 @@ void dda_step(DDA *dda) {
       dda->x_counter -= dda->x_delta;
       if (dda->x_counter < 0)
       {
-        x_step();
+        x_unstep();
+        step_requested |= 1;
         did_step = 1;
         if (dda->x_direction)
           current_position.X++;
@@ -335,7 +342,8 @@ void dda_step(DDA *dda) {
       dda->y_counter -= dda->y_delta;
       if (dda->y_counter < 0)
       {
-        y_step();
+        y_unstep();
+        step_requested |= 2;
         did_step = 1;
         if (dda->y_direction)
           current_position.Y++;
@@ -353,7 +361,8 @@ void dda_step(DDA *dda) {
       dda->y_counter -= dda->y_delta;
       if (dda->y_counter < 0)
       {
-        y_step();
+        y_unstep();
+        step_requested |= 2;
         did_step = 1;
         if (dda->y_direction)
           current_position.Y++;
@@ -372,7 +381,8 @@ void dda_step(DDA *dda) {
       dda->z_counter -= dda->z_delta;
       if (dda->z_counter < 0)
       {
-        z_step();
+        z_unstep();
+        step_requested |= 4;
         did_step = 1;
         if (dda->z_direction)
           current_position.Z++;
@@ -390,7 +400,8 @@ void dda_step(DDA *dda) {
       dda->z_counter -= dda->z_delta;
       if (dda->z_counter < 0)
       {
-        z_step();
+        z_unstep();
+        step_requested |= 4;
         did_step = 1;
         if (dda->z_direction)
           current_position.Z++;
@@ -407,7 +418,8 @@ void dda_step(DDA *dda) {
     dda->e_counter -= dda->e_delta;
     if (dda->e_counter < 0)
     {
-      e_step();
+      e_unstep();
+      step_requested |= 8;
       did_step = 1;
       if (dda->e_direction)
         current_position.E++;
@@ -427,11 +439,11 @@ void dda_step(DDA *dda) {
                         ) {
                         dda->c = (int32_t) dda->c - ((int32_t) (dda->c * 2) / dda->n);
                         dda->n += 4;
-                        setTimer(dda->c >> 8);
+                        setHwTimerInterval (0, dda->c >> 8);
                 }
                 else if (dda->c != dda->end_c) {
                         dda->c = dda->end_c;
-                        setTimer(dda->c >> 8);
+                        setHwTimerInterval (0, dda->c >> 8);
                 }
                 // else we are already at target speed
         }
@@ -462,7 +474,7 @@ void dda_step(DDA *dda) {
                                         dda->ramp_state = RAMP_MAX;
                                         dda->ramp_steps = dda->total_steps - dda->step_no;
                                 }
-                                setTimer(dda->c >> 8);
+                                setHwTimerInterval (0, dda->c >> 8);
                                 break;
                 }
                 dda->step_no++;
@@ -482,8 +494,5 @@ void dda_step(DDA *dda) {
                 current_position.F = dda->endpoint.F;
         }
 
-        // turn off step outputs, hopefully they've been on long enough by now to register with the drivers
-        // if not, too bad. or insert a (very!) small delay here, or fire up a spare timer or something.
-        // we also hope that we don't step before the drivers register the low- limit maximum speed if you think this is a problem.
-        unstep();
+  // The following Match 1 and Match 2 interrupts will create step pulse
 }

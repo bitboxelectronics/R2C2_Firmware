@@ -39,6 +39,7 @@ uint8_t mb_head = 0;
 uint8_t mb_tail = 0;
 DDA movebuffer[MOVEBUFFER_SIZE];
 
+
 uint8_t queue_full() {
   uint8_t a;
   a = (((mb_tail - mb_head - 1) & (MOVEBUFFER_SIZE - 1)) == 0)?255:0;
@@ -104,7 +105,7 @@ void enqueue(TARGET *t)
   mb_head = h;
 
   // fire up in case we're not running yet
-  if (timerInterruptIsEnabled() == 0)
+  if (isHwTimerEnabled(0) == 0)
     next_move();
 }
 
@@ -117,14 +118,19 @@ void next_move()
     t &= (MOVEBUFFER_SIZE - 1);
     dda_start(&movebuffer[t]);
     mb_tail = t;
+    startBlink();
   }
   else
-    disableTimerInterrupt();
+  {
+    disableHwTimer(0);
+    stopBlink();
+  }
 }
 
 void queue_flush()
 {
-  disableTimerInterrupt();
+  disableHwTimer(0);
+  stopBlink();
 
   // flush queue
   mb_tail = mb_head;

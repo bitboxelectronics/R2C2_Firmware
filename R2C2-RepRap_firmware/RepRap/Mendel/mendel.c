@@ -29,6 +29,7 @@
 */
 
 #include <stdint.h>
+#include "lpc17xx_timer.h"
 #include "machine.h"
 #include "serial.h"
 #include "dda_queue.h"
@@ -47,6 +48,17 @@
 #include "debug.h"
 #include "config.h"
 #include "buzzer.h"
+
+extern volatile uint8_t step_requested;
+
+uint8_t leds_enabled;
+
+uint8_t  led_on;
+uint16_t led_on_time;
+uint16_t led_off_time;
+
+tTimer blinkTimer;
+
 
 void io_init(void)
 {
@@ -88,6 +100,75 @@ void io_init(void)
   adc_init();
 }
 
+
+void blinkTimerCallback (tTimer *pTimer)
+{
+  if (leds_enabled)
+  {
+    led_on = led_on ^ 1;
+
+    if (led_on)
+      StartSlowTimer (&blinkTimer, led_on_time, blinkTimerCallback);
+    else
+      StartSlowTimer (&blinkTimer, led_off_time, blinkTimerCallback);
+  }
+  else
+  {
+    led_on = 0;
+  }
+
+}
+
+void startBlink(void)
+{
+  leds_enabled = 1;
+  led_on = 1;
+  StartSlowTimer (&blinkTimer, led_on_time, blinkTimerCallback);
+}
+
+void stopBlink (void)
+{
+  leds_enabled = 0;
+  led_on = 0;
+  StopSlowTimer (&blinkTimer);
+  unstep();
+}
+
+void timerCallback (tHwTimer *pTimer, uint32_t int_mask)
+{
+  (void)pTimer;
+
+  if (int_mask & _BIT(TIM_MR0_INT))
+  {
+    // decide which outputs need stepping
+    queue_step();
+  }
+
+  if (int_mask & _BIT(TIM_MR1_INT))
+  { 
+    // step the required channels
+    if (step_requested & 1)
+      x_step();
+    if (step_requested & 2)
+      y_step();
+    if (step_requested & 4)
+      z_step();
+    if (step_requested & 8)
+      e_step();
+  }
+
+  if (int_mask & _BIT(TIM_MR2_INT))
+  { 
+    if (led_on == 0)
+    {
+      // turn off step outputs
+      unstep();
+    }
+    // else leave as is (important!)
+  }
+
+}
+
 void init(void)
 {
   // set up inputs and outputs
@@ -104,7 +185,20 @@ void init(void)
       config.search_feedrate_z;
 
   // set up timers
-  setupTimerInterrupt();
+  // we use hardware timer 0
+  setupHwTimer(0, timerCallback);
+  // Set the Match 1 and Match 2 interrupts
+  // The time from Match0 to Match 1 defines the low pulse period of the step output
+  // and the time from Match1 to Match 2 defines the minimum high pulse period of the step output-
+  // if the LED is in a blink ON period the step output will be left high until next required step
+  setHwTimerMatch(0, 1, 500); // Match1 about Match0 + 5 us
+  setHwTimerMatch(0, 2, 1000); // Match2, about Match0 + 10 us
+
+  // set the LED blink times, 50 ms on/off = 10 flashes per second
+  led_on_time = 50;
+  led_off_time = 50;
+
+  AddSlowTimer (&blinkTimer);
 
   // say hi to host
   serial_writestr("Start\r\nOK\r\n");
@@ -158,5 +252,6 @@ int main_reprap (void)
         steptimeout++;
       }
     }
+
   }
 }

@@ -266,7 +266,7 @@ void gcode_parse_char(uint8_t c) {
 
   if (next_target.getting_string)
   {
-    if ((c == 10) || (c == 13) || ( c == ' '))
+    if ((c == 10) || (c == 13) || ( c == ' ')  || ( c == '*'))
       next_target.getting_string = 0;
     else
     {
@@ -391,14 +391,21 @@ void gcode_parse_char(uint8_t c) {
                   // M29 - stop writing
                   sd_writing_file = false;
                   sd_close (&file);
+                  serial_writestr("Done saving file\r\n");
                 }
-                // else - do not write SD M-codes to file
+                else
+                {
+                  // else - do not write SD M-codes to file
+                  serial_writestr("ok\r\n");
+                }
               }
               else
               {
-                write_to_file();
+                if (write_to_file())
+                  serial_writestr("ok\r\n");
+                else
+                  serial_writestr("error writing to file\r\n");
               }
-              serial_writestr("ok\r\n");
             }
             else
             {

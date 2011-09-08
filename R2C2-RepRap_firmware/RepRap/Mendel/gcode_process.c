@@ -152,7 +152,7 @@ void sd_list_dir (void)
 #endif
     char path[80];
 
-    strcpy (path, "/");
+    strcpy (path, "");
 
     res = f_opendir(&dir, path);
     if (res == FR_OK) 
@@ -427,7 +427,7 @@ bool process_gcode_command()
         }
         else
         {
-          sersendf("E: file open failed\r\n");
+          sersendf("file.open failed\r\n");
         }
       }
       break;
@@ -461,7 +461,7 @@ bool process_gcode_command()
       }
       else
       {
-    	  serial_writestr("E: not SD printing\r\n");
+    	  serial_writestr("Not SD printing\r\n");
       }
       break;
     
@@ -473,7 +473,7 @@ bool process_gcode_command()
 
         if (!sd_open(&file, next_target.filename, FA_CREATE_ALWAYS | FA_WRITE))
         {
-          sersendf("E: open failed, File: %s\r\n", next_target.filename);
+          sersendf("open failed, File: %s.\r\n", next_target.filename);
         }
         else
         {

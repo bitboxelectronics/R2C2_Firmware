@@ -122,8 +122,8 @@ void blinkTimerCallback (tTimer *pTimer)
 void startBlink(void)
 {
   leds_enabled = 1;
-  led_on = 1;
-  StartSlowTimer (&blinkTimer, led_on_time, blinkTimerCallback);
+  led_on = 0x00;
+//  StartSlowTimer (&blinkTimer, led_on_time, blinkTimerCallback);
 }
 
 void stopBlink (void)
@@ -159,10 +159,22 @@ void timerCallback (tHwTimer *pTimer, uint32_t int_mask)
 
   if (int_mask & _BIT(TIM_MR2_INT))
   { 
-    if (led_on == 0)
+    // turn off step outputs
+    if ((led_on & 1) == 0)
     {
-      // turn off step outputs
-      unstep();
+      x_unstep();
+    }
+    if ((led_on & 2) == 0)
+    {
+      y_unstep();
+    }
+    if ((led_on & 4) == 0)
+    {
+      z_unstep();
+    }
+    if ((led_on & 8) == 0)
+    {
+      e_unstep();
     }
     // else leave as is (important!)
   }

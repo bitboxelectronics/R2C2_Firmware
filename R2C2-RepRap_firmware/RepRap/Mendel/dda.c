@@ -50,6 +50,8 @@
 #define ABSDELTA(a, b)  (((a) >= (b))?((a) - (b)):((b) - (a)))
 #endif
 
+extern uint8_t led_on;
+
 // inverse, used in distance calculation during DDA setup
 double um_per_step_x;
 double um_per_step_y;
@@ -79,6 +81,7 @@ TARGET current_position;
 
 //
 volatile uint8_t step_requested;
+uint8_t led_count [4];
 
 /*
         utility functions
@@ -290,48 +293,41 @@ void dda_start(DDA *dda) {
         STEP
 */
 
+static inline void inc_led_count (uint8_t *pCount, uint8_t led_mask)
+{
+  (*pCount) ++;
+  if (*pCount == 128)
+  {
+    led_on = led_on ^ led_mask;
+    *pCount = 0;
+  }
+}
+
 void dda_step(DDA *dda) {
   // called from interrupt context! keep it as simple as possible
   uint8_t did_step = 0;
 
   step_requested = 0;
-
-  if (dda->endpoint.options.g28 == 1)
+  
+  if ( (current_position.X != dda->endpoint.X) && 
+        (  (dda->endpoint.options.g28 == 0)
+        || ! (x_min() && (dda->x_direction == 0) )
+        )
+     )
   {
-    if ((current_position.X != dda->endpoint.X) && (!(x_min() && (dda->x_direction == 0))))
+    dda->x_counter -= dda->x_delta;
+    if (dda->x_counter < 0)
     {
-      dda->x_counter -= dda->x_delta;
-      if (dda->x_counter < 0)
-      {
-        x_unstep();
-        step_requested |= 1;
-        did_step = 1;
-        if (dda->x_direction)
-          current_position.X++;
-        else
-          current_position.X--;
+      x_unstep();
+      step_requested |= 1;
+      did_step = 1;
+      if (dda->x_direction)
+        current_position.X++;
+      else
+        current_position.X--;
 
-        dda->x_counter += dda->total_steps;
-      }
-    }
-  }
-  else
-  {
-    if (current_position.X != dda->endpoint.X)
-    {
-      dda->x_counter -= dda->x_delta;
-      if (dda->x_counter < 0)
-      {
-        x_unstep();
-        step_requested |= 1;
-        did_step = 1;
-        if (dda->x_direction)
-          current_position.X++;
-        else
-          current_position.X--;
-
-        dda->x_counter += dda->total_steps;
-      }
+      dda->x_counter += dda->total_steps;
+      inc_led_count (&led_count[0], 1);
     }
   }
 
@@ -351,6 +347,7 @@ void dda_step(DDA *dda) {
           current_position.Y--;
 
         dda->y_counter += dda->total_steps;
+        inc_led_count (&led_count[1], 2);
       }
     }
   }
@@ -370,6 +367,7 @@ void dda_step(DDA *dda) {
           current_position.Y--;
 
         dda->y_counter += dda->total_steps;
+        inc_led_count (&led_count[1], 2);
       }
     }
   }
@@ -390,6 +388,7 @@ void dda_step(DDA *dda) {
           current_position.Z--;
 
         dda->z_counter += dda->total_steps;
+        inc_led_count (&led_count[2], 4);
       }
     }
   }
@@ -409,6 +408,7 @@ void dda_step(DDA *dda) {
           current_position.Z--;
 
         dda->z_counter += dda->total_steps;
+        inc_led_count (&led_count[2], 4);
       }
     }
   }
@@ -427,6 +427,7 @@ void dda_step(DDA *dda) {
         current_position.E--;
 
       dda->e_counter += dda->total_steps;
+      inc_led_count (&led_count[3], 8);
     }
   }
 
@@ -494,5 +495,5 @@ void dda_step(DDA *dda) {
                 current_position.F = dda->endpoint.F;
         }
 
-  // The following Match 1 and Match 2 interrupts will create step pulse
+  // Match 1 and Match 2 interrupts will create step pulse
 }

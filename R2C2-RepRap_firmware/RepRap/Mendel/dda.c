@@ -295,12 +295,14 @@ void dda_start(DDA *dda) {
 
 static inline void inc_led_count (uint8_t *pCount, uint8_t led_mask)
 {
+#ifdef STEP_LED_FLASH_VARIABLE
   (*pCount) ++;
   if (*pCount == 128)
   {
     led_on = led_on ^ led_mask;
     *pCount = 0;
   }
+#endif
 }
 
 void dda_step(DDA *dda) {

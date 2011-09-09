@@ -30,6 +30,7 @@
 
 #include <stdint.h>
 #include "lpc17xx_timer.h"
+#include "lpc17xx_wdt.h"
 #include "machine.h"
 #include "serial.h"
 #include "dda_queue.h"
@@ -107,7 +108,7 @@ void blinkTimerCallback (tTimer *pTimer)
 {
   if (leds_enabled)
   {
-    led_on = led_on ^ 1;
+    led_on = led_on ^ 0x0F;
 
     if (led_on)
       StartSlowTimer (&blinkTimer, led_on_time, blinkTimerCallback);
@@ -116,7 +117,7 @@ void blinkTimerCallback (tTimer *pTimer)
   }
   else
   {
-    led_on = 0;
+    led_on = 0x00;
   }
 
 }
@@ -124,14 +125,18 @@ void blinkTimerCallback (tTimer *pTimer)
 void startBlink(void)
 {
   leds_enabled = 1;
+#ifdef STEP_LED_FLASH_FIXED  
+  StartSlowTimer (&blinkTimer, led_on_time, blinkTimerCallback);
+  led_on = 0x0F;
+#else
   led_on = 0x00;
-//  StartSlowTimer (&blinkTimer, led_on_time, blinkTimerCallback);
+#endif
 }
 
 void stopBlink (void)
 {
   leds_enabled = 0;
-  led_on = 0;
+  led_on = 0x00;
   StopSlowTimer (&blinkTimer);
   unstep();
 }
@@ -161,6 +166,10 @@ void timerCallback (tHwTimer *pTimer, uint32_t int_mask)
 
   if (int_mask & _BIT(TIM_MR2_INT))
   { 
+#ifdef STEP_LED_NONE
+    // turn off all step outputs
+    unstep();
+#elif !defined(STEP_LED_ON_WHEN_ACTIVE)
     // turn off step outputs
     if ((led_on & 1) == 0)
     {
@@ -179,8 +188,19 @@ void timerCallback (tHwTimer *pTimer, uint32_t int_mask)
       e_unstep();
     }
     // else leave as is (important!)
+#endif
   }
 
+}
+
+void check_boot_request (void)
+{
+  if (digital_read (4, (1<<29)) == 0)
+  {
+    WDT_Init (WDT_CLKSRC_PCLK, WDT_MODE_RESET);
+    WDT_Start (10);
+    while (1);
+  }
 }
 
 void init(void)
@@ -201,6 +221,7 @@ void init(void)
   // set up timers
   // we use hardware timer 0
   setupHwTimer(0, timerCallback);
+
   // Set the Match 1 and Match 2 interrupts
   // The time from Match0 to Match 1 defines the low pulse period of the step output
   // and the time from Match1 to Match 2 defines the minimum high pulse period of the step output-
@@ -312,5 +333,7 @@ int main_reprap (void)
       }
     }
 
+    // OPTION: enter bootloader on "Boot" button
+    //!check_boot_request();
   }
 }

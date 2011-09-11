@@ -394,6 +394,10 @@ void gcode_parse_char(uint8_t c, tLineBuffer *pLine) {
               }
               else
               {
+                // lines in files must be LF terminated for sd_read_file to work
+                if (pLine->data [pLine->len-1] == 13)
+                  pLine->data [pLine->len-1] = 10;
+                  
                 if (sd_write_to_file(pLine->data, pLine->len))
                   serial_writestr("ok\r\n");
                 else

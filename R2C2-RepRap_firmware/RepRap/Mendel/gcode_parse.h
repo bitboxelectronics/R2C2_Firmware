@@ -75,7 +75,7 @@ typedef struct {
 	uint8_t					option_inches				:1;
 
 	uint8_t						G;
-	uint8_t						M;
+	uint16_t				  M;
 	TARGET						target;
 
 	int16_t						S;

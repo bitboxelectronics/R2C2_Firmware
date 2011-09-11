@@ -36,6 +36,7 @@
 #define HEATED_BED_0                    1
 
 #include <stdint.h>
+#include <stdbool.h>
 #include "adc.h"
 
 // read temperature from sensors
@@ -62,6 +63,9 @@ void temp_tick(void);
 uint16_t extruder_read_temp(uint8_t sensor_number);
 
 #define NUMTEMPS 31
-extern const uint16_t temptable[NUMTEMPS][3];
+extern uint16_t temptable[NUMTEMPS][3];
+
+bool      temp_set_table_entry (uint8_t sensor_number, uint16_t temp, uint16_t adc_val);
+uint16_t  temp_get_table_entry (uint8_t sensor_number, uint16_t temp);
 
 #endif	/* _TIMER_H */

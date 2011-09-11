@@ -40,7 +40,7 @@
 
 /* Table for NTC EPCOS B57560G104F and R1 = 330R for Extruder0
  * Table for NTC EPCOS B57560G104F and R1 = 12K for HeatedBed0 */
-const uint16_t temptable[NUMTEMPS][3] = {
+uint16_t temptable[NUMTEMPS][3] = {
   {1009,   36, 300}, /* {ADC value Extruder0, ADC value HeatedBed0, temperature} */
   {1119,   42, 290},
   {1240,   48, 280},
@@ -207,4 +207,40 @@ uint16_t read_temp(uint8_t sensor_number)
   }
 
   return celsius;
+}
+
+bool temp_set_table_entry (uint8_t sensor_number, uint16_t temp, uint16_t adc_val)
+{
+  if (sensor_number < NUMBER_OF_SENSORS)
+  {
+    for (int entry=0; entry < NUMTEMPS; entry++)
+    {
+      if (temptable[entry][2] == temp)
+      {
+        temptable[entry][sensor_number] = adc_val;
+        return true;
+      }
+    }
+    return false;
+  }
+  else
+    return false;
+}
+
+uint16_t temp_get_table_entry (uint8_t sensor_number, uint16_t temp)
+{
+  uint16_t result = 0xffff;
+  
+  if (sensor_number < NUMBER_OF_SENSORS)
+  {
+    for (int entry=0; entry < NUMTEMPS; entry++)
+    {
+      if (temptable[entry][2] == temp)
+      {
+        result = temptable[entry][sensor_number];
+        break;
+      }
+    }
+  }
+  return result;
 }

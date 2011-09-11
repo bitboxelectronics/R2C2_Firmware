@@ -217,7 +217,8 @@ bool sd_read_file(tLineBuffer *pLine)
 
   if (ptr != NULL)
   {
-    sd_pos += strlen(ptr);
+    pLine->len = strlen(ptr);
+    sd_pos += pLine->len;
     return true;
   }
   else
@@ -441,6 +442,8 @@ bool process_gcode_command()
       break;
     
       case 23: // M23 <filename> - Select file
+      if (!sd_active)
+        sd_initialise();
       if(sd_active)
       {
         sd_printing = false;
@@ -493,6 +496,8 @@ bool process_gcode_command()
       break;
     
       case 28: //M28 <filename> - Start SD write
+      if (!sd_active)
+        sd_initialise();
       if(sd_active)
       {
         sd_close(&file);
@@ -674,6 +679,48 @@ bool process_gcode_command()
       z_disable();
       e_disable();
       power_off();
+      break;
+
+      // M200 - set steps per mm
+      case 200:
+      if (next_target.seen_X)
+        config.steps_per_mm_x = next_target.target.X;
+      if (next_target.seen_Y)
+        config.steps_per_mm_y = next_target.target.Y;
+      if (next_target.seen_Z)
+        config.steps_per_mm_z = next_target.target.Z;
+      if (next_target.seen_E)
+        config.steps_per_mm_e = next_target.target.E;
+        
+      gcode_parse_init();  
+      dda_init();
+      break;
+      
+      // M202 - set max speed in mm/min
+      case 202:
+      if (next_target.seen_X)
+        config.maximum_feedrate_x = next_target.target.X;
+      if (next_target.seen_Y)
+        config.maximum_feedrate_y = next_target.target.Y;
+      if (next_target.seen_Z)
+        config.maximum_feedrate_z = next_target.target.Z;
+      if (next_target.seen_E)
+        config.maximum_feedrate_e = next_target.target.E;
+      break;
+      
+      // M500 - set/get adc value for temperature
+      // S: temperature (degrees C, 0-300)
+      // P: ADC val
+      case 500:
+      if (next_target.seen_S && next_target.seen_P)
+        temp_set_table_entry (EXTRUDER_0, next_target.S, next_target.P);
+      else if (next_target.seen_S)
+      {
+        result = false;
+        sersendf ("ok [%d] = %d\r\n", next_target.S, temp_get_table_entry (EXTRUDER_0, next_target.S));
+      }
+      else
+        serial_writestr ("E: bad param\r\n");
       break;
 
       // unknown mcode: spit an error

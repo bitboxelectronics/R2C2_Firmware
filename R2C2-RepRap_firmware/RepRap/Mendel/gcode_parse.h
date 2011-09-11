@@ -89,7 +89,7 @@ typedef struct {
 
   // for SD functions
 	uint8_t						chpos;
-	char              			filename [13];
+	char              filename [120];
 } GCODE_COMMAND;
 
 #define MAX_LINE 120

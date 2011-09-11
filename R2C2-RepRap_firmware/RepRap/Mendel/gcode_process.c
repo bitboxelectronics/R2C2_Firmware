@@ -138,7 +138,7 @@ void sd_initialise(void)
   sd_active = true;
 }
 
-void sd_list_dir (void)
+FRESULT sd_list_dir_sub (char *path)
 {
     FRESULT res;
     FILINFO fno;
@@ -150,9 +150,6 @@ void sd_list_dir (void)
     fno.lfname = lfn;
     fno.lfsize = sizeof(lfn);
 #endif
-    char path[80];
-
-    strcpy (path, "");
 
     res = f_opendir(&dir, path);
     if (res == FR_OK) 
@@ -171,8 +168,11 @@ void sd_list_dir (void)
             if (fno.fattrib & AM_DIR) 
             {
                 sersendf("%s/%s/\r\n", path, fn);
-//                sprintf(&path[i], "/%s", fn);
-//recursive                res = scan_files(path);
+                
+                strcat (path, "/");
+                strcat (path, fn);
+                // sprintf(&path[i], "/%s", fn);
+                res = sd_list_dir_sub(path);
                 if (res != FR_OK) break;
                 path[i] = 0;
             } else 
@@ -182,8 +182,16 @@ void sd_list_dir (void)
         }
     }
 
-    //return res;
+    return res;    
+}
+
+void sd_list_dir (void)
+{
+  char path[120];
     
+  strcpy (path, "");
+    
+  sd_list_dir_sub(path);
 }
 
 unsigned sd_open(FIL *pFile, char *path, uint8_t flags)

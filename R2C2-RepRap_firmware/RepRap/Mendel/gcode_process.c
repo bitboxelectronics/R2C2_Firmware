@@ -691,29 +691,55 @@ bool process_gcode_command()
 
       // M200 - set steps per mm
       case 200:
-      if (next_target.seen_X)
-        config.steps_per_mm_x = next_target.target.X;
-      if (next_target.seen_Y)
-        config.steps_per_mm_y = next_target.target.Y;
-      if (next_target.seen_Z)
-        config.steps_per_mm_z = next_target.target.Z;
-      if (next_target.seen_E)
-        config.steps_per_mm_e = next_target.target.E;
-        
-      gcode_parse_init();  
-      dda_init();
+      if ((next_target.seen_X | next_target.seen_Y | next_target.seen_Z | next_target.seen_E) == 0)
+      {
+        result = false;
+        sersendf ("ok X%d Y%d Z%d E%d\r\n", 
+          config.steps_per_mm_x,
+          config.steps_per_mm_y,
+          config.steps_per_mm_z,
+          config.steps_per_mm_e
+          );
+      }
+      else
+      {
+        if (next_target.seen_X)
+          config.steps_per_mm_x = next_target.target.X;
+        if (next_target.seen_Y)
+          config.steps_per_mm_y = next_target.target.Y;
+        if (next_target.seen_Z)
+          config.steps_per_mm_z = next_target.target.Z;
+        if (next_target.seen_E)
+          config.steps_per_mm_e = next_target.target.E;
+          
+        gcode_parse_init();  
+        dda_init();
+      }
       break;
       
       // M202 - set max speed in mm/min
       case 202:
-      if (next_target.seen_X)
-        config.maximum_feedrate_x = next_target.target.X;
-      if (next_target.seen_Y)
-        config.maximum_feedrate_y = next_target.target.Y;
-      if (next_target.seen_Z)
-        config.maximum_feedrate_z = next_target.target.Z;
-      if (next_target.seen_E)
-        config.maximum_feedrate_e = next_target.target.E;
+      if ((next_target.seen_X | next_target.seen_Y | next_target.seen_Z | next_target.seen_E) == 0)
+      {
+        result = false;
+        sersendf ("ok X%d Y%d Z%d E%d\r\n", 
+          config.maximum_feedrate_x,
+          config.maximum_feedrate_y,
+          config.maximum_feedrate_z,
+          config.maximum_feedrate_e
+          );
+      }
+      else
+      {
+        if (next_target.seen_X)
+          config.maximum_feedrate_x = next_target.target.X;
+        if (next_target.seen_Y)
+          config.maximum_feedrate_y = next_target.target.Y;
+        if (next_target.seen_Z)
+          config.maximum_feedrate_z = next_target.target.Z;
+        if (next_target.seen_E)
+          config.maximum_feedrate_e = next_target.target.E;
+      }
       break;
       
       // M500 - set/get adc value for temperature

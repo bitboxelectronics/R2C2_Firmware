@@ -51,68 +51,70 @@ bool      sd_writing_file = false;   // writing to SD file
 
 void zero_x(void)
 {
-  SpecialMoveXY(0, 0, config.maximum_feedrate_x);
-
-  // wait for queue to complete
-  for (;queue_empty() == 0;) {}
-
+  //TODO: move distance needs to be a least as big as print area
+  
   // hit endstops, no acceleration- we don't care about skipped steps
   current_position.X = 0;
-  SpecialMoveXY(-250 * config.steps_per_mm_x, 0, config.maximum_feedrate_x);
+  SpecialMoveXY(-300 * config.steps_per_mm_x, current_position.Y, config.homing_feedrate_x);
+  
   // wait for queue to complete
   for (;queue_empty() == 0;) {}
+  
   current_position.X = 0;
 
   // move forward a bit
-  SpecialMoveXY(3 * config.steps_per_mm_x, 0, config.search_feedrate_x);
+  SpecialMoveXY(3 * config.steps_per_mm_x, current_position.Y, config.search_feedrate_x);
 
   // move back in to endstops slowly
-  SpecialMoveXY(-6 * config.steps_per_mm_x, 0, config.search_feedrate_x);
+  SpecialMoveXY(-6 * config.steps_per_mm_x, current_position.Y, config.search_feedrate_x);
+  
   // wait for queue to complete
   for (;queue_empty() == 0;) {}
 
   // this is our home point
-  startpoint.X = current_position.X = 0;
+  startpoint.X = current_position.X = config.home_pos_x * config.steps_per_mm_x;
 }
 
 void zero_y(void)
 {
-  SpecialMoveXY(0, 0, config.maximum_feedrate_y);
-
-  // wait for queue to complete
-  for (;queue_empty() == 0;) {}
+  int dir;
 
   // hit endstops, no acceleration- we don't care about skipped steps
   current_position.Y = 0;
-  SpecialMoveXY(0, -250 * config.steps_per_mm_y, config.maximum_feedrate_y);
+  
+  if (config.home_direction_y < 0)
+    dir = -1;
+  else
+    dir = 1;
+    
+  SpecialMoveXY(current_position.X, dir * 250 * config.steps_per_mm_y, config.homing_feedrate_y);
+  
   // wait for queue to complete
   for (;queue_empty() == 0;) {}
+  
   current_position.Y = 0;
 
   // move forward a bit
-  SpecialMoveXY(0, 3 * config.steps_per_mm_x, config.search_feedrate_y);
-
+  SpecialMoveXY(current_position.X, -dir * 3 * config.steps_per_mm_x, config.search_feedrate_y);
   // move back in to endstops slowly
-  SpecialMoveXY(0, -6 * config.steps_per_mm_y, config.search_feedrate_y);
+  SpecialMoveXY(current_position.X, dir * 6 * config.steps_per_mm_y, config.search_feedrate_y);
+
   // wait for queue to complete
   for (;queue_empty() == 0;) {}
 
   // this is our home point
-  startpoint.Y = current_position.Y = 0;
+  startpoint.Y = current_position.Y = config.home_pos_y * config.steps_per_mm_y;
 }
 
 void zero_z(void)
 {
-  SpecialMoveXY(0, 0, config.maximum_feedrate_z);
-
-  // wait for queue to complete
-  for (;queue_empty() == 0;) {}
-
   // hit endstops, no acceleration- we don't care about skipped steps
   current_position.Z = 0;
-  SpecialMoveZ(-250 * config.steps_per_mm_z, config.maximum_feedrate_z);
+  SpecialMoveZ(-250 * config.steps_per_mm_z, config.homing_feedrate_z);
+  
   // wait for queue to complete
   for (;queue_empty() == 0;) {}
+  
   current_position.Z = 0;
 
   // move forward a bit
@@ -120,11 +122,12 @@ void zero_z(void)
 
   // move back in to endstops slowly
   SpecialMoveZ(-6 * config.steps_per_mm_z, config.search_feedrate_z);
+  
   // wait for queue to complete
   for (;queue_empty() == 0;) {}
 
   // this is our home point
-  startpoint.Z = current_position.Z = 0;
+  startpoint.Z = current_position.Z = config.home_pos_z * config.steps_per_mm_z;
 }
 
 void zero_e(void)

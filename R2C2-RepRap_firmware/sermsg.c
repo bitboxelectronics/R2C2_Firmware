@@ -134,15 +134,27 @@ void serwrite_int32(int32_t v) {
 
 void serwrite_double(double v)
 {
+  if (v < 0)
+  {
+    serial_writechar ('-');
+    v = -v;
+  }
+  
   /* print first part before '.' */
-  serwrite_uint32((int32_t) v);
+  serwrite_uint32((uint32_t) v);
 
   /* print the '.' */
   serial_writechar('.');
 
-  /* print last part before '.' */
-  v = (double) (v - ((int32_t) v));
+  /* print last part after '.' */
+  v = v - (int32_t)v;
 
-  serwrite_uint32((int32_t) (v * 100));
+  v = v * 1000.0;
+  if (v < 100.0)
+  	serial_writechar('0');
+  if (v < 10.0)
+  	serial_writechar('0');
+  serwrite_uint32((uint32_t) v);  	
+  
 }
 

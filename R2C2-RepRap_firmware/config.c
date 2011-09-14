@@ -50,26 +50,56 @@ struct configuration config =
   /* used for G0 rapid moves and as a cap for all other feedrates */
   .maximum_feedrate_x = 3000, /* 50mm / second */
   .maximum_feedrate_y = 3000,
-  .maximum_feedrate_z = 60,  /* 1mm / second */
+  .maximum_feedrate_z = 60,   /* 1mm / second */
   .maximum_feedrate_e = 3000, /* 50mm / second */
 
   /* used when searching endstops and similar */
   .search_feedrate_x = 120,
   .search_feedrate_y = 120,
   .search_feedrate_z = 60,
-  .search_feedrate_e = 1600
+  .search_feedrate_e = 1600,
+  
+  .homing_feedrate_x = 3000,
+  .homing_feedrate_y = 3000,
+  .homing_feedrate_z = 60,
+  
+  // home pos is left front
+  .home_direction_x = -1, 
+  .home_direction_y = -1,
+  .home_direction_z = -1,
+  
+  .home_pos_x = 0,
+  .home_pos_y = 0,
+  .home_pos_z = 0
+
+  
 };
 
-uint16_t read_u16 (FIL *file, uint8_t *line)
+uint16_t read_u16 (FIL *file, char *line)
 {
   f_gets(line, 80, file); /* read one line */
-  uint8_t *p_pos = strchr(line, '='); /* find the '=' position */
-  return (atoi(p_pos+1));
+  char *p_pos = strchr(line, '='); /* find the '=' position */
+  
+  if (p_pos != NULL)
+    return (atoi(p_pos+1));
+  else
+    return 0;
+}
+
+int16_t read_i16 (FIL *file, char *line)
+{
+  f_gets(line, 80, file); /* read one line */
+  char *p_pos = strchr(line, '='); /* find the '=' position */
+  
+  if (p_pos != NULL)
+    return (atoi(p_pos+1));
+  else
+    return 0;
 }
 
 void read_config (void)
 {
-  uint8_t line[80];
+  char line[80];
 
   /* initialize SPI for SDCard */
   spi_init();
@@ -92,6 +122,8 @@ void read_config (void)
   else
   {
     uint16_t temp;
+    int16_t ival;
+
     temp = read_u16(&file, line);
     if (temp) config.steps_per_mm_x = temp;
     temp = read_u16(&file, line);
@@ -116,6 +148,27 @@ void read_config (void)
     if (temp) config.search_feedrate_z = temp;
     temp = read_u16(&file, line);
     if (temp) config.search_feedrate_e = temp;
+
+    temp = read_u16(&file, line);
+    if (temp) config.homing_feedrate_x = temp;
+    temp = read_u16(&file, line);
+    if (temp) config.homing_feedrate_y = temp;
+    temp = read_u16(&file, line);
+    if (temp) config.homing_feedrate_z = temp;
+      
+    ival = read_i16(&file, line);
+    if (ival != 0) config.home_direction_x = ival;
+    ival = read_i16(&file, line);
+    if (ival != 0) config.home_direction_y = ival;
+    ival = read_i16(&file, line);
+    if (ival != 0) config.home_direction_z = ival;
+
+    ival = read_i16(&file, line);
+    if (ival != 0) config.home_pos_x = ival;
+    ival = read_i16(&file, line);
+    if (ival != 0) config.home_pos_y = ival;
+    ival = read_i16(&file, line);
+    if (ival != 0) config.home_pos_z = ival;
 
     /* Close config.txt file */
     res = f_close(&file);

@@ -48,6 +48,36 @@ struct configuration
   uint32_t search_feedrate_y;
   uint32_t search_feedrate_z;
   uint32_t search_feedrate_e;
+  
+  // rate when homing (fast)
+  uint32_t homing_feedrate_x;
+  uint32_t homing_feedrate_y;
+  uint32_t homing_feedrate_z;
+  
+  // direction to move when homing (depends on endstop locations)
+  int16_t home_direction_x;
+  int16_t home_direction_y;
+  int16_t home_direction_z;
+  
+  // position at home
+  int16_t home_pos_x;
+  int16_t home_pos_y;
+  int16_t home_pos_z;
+
+  // printable volume size
+  // TODO: Need to define origin?
+  int16_t printing_vol_x;
+  int16_t printing_vol_y;
+  int16_t printing_vol_z;
+  
+  // dump pos
+  int16_t dump_pos_x;
+  int16_t dump_pos_y;
+  
+  // rest pos
+  int16_t rest_pos_x;
+  int16_t rest_pos_y;
+
 };
 
 extern struct configuration config;

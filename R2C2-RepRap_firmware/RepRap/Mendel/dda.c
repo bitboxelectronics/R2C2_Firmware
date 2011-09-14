@@ -99,7 +99,7 @@ double calc_distance_3( double dx, double dy, double dz )
 
 // this is an ultra-crude pseudo-logarithm routine, such that:
 // 2 ^ msbloc(v) >= v
-const uint8_t   msbloc (uint32_t v) {
+__attribute__((const)) uint8_t   msbloc (uint32_t v) {
         uint8_t i;
         uint32_t c;
         for (i = 31, c = 0x80000000; i; i--) {
@@ -305,6 +305,18 @@ static inline void inc_led_count (uint8_t *pCount, uint8_t led_mask)
 #endif
 }
 
+bool hit_home_stop_y (unsigned dir)
+{
+  if (config.home_pos_y < 0)
+  {
+    return y_min() && (dir == 0);
+  }
+  else
+  {
+    return y_min() && (dir != 0);
+  }
+}
+
 void dda_step(DDA *dda) {
   // called from interrupt context! keep it as simple as possible
   uint8_t did_step = 0;
@@ -335,7 +347,7 @@ void dda_step(DDA *dda) {
 
   if (dda->endpoint.options.g28 == 1)
   {
-    if ((current_position.Y != dda->endpoint.Y) && (!(y_min() && (dda->y_direction == 0))))
+    if ((current_position.Y != dda->endpoint.Y) && (!hit_home_stop_y (dda->y_direction) ) )
     {
       dda->y_counter -= dda->y_delta;
       if (dda->y_counter < 0)

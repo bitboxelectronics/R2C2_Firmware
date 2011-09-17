@@ -34,50 +34,59 @@
 
 struct configuration
 {
-  uint16_t steps_per_mm_x;
-  uint16_t steps_per_mm_y;
-  uint16_t steps_per_mm_z;
-  uint16_t steps_per_mm_e;
+  int32_t steps_per_mm_x;
+  int32_t steps_per_mm_y;
+  int32_t steps_per_mm_z;
+  int32_t steps_per_mm_e;
 
-  uint32_t maximum_feedrate_x;
-  uint32_t maximum_feedrate_y;
-  uint32_t maximum_feedrate_z;
-  uint32_t maximum_feedrate_e;
+  int32_t maximum_feedrate_x;
+  int32_t maximum_feedrate_y;
+  int32_t maximum_feedrate_z;
+  int32_t maximum_feedrate_e;
 
-  uint32_t search_feedrate_x;
-  uint32_t search_feedrate_y;
-  uint32_t search_feedrate_z;
-  uint32_t search_feedrate_e;
+  int32_t search_feedrate_x;
+  int32_t search_feedrate_y;
+  int32_t search_feedrate_z;
+  int32_t search_feedrate_e;
   
   // rate when homing (fast)
-  uint32_t homing_feedrate_x;
-  uint32_t homing_feedrate_y;
-  uint32_t homing_feedrate_z;
+  int32_t homing_feedrate_x;
+  int32_t homing_feedrate_y;
+  int32_t homing_feedrate_z;
   
   // direction to move when homing (depends on endstop locations)
-  int16_t home_direction_x;
-  int16_t home_direction_y;
-  int16_t home_direction_z;
+  int32_t home_direction_x;
+  int32_t home_direction_y;
+  int32_t home_direction_z;
   
   // position at home
-  int16_t home_pos_x;
-  int16_t home_pos_y;
-  int16_t home_pos_z;
+  int32_t home_pos_x;
+  int32_t home_pos_y;
+  int32_t home_pos_z;
 
   // printable volume size
   // TODO: Need to define origin?
-  int16_t printing_vol_x;
-  int16_t printing_vol_y;
-  int16_t printing_vol_z;
+  int32_t printing_vol_x;
+  int32_t printing_vol_y;
+  int32_t printing_vol_z;
   
   // dump pos
-  int16_t dump_pos_x;
-  int16_t dump_pos_y;
+  int32_t have_dump_pos;
+  int32_t dump_pos_x;
+  int32_t dump_pos_y;
   
   // rest pos
-  int16_t rest_pos_x;
-  int16_t rest_pos_y;
+  int32_t have_rest_pos;
+  int32_t rest_pos_x;
+  int32_t rest_pos_y;
 
+  // wipe pos
+  int32_t have_wipe_pos;
+  int32_t wipe_pos_x;
+  int32_t wipe_pos_y;
+  
+  //
+  int32_t steps_per_revolution_e;
 };
 
 extern struct configuration config;

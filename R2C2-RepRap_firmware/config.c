@@ -27,53 +27,84 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <stdbool.h>
+#include "stdlib.h"
+#include "string.h"
+
 #include "config.h"
 #include "spi.h"
 #include "ff.h"
 #include "debug.h"
-#include "stdlib.h"
-#include "string.h"
 #include "gcode_parse.h"
 #include "dda.h"
 
 /* values reflecting the gearing of your machine
  * all numbers are integers, so no decimals, please :-)
  */
-struct configuration config =
+struct configuration config;
+
+typedef struct {
+  char      *name;
+  int32_t   *pValue;
+  int32_t   default_value;
+} tConfigItem;
+
+/* calculate the default values appropriate for your machine */
+tConfigItem config_lookup [] = 
 {
-  /* calculate these values appropriate for your machine */
-  .steps_per_mm_x = 80,
-  .steps_per_mm_y = 80,
-  .steps_per_mm_z = 6400,
-  .steps_per_mm_e = 36, /* Wades extruder, NEMA 17 geared extruder (1/39 * 6.5mm) */
+  { "steps_per_mm_x", &config.steps_per_mm_x, 80},
+  { "steps_per_mm_y", &config.steps_per_mm_y, 80},
+  { "steps_per_mm_z", &config.steps_per_mm_z, 6400},
+  { "steps_per_mm_e", &config.steps_per_mm_e, 36},    /* Wades extruder, NEMA 17 geared extruder (1/39 * 6.5mm) */
 
   /* used for G0 rapid moves and as a cap for all other feedrates */
-  .maximum_feedrate_x = 3000, /* 50mm / second */
-  .maximum_feedrate_y = 3000,
-  .maximum_feedrate_z = 60,   /* 1mm / second */
-  .maximum_feedrate_e = 3000, /* 50mm / second */
+  { "maximum_feedrate_x", &config.maximum_feedrate_x, 3000}, /* 50mm / second */
+  { "maximum_feedrate_y", &config.maximum_feedrate_y, 3000},
+  { "maximum_feedrate_z", &config.maximum_feedrate_z, 60},   /* 1mm / second */
+  { "maximum_feedrate_e", &config.maximum_feedrate_e, 3000}, /* 50mm / second */
 
   /* used when searching endstops and similar */
-  .search_feedrate_x = 120,
-  .search_feedrate_y = 120,
-  .search_feedrate_z = 60,
-  .search_feedrate_e = 1600,
+  { "search_feedrate_x", &config.search_feedrate_x, 120},
+  { "search_feedrate_y", &config.search_feedrate_y, 120},
+  { "search_feedrate_z", &config.search_feedrate_z, 60},
+  { "search_feedrate_e", &config.search_feedrate_e, 1600},
   
-  .homing_feedrate_x = 3000,
-  .homing_feedrate_y = 3000,
-  .homing_feedrate_z = 60,
+  { "homing_feedrate_x", &config.homing_feedrate_x, 3000},
+  { "homing_feedrate_y", &config.homing_feedrate_y, 3000},
+  { "homing_feedrate_z", &config.homing_feedrate_z, 60},
   
   // home pos is left front
-  .home_direction_x = -1, 
-  .home_direction_y = -1,
-  .home_direction_z = -1,
+  { "home_direction_x", &config.home_direction_x, -1}, 
+  { "home_direction_y", &config.home_direction_y, -1},
+  { "home_direction_z", &config.home_direction_z, -1},
   
-  .home_pos_x = 0,
-  .home_pos_y = 0,
-  .home_pos_z = 0
+  { "home_pos_x", &config.home_pos_x, 0},
+  { "home_pos_y", &config.home_pos_y, 0},
+  { "home_pos_z", &config.home_pos_z, 0},
 
+  { "printing_vol_x", &config.printing_vol_x , 0},
+  { "printing_vol_y", &config.printing_vol_y , 0},
+  { "printing_vol_z", &config.printing_vol_z , 0},
   
+  // dump pos
+  { "have_dump_pos", &config.have_dump_pos , 0},
+  { "dump_pos_x", &config.dump_pos_x , 0},
+  { "dump_pos_y", &config.dump_pos_x , 0},
+  
+  // rest pos
+  { "have_rest_pos", &config.have_rest_pos , 0},
+  { "rest_pos_x", &config.rest_pos_x , 0},
+  { "rest_pos_y", &config.rest_pos_y , 0},
+
+  // wipe pos
+  { "have_wipe_pos", &config.have_wipe_pos , 0},
+  { "wipe_pos_x", &config.wipe_pos_x , 0},
+  { "wipe_pos_y", &config.wipe_pos_y , 0},
+
+  { "steps_per_revolution_e", &config.steps_per_revolution_e, 3200}  // 200 * 16
 };
+
+#define NUM_TOKENS (sizeof(config_lookup)/sizeof(tConfigItem))
 
 uint16_t read_u16 (FIL *file, char *line)
 {
@@ -86,21 +117,76 @@ uint16_t read_u16 (FIL *file, char *line)
     return 0;
 }
 
-int16_t read_i16 (FIL *file, char *line)
+// return true if c matches any character in s
+bool char_match (char c, char *s)
 {
-  f_gets(line, 80, file); /* read one line */
-  char *p_pos = strchr(line, '='); /* find the '=' position */
+  while (*s)
+  {
+    if (*s == c)
+      return true;
+    s++;
+  }
+  return false;
+}
+
+// a version of strtok()
+// NB: very unsafe; not re-entrant. Use with caution.
+char *get_token (char *pLine, char *separators)
+{
+  static char *pNext;
+  static char saved;
+  char *pToken = NULL;
   
-  if (p_pos != NULL)
-    return (atoi(p_pos+1));
+  if (pLine)
+  {
+    pNext = pLine;
+  }
+  else if (pNext)
+  {
+    *pNext = saved;
+  }
+
+  if (!pNext || !separators)
+    return NULL;
+
+  // skip separators    
+  while (*pNext && char_match (*pNext, separators) )
+  {
+    pNext ++;
+  }
+      
+  if (*pNext == 0)
+    // reached end of string
+    return NULL;
   else
-    return 0;
+  {  
+    // find next separator
+    pToken = pNext;
+    while (*pNext && ! char_match (*pNext, separators) )
+    {
+      pNext ++;
+    }
+    
+    saved = *pNext;
+    *pNext = 0;
+    return pToken;
+  }
 }
 
 void read_config (void)
 {
   char line[80];
+  char *pToken;
+  char *pLine;
+  unsigned j;
 
+  // first set defaults
+  for (j=0; j < NUM_TOKENS; j++)
+  {
+    *config_lookup[j].pValue = config_lookup[j].default_value;
+  }
+  
+  
   /* initialize SPI for SDCard */
   spi_init();
 
@@ -114,61 +200,52 @@ void read_config (void)
   res = f_mount(0, &fs);
   if(res)
     debug("Err mount fs\n");
-
+  
   /* Open config.txt file */
   res = f_open(&file, "config.txt", FA_OPEN_EXISTING | FA_READ);
   if (res)
     debug("File config.txt not found\n");
   else
   {
-    uint16_t temp;
-    int16_t ival;
+    bool    found;
 
-    temp = read_u16(&file, line);
-    if (temp) config.steps_per_mm_x = temp;
-    temp = read_u16(&file, line);
-    if (temp) config.steps_per_mm_y = temp;
-    temp = read_u16(&file, line);
-    if (temp) config.steps_per_mm_z = temp;
-    temp = read_u16(&file, line);
-    if (temp) config.steps_per_mm_e = temp;
-    temp = read_u16(&file, line);
-    if (temp) config.maximum_feedrate_x = temp;
-    temp = read_u16(&file, line);
-    if (temp) config.maximum_feedrate_y = temp;
-    temp = read_u16(&file, line);
-    if (temp) config.maximum_feedrate_z = temp;
-    temp = read_u16(&file, line);
-    if (temp) config.maximum_feedrate_e = temp;
-    temp = read_u16(&file, line);
-    if (temp) config.search_feedrate_x = temp;
-    temp = read_u16(&file, line);
-    if (temp) config.search_feedrate_y = temp;
-    temp = read_u16(&file, line);
-    if (temp) config.search_feedrate_z = temp;
-    temp = read_u16(&file, line);
-    if (temp) config.search_feedrate_e = temp;
-
-    temp = read_u16(&file, line);
-    if (temp) config.homing_feedrate_x = temp;
-    temp = read_u16(&file, line);
-    if (temp) config.homing_feedrate_y = temp;
-    temp = read_u16(&file, line);
-    if (temp) config.homing_feedrate_z = temp;
+    pLine = f_gets(line, sizeof(line), &file); /* read one line */
+    while (pLine)
+    {
+      pToken = get_token (pLine, " =\t\n");
+      if (pToken && *pToken != '#')
+      {
+        found = false;      
+        for (j=0; (j < NUM_TOKENS) && !found; j++)
+        {
+          if (stricmp (pToken, config_lookup[j].name) == 0)
+          {
+            found = true;
+            pToken = get_token (NULL, " \t\n");
+            if (pToken && (*pToken == '='))
+            {
+              // get value
+              pToken = get_token (NULL, " \t\n");
+            
+              if (pToken)
+                *config_lookup[j].pValue = atoi (pToken);
+              else
+                sersendf ("Missing value for %s\r\n", config_lookup[j].name);
+              
+              // debug  
+              //sersendf ("Found: %s = %d\r\n", config_lookup[j].name, *config_lookup[j].pValue);
+            }
+            else
+              sersendf ("Expected '='%s\r\n", line);              
+          }
+        }
+        
+        if (!found)
+          sersendf ("Unknown config: %s\r\n", pToken);
+      }
       
-    ival = read_i16(&file, line);
-    if (ival != 0) config.home_direction_x = ival;
-    ival = read_i16(&file, line);
-    if (ival != 0) config.home_direction_y = ival;
-    ival = read_i16(&file, line);
-    if (ival != 0) config.home_direction_z = ival;
-
-    ival = read_i16(&file, line);
-    if (ival != 0) config.home_pos_x = ival;
-    ival = read_i16(&file, line);
-    if (ival != 0) config.home_pos_y = ival;
-    ival = read_i16(&file, line);
-    if (ival != 0) config.home_pos_z = ival;
+      pLine = f_gets(line, sizeof(line), &file); /* read next line */
+    }
 
     /* Close config.txt file */
     res = f_close(&file);

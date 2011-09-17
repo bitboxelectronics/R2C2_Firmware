@@ -1,3 +1,4 @@
+# Config file for Rapman 3.1 machines
 STEPS_PER_MM_X = 86
 STEPS_PER_MM_Y = 86
 STEPS_PER_MM_Z = 2560
@@ -16,7 +17,14 @@ homing_feedrate_z = 60
 home_direction_x = -1
 home_direction_y = 1
 home_direction_z = -1
-home_pos_x = -5
-home_pos_y = 200
+home_pos_x = -135
+home_pos_y = 115
 home_pos_z = 0
+have_rest_pos = 1
+rest_pos_x = 130
+rest_pos_y = -85
+have_wipe_pos = 1
+wipe_pos_x = 120
+wipe_pos_y = -85
+
 

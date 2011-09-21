@@ -307,7 +307,7 @@ static inline void inc_led_count (uint8_t *pCount, uint8_t led_mask)
 
 bool hit_home_stop_y (unsigned dir)
 {
-  if (config.home_pos_y < 0)
+  if (config.home_direction_y < 0)
   {
     return y_min() && (dir == 0);
   }

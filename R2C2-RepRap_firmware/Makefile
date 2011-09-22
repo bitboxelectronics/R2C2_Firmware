@@ -161,6 +161,7 @@ SRC = \
 	sdcard.c \
 	config.c \
 	buzzer.c \
+	uart.c \
 	RepRap/Mendel/dda_queue.c \
 	RepRap/Mendel/dda.c \
 	RepRap/Mendel/gcode_parse.c \

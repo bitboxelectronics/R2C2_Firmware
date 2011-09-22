@@ -34,20 +34,26 @@
 #include	"sermsg.h"
 #include	"temp.h"
 
+extern void startBlink();
+extern void stopBlink();
+
 /* movebuffer works as a ring buffer */
 uint8_t mb_head = 0;
 uint8_t mb_tail = 0;
 DDA movebuffer[MOVEBUFFER_SIZE];
 
-
-uint8_t queue_full() {
+// return 255 if full, else 0
+uint8_t queue_full() 
+{
   uint8_t a;
-  a = (((mb_tail - mb_head - 1) & (MOVEBUFFER_SIZE - 1)) == 0)?255:0;
-        return a;
+  a = (((mb_tail - mb_head - 1) & (MOVEBUFFER_SIZE - 1)) == 0) ? 255:0;
+  return a;
 }
 
-uint8_t queue_empty() {
-        return ((mb_tail == mb_head) && (movebuffer[mb_tail].live == 0))?255:0;
+// return 255 if empty, else 0
+uint8_t queue_empty() 
+{
+  return ((mb_tail == mb_head) && (movebuffer[mb_tail].live == 0)) ? 255:0;
 }
 
 // -------------------------------------------------------

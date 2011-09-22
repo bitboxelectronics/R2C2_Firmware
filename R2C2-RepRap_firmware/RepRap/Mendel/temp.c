@@ -40,6 +40,8 @@
 
 /* Table for NTC EPCOS B57560G104F and R1 = 330R for Extruder0
  * Table for NTC EPCOS B57560G104F and R1 = 12K for HeatedBed0 */
+ // 274
+ // 10k
 uint16_t temptable[NUMTEMPS][3] = {
   {1009,   36, 300}, /* {ADC value Extruder0, ADC value HeatedBed0, temperature} */
   {1119,   42, 290},
@@ -169,7 +171,8 @@ void temp_tick(void)
 
 uint16_t read_temp(uint8_t sensor_number)
 {
-  uint16_t raw, celsius;
+  uint16_t raw = 0;
+  uint16_t celsius = 0;
   uint8_t i;
 
   if (sensor_number == EXTRUDER_0)

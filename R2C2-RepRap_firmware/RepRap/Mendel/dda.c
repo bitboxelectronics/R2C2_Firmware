@@ -70,7 +70,7 @@ void dda_init(void)
         step timeout
 */
 
-uint8_t steptimeout = 0;
+volatile uint16_t steptimeout = 0;
 
 /*
         position tracking

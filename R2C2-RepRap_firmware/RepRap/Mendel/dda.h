@@ -34,6 +34,10 @@
 #include        <stdint.h>
 //#include        "config.h"
 
+#ifndef ABS
+#define ABS(v)          (((v) >= 0)?(v):(-(v)))
+#endif
+
 /*
         enums
 */
@@ -126,7 +130,7 @@ typedef struct {
 */
 
 // steptimeout is set to zero when we step, and increases over time so we can turn the motors off when they've been idle for a while
-extern uint8_t steptimeout;
+extern volatile uint16_t steptimeout;
 
 // startpoint holds the endpoint of the most recently created DDA, so we know where the next one created starts
 // could also be called last_endpoint
@@ -139,8 +143,10 @@ extern TARGET current_position;
         methods
 */
 
-double approx_distance( double dx, double dy );
-double approx_distance_3( double dx, double dy, double dz );
+//double approx_distance( double dx, double dy );
+//double approx_distance_3( double dx, double dy, double dz );
+
+double calc_distance( double dx, double dy );
 
 // const because return value is always the same given the same v
 __attribute__((const)) uint8_t   msbloc (uint32_t v);

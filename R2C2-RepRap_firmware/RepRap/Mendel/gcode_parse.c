@@ -160,7 +160,7 @@ void SpecialMoveE(int32_t e, uint32_t f) {
 
 void gcode_parse_line (tLineBuffer *pLine) 
 {
-  unsigned int j;
+  int j;
 
   for (j=0; j < pLine->len; j++)
     gcode_parse_char (pLine->data [j], pLine);
@@ -174,12 +174,14 @@ void gcode_parse_line (tLineBuffer *pLine)
 
 void gcode_parse_char(uint8_t c, tLineBuffer *pLine) {
   bool send_reply = true;
+  uint8_t save_ch;
 
 	#ifdef ASTERISK_IN_CHECKSUM_INCLUDED
 	if (next_target.seen_checksum == 0)
 		next_target.checksum_calculated = crc(next_target.checksum_calculated, c);
 	#endif
 
+  save_ch = c;
 	// uppercase
 	if (c >= 'a' && c <= 'z')
 		c &= ~32;
@@ -322,6 +324,7 @@ void gcode_parse_char(uint8_t c, tLineBuffer *pLine) {
 
 			// comments
 			case ';':
+			case '^':
 				next_target.seen_semi_comment = 1;
 				break;
 			case '(':
@@ -356,7 +359,7 @@ void gcode_parse_char(uint8_t c, tLineBuffer *pLine) {
 
 	#ifndef ASTERISK_IN_CHECKSUM_INCLUDED
 	if (next_target.seen_checksum == 0)
-		next_target.checksum_calculated = crc(next_target.checksum_calculated, c);
+		next_target.checksum_calculated = crc(next_target.checksum_calculated, save_ch);
 	#endif
 
 	// end of line
@@ -445,9 +448,9 @@ void gcode_parse_char(uint8_t c, tLineBuffer *pLine) {
 		last_field = 0;
 		read_digit.sign = read_digit.mantissa = read_digit.exponent = 0;
 
-		// assume a G1 by default
-		next_target.seen_G = 1;
-		next_target.G = 1;
+		// dont assume a G1 by default
+		next_target.seen_G = 0;
+		next_target.G = 0;
 
 		if (next_target.option_relative) {
 			next_target.target.X = next_target.target.Y = next_target.target.Z = 0;

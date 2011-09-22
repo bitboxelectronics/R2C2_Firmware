@@ -100,6 +100,8 @@ void io_init(void)
   pin_mode(E_ENABLE_PORT, E_ENABLE_PIN, OUTPUT);
   e_enable();
 
+  pin_mode(EXTRUDER_0_FAN_PORT, EXTRUDER_0_FAN_PIN, OUTPUT);
+
   adc_init();
 }
 
@@ -274,7 +276,7 @@ int main_reprap (void)
     }
 
     // process SD file if no serial command pending
-    if (!serial_line_buf.seen_lf && sd_printing)
+    if (!sd_line_buf.seen_lf && sd_printing)
     {
       if (sd_read_file (&sd_line_buf))
       {
@@ -323,7 +325,7 @@ int main_reprap (void)
       temp_tick();
 
       /* If there are no activity during 30 seconds, power off the machine */
-      if (steptimeout > (30 * 4))
+      if (steptimeout > (30 * 1000/DELAY1))
       {
         power_off();
       }
@@ -333,7 +335,10 @@ int main_reprap (void)
       }
     }
 
+#ifdef USE_BOOT_BUTTON
     // OPTION: enter bootloader on "Boot" button
-    //!check_boot_request();
+    check_boot_request();
+#endif
+
   }
 }

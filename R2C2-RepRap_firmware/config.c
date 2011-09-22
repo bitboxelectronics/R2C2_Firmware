@@ -37,6 +37,7 @@
 #include "debug.h"
 #include "gcode_parse.h"
 #include "dda.h"
+#include "uart.h"
 
 /* values reflecting the gearing of your machine
  * all numbers are integers, so no decimals, please :-)
@@ -101,7 +102,10 @@ tConfigItem config_lookup [] =
   { "wipe_pos_x", &config.wipe_pos_x , 0},
   { "wipe_pos_y", &config.wipe_pos_y , 0},
 
-  { "steps_per_revolution_e", &config.steps_per_revolution_e, 3200}  // 200 * 16
+  { "steps_per_revolution_e", &config.steps_per_revolution_e, 3200},  // 200 * 16
+  
+  { "wait_on_temp", &config.wipe_pos_y , 0},
+    
 };
 
 #define NUM_TOKENS (sizeof(config_lookup)/sizeof(tConfigItem))
@@ -185,8 +189,7 @@ void read_config (void)
   {
     *config_lookup[j].pValue = config_lookup[j].default_value;
   }
-  
-  
+    
   /* initialize SPI for SDCard */
   spi_init();
 
@@ -253,6 +256,30 @@ void read_config (void)
       debug("Error closing config.txt\n");
   }
 
+  //
+  //read_gcode_file ("autoexec.g");
+  
+  res = f_open(&file, "autoexec.g", FA_OPEN_EXISTING | FA_READ);
+  if (res == FR_OK)
+  {
+    tLineBuffer line_buf;
+    
+    pLine = f_gets(line_buf.data, sizeof(line_buf.data), &file); /* read one line */
+    while (pLine)
+    {
+      line_buf.len = strlen(pLine);
+      gcode_parse_line (&line_buf);
+      pLine = f_gets(line_buf.data, sizeof(line_buf.data), &file); /* read next line */
+    }
+
+    /* Close file */
+    res = f_close(&file);
+    if (res)
+      debug("Error closing autoexec.g\n");
+  }  
+  
+  // 
+  
   /* Initialize using values readed from "config.txt" file */
   gcode_parse_init();
   dda_init();

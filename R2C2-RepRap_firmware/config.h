@@ -87,6 +87,9 @@ struct configuration
   
   //
   int32_t steps_per_revolution_e;
+  
+  //
+  int32_t wait_on_temp;
 };
 
 extern struct configuration config;

@@ -40,14 +40,24 @@
 #include "pinout.h"
 #include "config.h"
 #include "ff.h"
+#include "debug.h"
 
 FIL       file;
 uint32_t  filesize = 0;
 uint32_t  sd_pos = 0;
-bool      sd_printing = false;     // printing from SD file
-bool      sd_active = false;   // SD card active
-bool      sd_writing_file = false;   // writing to SD file
+bool      sd_printing = false;      // printing from SD file
+bool      sd_active = false;        // SD card active
+bool      sd_writing_file = false;  // writing to SD file
 
+#define EXTRUDER_NUM_1  1
+#define EXTRUDER_NUM_2  2
+#define EXTRUDER_NUM_3  4
+
+uint8_t   extruders_on;
+uint32_t  extruder_1_speed;         // in percent of 1:1 speed
+
+uint32_t  auto_prime_steps = 0;
+uint32_t  auto_reverse_steps = 0;
 
 void zero_x(void)
 {
@@ -233,7 +243,9 @@ bool sd_read_file(tLineBuffer *pLine)
     return true;
   }
   else
+  {
     return false;
+   }
 }
  
 bool sd_write_to_file(char *pStr, unsigned bytes_to_write)
@@ -301,6 +313,13 @@ bool process_gcode_command()
 
       // G1 - synchronised motion
       case 1:
+      if ( (extruders_on == EXTRUDER_NUM_1) && !next_target.seen_E)
+      {
+        // approximate translation for 3D code. distance to extrude is percentage of move distance
+        //TODO: extrude distance for Z moves
+        double d = calc_distance (ABS(next_target.target.X - startpoint.X), ABS(next_target.target.Y - startpoint.Y));
+        next_target.target.E = startpoint.E + d * extruder_1_speed / 100;
+      }
       enqueue(&next_target.target);
       break;
 
@@ -336,6 +355,7 @@ bool process_gcode_command()
 
       //	G28 - go home
       case 28:
+      
       if (next_target.seen_X)
       {
         zero_x();
@@ -362,13 +382,17 @@ bool process_gcode_command()
 
       if(!axisSelected)
       {
+        // move down to clear Z endstop
+        // Rapman only?
+        SpecialMoveZ (startpoint.Z + 3 * config.steps_per_mm_z, config.homing_feedrate_x);
+        
         zero_x();
         zero_y();
         zero_z();
         zero_e();
       }
 
-      startpoint.F = config.search_feedrate_x;
+      startpoint.F = config.homing_feedrate_x;  //?
       break;
 
       // G90 - absolute positioning
@@ -533,17 +557,23 @@ bool process_gcode_command()
     
       // M101- extruder on
       case 101:
+      extruders_on = EXTRUDER_NUM_1;
       break;
 
       // M102- extruder reverse
 
       // M103- extruder off
       case 103:
+      extruders_on = 0;
       break;
 
       // M104- set temperature
       case 104:
       temp_set(next_target.S, EXTRUDER_0);
+      
+      if (config.wait_on_temp)
+        enqueue(NULL);
+
       break;
 
       // M105- get temperature
@@ -554,13 +584,24 @@ bool process_gcode_command()
 
       // M106- fan on
       case 106:
+      extruder_fan_on();
       break;
+      
       // M107- fan off
       case 107:
+      extruder_fan_off();
       break;
 
+      // M108 - set extruder speed
+      // S = RPM * 10
       case 108:
-      /* What is this for Skeinforge?? */
+      if (next_target.seen_S)
+      {
+        // convert to a percent of nominal speed
+        // where 20.0 RPM = nominal 100%
+        //TODO: how to derive 20.0 from config
+        extruder_1_speed = next_target.S / 2;
+      }
       break;
 
       // M109- set temp and wait
@@ -611,9 +652,9 @@ bool process_gcode_command()
       break;
       
       // M115- report firmware version
-		case 115:
-			sersendf("FIRMWARE_NAME:Teacup_R2C2 FIRMWARE_URL:http%%3A//github.com/bitboxelectronics/R2C2 PROTOCOL_VERSION:1.0 MACHINE_TYPE:Mendel\r\n");
-		break;
+		  case 115:
+			  sersendf("FIRMWARE_NAME:Teacup_R2C2 FIRMWARE_URL:http%%3A//github.com/bitboxelectronics/R2C2 PROTOCOL_VERSION:1.0 MACHINE_TYPE:Mendel\r\n");
+		  break;
 
       case 119:
       // M119 - Get Endstop Status
@@ -707,13 +748,13 @@ bool process_gcode_command()
       else
       {
         if (next_target.seen_X)
-          config.steps_per_mm_x = next_target.target.X;
+          config.steps_per_mm_x = next_target.target.X / config.steps_per_mm_x;
         if (next_target.seen_Y)
-          config.steps_per_mm_y = next_target.target.Y;
+          config.steps_per_mm_y = next_target.target.Y / config.steps_per_mm_y;
         if (next_target.seen_Z)
-          config.steps_per_mm_z = next_target.target.Z;
+          config.steps_per_mm_z = next_target.target.Z / config.steps_per_mm_z;
         if (next_target.seen_E)
-          config.steps_per_mm_e = next_target.target.E;
+          config.steps_per_mm_e = next_target.target.E / config.steps_per_mm_e;
           
         gcode_parse_init();  
         dda_init();
@@ -735,15 +776,44 @@ bool process_gcode_command()
       else
       {
         if (next_target.seen_X)
-          config.maximum_feedrate_x = next_target.target.X;
+          config.maximum_feedrate_x = next_target.target.X / config.steps_per_mm_x;
         if (next_target.seen_Y)
-          config.maximum_feedrate_y = next_target.target.Y;
+          config.maximum_feedrate_y = next_target.target.Y / config.steps_per_mm_y;
         if (next_target.seen_Z)
-          config.maximum_feedrate_z = next_target.target.Z;
+          config.maximum_feedrate_z = next_target.target.Z / config.steps_per_mm_z;
         if (next_target.seen_E)
-          config.maximum_feedrate_e = next_target.target.E;
+          config.maximum_feedrate_e = next_target.target.E / config.steps_per_mm_e;
       }
       break;
+      
+      // M227 - Enable Auto-prime/reverse (steps)
+      // P: prime on start (steps)
+      // S: reverse on stop (steps)
+      case 227:
+      if (next_target.seen_S && next_target.seen_P)
+      {
+        auto_prime_steps = next_target.S;
+        auto_reverse_steps = next_target.P;
+      }
+      break;
+      
+      // M228 - Disable Auto-prime/reverse
+      case 228:
+      auto_prime_steps = 0;
+      auto_reverse_steps = 0;
+      break;
+      
+      // M229 - Enable Auto-prime/reverse
+      // P: prime on start (rotations)
+      // S: reverse on stop (rotations)
+      case 229:
+      if (next_target.seen_S && next_target.seen_P)
+      {
+        auto_prime_steps = next_target.S * config.steps_per_revolution_e;
+        auto_reverse_steps = next_target.P * config.steps_per_revolution_e;
+      }
+      break;
+      
       
       // M500 - set/get adc value for temperature
       // S: temperature (degrees C, 0-300)
@@ -760,6 +830,47 @@ bool process_gcode_command()
         serial_writestr ("E: bad param\r\n");
       break;
 
+      // M542 - nozzle wipe/move to rest location
+      case 542:
+      // TODO: this depends on current origin being same as home position
+      if (config.have_rest_pos)
+      {
+        // move above bed if ncessary
+        if (startpoint.Z < 2 * config.steps_per_mm_z)
+          SpecialMoveZ (2 * config.steps_per_mm_z, config.maximum_feedrate_x);
+
+        // move to reset position
+        next_target.target.X = config.rest_pos_x * config.steps_per_mm_x;
+        next_target.target.Y = config.rest_pos_y * config.steps_per_mm_y;
+        next_target.target.Z = startpoint.Z;
+        next_target.target.F = config.maximum_feedrate_x;
+        enqueue(&next_target.target);
+      }
+      break;
+
+      // M543 - exit nozzle wipe/no op
+      case 543:
+        if (config.have_wipe_pos)
+        {
+          //TODO
+        }
+      break;
+
+      // M551 - Prime extruder 1
+      // P : number of steps
+      // S : RPM * 10
+      case 551:
+      if (next_target.seen_S && next_target.seen_P)
+      {
+        // calc E distance, use approximate conversion to get distance, not critical
+        // TODO: how to derive magic number
+        // S is RPM*10, but happens to give about the right speed in mm/min        
+        next_target.target.E = startpoint.E + next_target.P / 256 * config.steps_per_mm_e;
+        next_target.target.F = next_target.S;
+        enqueue(&next_target.target);
+      }
+      break;
+                  
       // unknown mcode: spit an error
       default:
       serial_writestr("E: Bad M-code ");

@@ -104,7 +104,7 @@ tConfigItem config_lookup [] =
 
   { "steps_per_revolution_e", &config.steps_per_revolution_e, 3200},  // 200 * 16
   
-  { "wait_on_temp", &config.wipe_pos_y , 0},
+  { "wait_on_temp", &config.wait_on_temp, 0},
     
 };
 

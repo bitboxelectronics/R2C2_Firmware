@@ -67,6 +67,7 @@ void queue_step()
   {
     if (movebuffer[mb_tail].waitfor_temp)
     {
+      temp_tick();
       if (temp_achieved(EXTRUDER_0))
       {
         movebuffer[mb_tail].live = movebuffer[mb_tail].waitfor_temp = 0;

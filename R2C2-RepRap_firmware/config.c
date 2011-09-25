@@ -107,6 +107,7 @@ tConfigItem config_lookup [] =
   
   { "wait_on_temp", &config.wait_on_temp, 0},
     
+  { "enable_extruder_1", &config.enable_extruder_1, 1},
 };
 
 #define NUM_TOKENS (sizeof(config_lookup)/sizeof(tConfigItem))
@@ -172,16 +173,17 @@ char *get_token (char *pLine)
     {
       // identifier is alpha (alpha|digit|"_")*
       while (*pNext && ( isalpha(*pNext) || isdigit(*pNext) || (*pNext == '_' ) ) )
-    {
-      pNext ++;
+      {
+        pNext ++;
+      }
     }
-}
-    else if (isdigit (*pNext))
-{
-      // number is (digit)+
+    else if (isdigit (*pNext) || char_match (*pNext, "+-"))
+    {
+      // number is [+|-] (digit)+
+      pNext ++;
       while (*pNext && isdigit (*pNext) )
-  {
-       pNext ++;
+      {
+        pNext ++;
       }
     }
     else

@@ -88,8 +88,9 @@ struct configuration
   //
   int32_t steps_per_revolution_e;
   
-  //
+  // options
   int32_t wait_on_temp;
+  int32_t enable_extruder_1;
 };
 
 extern struct configuration config;

@@ -64,6 +64,10 @@ void dda_init(void)
   um_per_step_y = ((double) (1000.0 / config.steps_per_mm_y));
   um_per_step_z = ((double) (1000.0 / config.steps_per_mm_z));
   um_per_step_e = ((double) (1000.0 / config.steps_per_mm_e));
+
+  // initialise with a safe slow feedrate
+  // magic number: accel does not work with lower value
+  startpoint.F = 240;
 }
 
 /*
@@ -127,7 +131,11 @@ void dda_create(DDA *dda, TARGET *target) {
         dda->x_delta = ABS(target->X - startpoint.X);
         dda->y_delta = ABS(target->Y - startpoint.Y);
         dda->z_delta = ABS(target->Z - startpoint.Z);
-        dda->e_delta = ABS(target->E - startpoint.E);
+
+        if (config.enable_extruder_1)
+          dda->e_delta = ABS(target->E - startpoint.E);
+        else
+          dda->e_delta = 0;
 
         dda->x_direction = (target->X >= startpoint.X)?1:0;
         dda->y_direction = (target->Y >= startpoint.Y)?1:0;
@@ -282,6 +290,8 @@ void dda_start(DDA *dda) {
 
                 // ensure this dda starts
                 dda->live = 1;
+
+// debug: sersendf ("%lx\n", (uint32_t)(dda->c>>8));
 
                 // set timeout for first step
                 setHwTimerInterval (0, dda->c >> 8);
@@ -447,20 +457,36 @@ void dda_step(DDA *dda) {
 
   #ifdef ACCELERATION_REPRAP
         // linear acceleration magic, courtesy of http://www.embedded.com/columns/technicalinsights/56800129?printable=true
-        if (dda->accel) {
-                if (
-                                ((dda->n > 0) && (dda->c > dda->end_c)) ||
-                                ((dda->n < 0) && (dda->c < dda->end_c))
-                        ) {
-                        dda->c = (int32_t) dda->c - ((int32_t) (dda->c * 2) / dda->n);
-                        dda->n += 4;
-                        setHwTimerInterval (0, dda->c >> 8);
-                }
-                else if (dda->c != dda->end_c) {
-                        dda->c = dda->end_c;
-                        setHwTimerInterval (0, dda->c >> 8);
-                }
-                // else we are already at target speed
+        if (dda->accel) 
+        {
+          if ((dda->c > dda->end_c) && (dda->n > 0)) 
+          {
+            uint32_t new_c = dda->c - (dda->c * 2) / dda->n;
+            if (new_c <= dda->c && new_c > dda->end_c) 
+            {
+              dda->c = new_c;
+              dda->n += 4;
+            }
+            else
+              dda->c = dda->end_c;
+          }
+          else if ((dda->c < dda->end_c) && (dda->n < 0)) 
+          {
+            uint32_t new_c = dda->c + ((dda->c * 2) / -dda->n);
+            if (new_c >= dda->c && new_c < dda->end_c) 
+            {
+              dda->c = new_c;
+              dda->n += 4;
+            }
+            else
+              dda->c = dda->end_c;
+          }
+          else if (dda->c != dda->end_c) 
+          {
+            dda->c = dda->end_c;
+          }
+          // else we are already at target speed
+          setHwTimerInterval (0, dda->c >> 8);
         }
   #endif
 

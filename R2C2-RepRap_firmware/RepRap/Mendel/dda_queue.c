@@ -104,8 +104,6 @@ void enqueue(TARGET *t)
     // it's a wait for temp
     movebuffer[h].waitfor_temp = 1;
     movebuffer[h].nullmove = 0;
-    // set "step" timeout to maximum
-    movebuffer[h].c = 0xFFFFFF00;
   }
 
   mb_head = h;
@@ -122,9 +120,23 @@ void next_move()
     // next item
     uint8_t t = mb_tail + 1;
     t &= (MOVEBUFFER_SIZE - 1);
-    dda_start(&movebuffer[t]);
+    
+    DDA *current = &movebuffer[t];
+    
     mb_tail = t;
-    startBlink();
+    
+    if (current->waitfor_temp)
+    {
+      serial_writestr ("Waiting for target temp\n");
+      current->live = 1;
+      setHwTimerInterval (0, HEATER_WAIT_TIMEOUT);
+      enableHwTimer(0);
+    }
+    else
+    {
+      startBlink();
+      dda_start(current);
+    }
   }
   else
   {

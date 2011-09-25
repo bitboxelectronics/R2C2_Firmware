@@ -33,6 +33,9 @@
 
 #include "machine.h"
 #include  "dda.h"
+#include "timer.h"
+
+#define HEATER_WAIT_TIMEOUT (100 * MS)
 
 /*
         variables

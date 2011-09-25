@@ -135,6 +135,10 @@ int32_t	decfloat_to_int(decfloat *df, int32_t multiplicand, int32_t denominator)
 
 void SpecialMoveXY(int32_t x, int32_t y, uint32_t f) {
 	TARGET t = startpoint;
+#ifdef ACCELERATION_REPRAP
+	// no accel for ACCEL_REPRAP
+	startpoint.F = f;
+#endif
 	t.X = x;
 	t.Y = y;
 	t.F = f;
@@ -144,6 +148,10 @@ void SpecialMoveXY(int32_t x, int32_t y, uint32_t f) {
 
 void SpecialMoveZ(int32_t z, uint32_t f) {
 	TARGET t = startpoint;
+#ifdef ACCELERATION_REPRAP
+	// no accel for ACCEL_REPRAP
+	startpoint.F = f;
+#endif
 	t.Z = z;
 	t.F = f;
 	t.options.g28 = 1; /* signal a G28 command */
@@ -152,9 +160,13 @@ void SpecialMoveZ(int32_t z, uint32_t f) {
 
 void SpecialMoveE(int32_t e, uint32_t f) {
 	TARGET t = startpoint;
+#ifdef ACCELERATION_REPRAP
+	// no accel for ACCEL_REPRAP
+	startpoint.F = f;
+#endif
 	t.E = e;
 	t.F = f;
-	t.options.g28 = 1; /* signal a G28 command */
+	//t.options.g28 = 1; /* signal a G28 command */
 	enqueue(&t);
 }
 

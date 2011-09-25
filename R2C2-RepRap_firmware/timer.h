@@ -34,11 +34,11 @@
 #include "machine.h"
 
 // time-related constants
-//#define	US	* (F_CPU / 1000000)
-#define	MS	* (F_CPU / 1000)
+//#define	US	(F_CPU / 1000000)
+#define	MS	(F_CPU / 1000)
 
 // #define	DEFAULT_TICK	(100 US)
-#define	WAITING_DELAY 10000 // (10 * MS)
+#define	WAITING_DELAY  (10 * MS)
 
 #define NUM_HARDWARE_TIMERS 4
 

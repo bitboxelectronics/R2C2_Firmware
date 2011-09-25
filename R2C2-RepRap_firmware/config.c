@@ -28,6 +28,7 @@
 */
 
 #include <stdbool.h>
+#include <ctype.h>
 #include "stdlib.h"
 #include "string.h"
 
@@ -133,9 +134,9 @@ bool char_match (char c, char *s)
   return false;
 }
 
-// a version of strtok()
-// NB: very unsafe; not re-entrant. Use with caution.
-char *get_token (char *pLine, char *separators)
+// a version of strtok(), recognises identifiers, integers, and single-char symbols
+// NB: very unsafe; not re-entrant. Use with caution!
+char *get_token (char *pLine)
 {
   static char *pNext;
   static char saved;
@@ -150,11 +151,11 @@ char *get_token (char *pLine, char *separators)
     *pNext = saved;
   }
 
-  if (!pNext || !separators)
+  if (!pNext)
     return NULL;
 
-  // skip separators    
-  while (*pNext && char_match (*pNext, separators) )
+  // skip white space
+  while (*pNext && char_match (*pNext, " \t\n") )
   {
     pNext ++;
   }
@@ -164,13 +165,31 @@ char *get_token (char *pLine, char *separators)
     return NULL;
   else
   {  
-    // find next separator
+    // find next token
     pToken = pNext;
-    while (*pNext && ! char_match (*pNext, separators) )
+
+    if (isalpha (*pNext))
+    {
+      // identifier is alpha (alpha|digit|"_")*
+      while (*pNext && ( isalpha(*pNext) || isdigit(*pNext) || (*pNext == '_' ) ) )
     {
       pNext ++;
     }
-    
+}
+    else if (isdigit (*pNext))
+{
+      // number is (digit)+
+      while (*pNext && isdigit (*pNext) )
+  {
+       pNext ++;
+      }
+    }
+    else
+    {
+       // anything else is presumed to be single char token, e.g. "="
+       pNext ++;
+    }
+
     saved = *pNext;
     *pNext = 0;
     return pToken;
@@ -215,7 +234,7 @@ void read_config (void)
     pLine = f_gets(line, sizeof(line), &file); /* read one line */
     while (pLine)
     {
-      pToken = get_token (pLine, " =\t\n");
+      pToken = get_token (pLine);
       if (pToken && *pToken != '#')
       {
         found = false;      
@@ -224,19 +243,21 @@ void read_config (void)
           if (stricmp (pToken, config_lookup[j].name) == 0)
           {
             found = true;
-            pToken = get_token (NULL, " \t\n");
+            pToken = get_token (NULL);
             if (pToken && (*pToken == '='))
             {
               // get value
-              pToken = get_token (NULL, " \t\n");
+              pToken = get_token (NULL);
             
               if (pToken)
+              {
                 *config_lookup[j].pValue = atoi (pToken);
+                // debug  
+                //sersendf ("Found: %s = %d\r\n", config_lookup[j].name, *config_lookup[j].pValue);
+              }
               else
                 sersendf ("Missing value for %s\r\n", config_lookup[j].name);
               
-              // debug  
-              //sersendf ("Found: %s = %d\r\n", config_lookup[j].name, *config_lookup[j].pValue);
             }
             else
               sersendf ("Expected '='%s\r\n", line);              

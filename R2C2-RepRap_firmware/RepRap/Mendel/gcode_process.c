@@ -292,11 +292,8 @@ bool process_gcode_command()
   /* reset a target.options.g28 */
   next_target.target.options.g28 = 0;
 
-  // E ALWAYS relative, otherwise we overflow our registers after only a few layers
-  // 	next_target.target.E += startpoint.E;
-  // easier way to do this
-  // 	startpoint.E = 0;
-  // moved to dda.c, end of dda_create() and dda_queue.c, next_move()
+  // E ALWAYS absolute 
+  // host should periodically reset E with "G92 E0", otherwise we overflow our registers after only a few layers
 	
   if (next_target.seen_G)
   {
@@ -569,10 +566,13 @@ bool process_gcode_command()
 
       // M104- set temperature
       case 104:
-      temp_set(next_target.S, EXTRUDER_0);
+      if (config.enable_extruder_1)
+      {
+        temp_set(next_target.S, EXTRUDER_0);
       
-      if (config.wait_on_temp)
-        enqueue(NULL);
+        if (config.wait_on_temp)
+          enqueue(NULL);
+      }
 
       break;
 
@@ -606,8 +606,11 @@ bool process_gcode_command()
 
       // M109- set temp and wait
       case 109:
-      temp_set(next_target.S, EXTRUDER_0);
-      enqueue(NULL);
+      if (config.enable_extruder_1)
+      {
+        temp_set(next_target.S, EXTRUDER_0);
+        enqueue(NULL);
+      }
       break;
 
       // M110- set line number

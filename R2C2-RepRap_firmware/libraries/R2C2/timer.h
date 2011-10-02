@@ -31,7 +31,6 @@
 #define	_TIMER_H
 
 #include <stdbool.h>
-#include "machine.h"
 
 // time-related constants
 //#define	US	(F_CPU / 1000000)

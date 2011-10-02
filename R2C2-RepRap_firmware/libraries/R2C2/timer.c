@@ -29,13 +29,12 @@
 
 #include "lpc17xx_timer.h"
 #include "lpc17xx_clkpwr.h"
+#include "lpc17xx_gpio.h"
 #include "lpc_types.h"
-#include "dda_queue.h"
 #include "ios.h"
 #include "sdcard.h"
 #include "timer.h"
 
-#include "lpc17xx_gpio.h"
 
 //unsigned char clock_counter_250ms = 0;
 //unsigned char clock_counter_1s = 0;

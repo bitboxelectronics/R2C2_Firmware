@@ -31,31 +31,11 @@
 #include "lpc17xx_pinsel.h"
 #include "lpc17xx_gpio.h"
 #include "lpc17xx_adc.h"
-#include "pinout.h"
+
+//#include "pinout.h"
 #include "ios.h"
 #include "adc.h"
 
-/* Initialize ADC for reading sensors */
-void adc_init(void)
-{
-  PINSEL_CFG_Type PinCfg;
-
-  PinCfg.Funcnum = PINSEL_FUNC_2; /* ADC function */
-  PinCfg.OpenDrain = PINSEL_PINMODE_NORMAL;
-  PinCfg.Pinmode = PINSEL_PINMODE_TRISTATE;
-  PinCfg.Portnum = EXTRUDER_0_SENSOR_ADC_PORT;
-  PinCfg.Pinnum = EXTRUDER_0_SENSOR_ADC_PIN;
-  PINSEL_ConfigPin(&PinCfg);
-
-  PinCfg.Funcnum = PINSEL_FUNC_2; /* ADC function */
-  PinCfg.OpenDrain = PINSEL_PINMODE_NORMAL;
-  PinCfg.Pinmode = PINSEL_PINMODE_TRISTATE;
-  PinCfg.Portnum = HEATED_BED_0_ADC_PORT;
-  PinCfg.Pinnum = HEATED_BED_0_ADC_PIN;
-  PINSEL_ConfigPin(&PinCfg);
-
-  ADC_Init(LPC_ADC, 200000); /* ADC conversion rate = 200Khz */
-}
 
 uint16_t analog_read(uint8_t adc_channel)
 {

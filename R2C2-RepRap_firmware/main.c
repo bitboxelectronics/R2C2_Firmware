@@ -27,28 +27,14 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "LPC17xx.h"
-#include "lpc17xx_nvic.h"
-#include "lpc17xx_pinsel.h"
-#include "lpc17xx_gpio.h"
-#include "usbapi.h"
-#include "usbdebug.h"
-#include "serial.h"
-#include "sersendf.h"
-#include "timer.h"
-#include "spi.h"
-
-
-#include "lpc17xx_pwm.h"
-#include "lpc17xx_pinsel.h"
-
+#include "r2c2.h"
 
 #define USER_FLASH_START 0x10000 /* For USB bootloader */
 //#define USER_FLASH_START 0x0 /* No USB bootloader */
 
+extern int app_main (void);
+
 extern void USBSerial_Init(void); // from USBSerial.c
-extern int main_reprap (void);
-extern void init(void);
 
 void startup_delay(void)
 {
@@ -78,7 +64,7 @@ int main(void)
   USBSerial_Init(); // Initialize USB<->Serial
   SysTickTimer_Init(); // Initialize the timer for millis()
 
-  main_reprap();
+  app_main ();
 
   /* should never get here */
   while(1) ;

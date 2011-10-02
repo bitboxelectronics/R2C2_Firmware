@@ -1,5 +1,4 @@
-/* Copyright (C) 2009-2010 Michael Moon aka Triffid_Hunter   */
-/* Copyright (c) 2011 Jorge Pinto - casainho@gmail.com       */
+/* Copyright (c) 2011 peter brier pbrier.nl@gmail.com       */
 /* All rights reserved.
 
    Redistribution and use in source and binary forms, with or without
@@ -28,44 +27,29 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef _DDA_QUEUE
-#define _DDA_QUEUE
+#ifndef _R2C2_H
+#define _R2C2_H
 
-#include  "dda.h"
+#include "lpc17xx.h"
+#include "lpc17xx_nvic.h"
+#include "lpc17xx_pinsel.h"
+#include "lpc17xx_gpio.h"
+#include "lpc17xx_pwm.h"
 
-#define HEATER_WAIT_TIMEOUT (100 * MS)
+#include "adc.h"
+#include "buzzer.h"
+#include "ios.h"
+#include "sdcard.h"
+#include "serial.h"
+#include "serial_fifo.h"
+#include "sermsg.h"
+#include "sersendf.h"
+#include "spi.h"
+#include "timer.h"
+#include "usb.h"
 
-/*
-        variables
-*/
+#include "usbapi.h"
+#include "usbdebug.h"
 
-// this is the ringbuffer that holds the current and pending moves.
-extern uint8_t  mb_head;
-extern uint8_t  mb_tail;
-extern DDA movebuffer[MOVEBUFFER_SIZE];
 
-/*
-        methods
-*/
-
-// queue status methods
-uint8_t queue_full(void);
-uint8_t queue_empty(void);
-
-// take one step
-void queue_step(void);
-
-// add a new target to the queue
-// t == NULL means add a wait for target temp to the queue
-void enqueue(TARGET *t);
-
-// called from step timer when current move is complete
-void next_move(void) __attribute__ ((hot));
-
-// print queue status
-void print_queue(void);
-
-// flush the queue for eg; emergency stop
-void queue_flush(void);
-
-#endif  /* _DDA_QUEUE */
+#endif

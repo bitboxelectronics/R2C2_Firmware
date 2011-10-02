@@ -30,16 +30,15 @@
 
 #include <stdint.h>
 #include <string.h>         // memcpy
-#include        "timer.h"
-#include        "dda.h"
-#include        "serial.h"
-#include        "sermsg.h"
-#include        "dda_queue.h"
-#include        "debug.h"
-#include        "sersendf.h"
+#include <math.h>
+
+#include "r2c2.h"
+
+#include "dda.h"
+#include "dda_queue.h"
+#include "debug.h"
 #include "pinout.h"
 #include "machine.h"
-#include <math.h>
 #include "config.h"
 
 #ifndef ABS

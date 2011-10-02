@@ -33,6 +33,7 @@
 
 #include        <stdint.h>
 //#include        "config.h"
+#include        "machine.h"
 
 #ifndef ABS
 #define ABS(v)          (((v) >= 0)?(v):(-(v)))

@@ -29,26 +29,20 @@
 */
 
 #include <stdint.h>
+#include <stdlib.h>
+
 #include "lpc17xx_timer.h"
 #include "lpc17xx_wdt.h"
+#include "r2c2.h"
+
 #include "machine.h"
-#include "serial.h"
 #include "dda_queue.h"
 #include "dda.h"
 #include "gcode_parse.h"
 #include "gcode_process.h"
-#include "timer.h"
-#include "temp.h"
-#include "sermsg.h"
-#include "debug.h"
-#include "sersendf.h"
-#include "ios.h"
-#include "adc.h"
 #include "pinout.h"
-#include "stdlib.h"
 #include "debug.h"
 #include "config.h"
-#include "buzzer.h"
 
 extern volatile uint8_t step_requested;
 
@@ -62,6 +56,28 @@ tTimer blinkTimer;
 
 tLineBuffer serial_line_buf;
 tLineBuffer sd_line_buf;
+
+/* Initialize ADC for reading sensors */
+void adc_init(void)
+{
+  PINSEL_CFG_Type PinCfg;
+
+  PinCfg.Funcnum = PINSEL_FUNC_2; /* ADC function */
+  PinCfg.OpenDrain = PINSEL_PINMODE_NORMAL;
+  PinCfg.Pinmode = PINSEL_PINMODE_TRISTATE;
+  PinCfg.Portnum = EXTRUDER_0_SENSOR_ADC_PORT;
+  PinCfg.Pinnum = EXTRUDER_0_SENSOR_ADC_PIN;
+  PINSEL_ConfigPin(&PinCfg);
+
+  PinCfg.Funcnum = PINSEL_FUNC_2; /* ADC function */
+  PinCfg.OpenDrain = PINSEL_PINMODE_NORMAL;
+  PinCfg.Pinmode = PINSEL_PINMODE_TRISTATE;
+  PinCfg.Portnum = HEATED_BED_0_ADC_PORT;
+  PinCfg.Pinnum = HEATED_BED_0_ADC_PIN;
+  PINSEL_ConfigPin(&PinCfg);
+
+  ADC_Init(LPC_ADC, 200000); /* ADC conversion rate = 200Khz */
+}
 
 void io_init(void)
 {
@@ -241,7 +257,7 @@ void init(void)
   serial_writestr("Start\r\nOK\r\n");
 }
 
-int main_reprap (void)
+int app_main (void)
 {
   long timer1 = 0;
 

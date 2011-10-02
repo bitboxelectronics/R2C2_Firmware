@@ -80,5 +80,7 @@
 //#define STEP_LED_FLASH_FIXED      // LED Flash at fixed rate
 #define STEP_LED_FLASH_VARIABLE   // LED Flash at variable rate
 
+// #define USE_BOOT_BUTTON
+
 
 #endif	/* _MACHINE_H */  

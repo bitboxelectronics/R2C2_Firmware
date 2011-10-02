@@ -131,13 +131,27 @@ OUTDIR = $(RUN_MODE)
 # Target file name (without extension).
 TARGET = project
 
+# application dir and source
+APPDIR = RepRap/Mendel
+APPSRC = $(APPDIR)/dda_queue.c \
+	$(APPDIR)/dda.c \
+	$(APPDIR)/gcode_parse.c \
+	$(APPDIR)/gcode_process.c \
+	$(APPDIR)/mendel.c \
+	$(APPDIR)/temp.c \
+	$(APPDIR)/config.c
+
+#APPDIR = sample
+#APPSRC = $(APPDIR)/sample_app.c
+
 # Utility variables
 APPLIBDIR    = libraries
 INCLUDES = $(APPLIBDIR)/CMSISv1p30_LPC17xx/inc \
 	 $(APPLIBDIR)/LPCUSB/inc \
 	 $(APPLIBDIR)/NXP/Drivers/include \
 	 $(APPLIBDIR)/FatFs/src \
-	 RepRap/Mendel
+	 $(APPLIBDIR)/R2C2/ \
+	 $(APPDIR)
 
 # List C source files here. (C dependencies are automatically generated.)
 # use file-extension c for "c-only"-files
@@ -148,26 +162,20 @@ SRC = \
 	$(APPLIBDIR)/FatFs/src/ff.c \
 	$(APPLIBDIR)/FatFs/src/diskio.c \
 	$(APPLIBDIR)/FatFs/src/fattime.c \
-	main.c \
-	ios.c \
-	usb.c \
-	serial_fifo.c \
-	serial.c \
-	sermsg.c \
-	sersendf.c \
-	timer.c \
-	adc.c \
-	spi.c \
-	sdcard.c \
-	config.c \
-	buzzer.c \
-	uart.c \
-	RepRap/Mendel/dda_queue.c \
-	RepRap/Mendel/dda.c \
-	RepRap/Mendel/gcode_parse.c \
-	RepRap/Mendel/gcode_process.c \
-	RepRap/Mendel/mendel.c \
-	RepRap/Mendel/temp.c \
+	$(APPLIBDIR)/R2C2/ios.c \
+	$(APPLIBDIR)/R2C2/usb.c \
+	$(APPLIBDIR)/R2C2/serial_fifo.c \
+	$(APPLIBDIR)/R2C2/serial.c \
+	$(APPLIBDIR)/R2C2/sermsg.c \
+	$(APPLIBDIR)/R2C2/sersendf.c \
+	$(APPLIBDIR)/R2C2/timer.c \
+	$(APPLIBDIR)/R2C2/adc.c \
+	$(APPLIBDIR)/R2C2/spi.c \
+	$(APPLIBDIR)/R2C2/sdcard.c \
+	$(APPLIBDIR)/R2C2/buzzer.c \
+	$(APPLIBDIR)/R2C2/uart.c \
+	$(APPSRC) \
+	main.c
 	
 	
 # List C source files here which must be compiled in ARM-Mode (no -mthumb).

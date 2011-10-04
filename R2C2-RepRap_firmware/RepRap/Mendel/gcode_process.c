@@ -34,13 +34,13 @@
 #include	"dda_queue.h"
 #include	"serial.h"
 #include	"sermsg.h"
-#include	"temp.h"
 #include	"sersendf.h"
+#include	"temp.h"
 #include "timer.h"
 #include "pinout.h"
 #include "config.h"
 #include "ff.h"
-#include "debug.h"
+//#include "debug.h"
 
 FIL       file;
 uint32_t  filesize = 0;
@@ -59,7 +59,47 @@ uint32_t  extruder_1_speed;         // in percent of 1:1 speed
 uint32_t  auto_prime_steps = 0;
 uint32_t  auto_reverse_steps = 0;
 
-void zero_x(void)
+static void SpecialMoveXY(int32_t x, int32_t y, uint32_t f) {
+	TARGET t = startpoint;
+#ifdef ACCELERATION_REPRAP
+	// no accel for ACCEL_REPRAP
+	startpoint.F = f;
+#endif
+	t.X = x;
+	t.Y = y;
+	t.F = f;
+	t.options.g28 = 1; /* signal a G28 command */
+	enqueue(&t);
+}
+
+static void SpecialMoveZ(int32_t z, uint32_t f) {
+	TARGET t = startpoint;
+#ifdef ACCELERATION_REPRAP
+	// no accel for ACCEL_REPRAP
+	startpoint.F = f;
+#endif
+	t.Z = z;
+	t.F = f;
+	t.options.g28 = 1; /* signal a G28 command */
+	enqueue(&t);
+}
+
+#if 0
+// this function is not used
+static void SpecialMoveE(int32_t e, uint32_t f) {
+	TARGET t = startpoint;
+#ifdef ACCELERATION_REPRAP
+	// no accel for ACCEL_REPRAP
+	startpoint.F = f;
+#endif
+	t.E = e;
+	t.F = f;
+	//t.options.g28 = 1; /* signal a G28 command */
+	enqueue(&t);
+}
+#endif
+
+static void zero_x(void)
 {
   //TODO: move distance needs to be a least as big as print area
   
@@ -85,7 +125,7 @@ void zero_x(void)
   startpoint.X = current_position.X = config.home_pos_x * config.steps_per_mm_x;
 }
 
-void zero_y(void)
+static void zero_y(void)
 {
   int dir;
 
@@ -116,7 +156,7 @@ void zero_y(void)
   startpoint.Y = current_position.Y = config.home_pos_y * config.steps_per_mm_y;
 }
 
-void zero_z(void)
+static void zero_z(void)
 {
   // hit endstops, no acceleration- we don't care about skipped steps
   current_position.Z = 0;
@@ -140,7 +180,7 @@ void zero_z(void)
   startpoint.Z = current_position.Z = config.home_pos_z * config.steps_per_mm_z;
 }
 
-void zero_e(void)
+static void zero_e(void)
 {
   // extruder only runs one way and we have no "endstop", just set this point as home
   startpoint.E = current_position.E = 0;
@@ -655,9 +695,9 @@ bool process_gcode_command()
       break;
       
       // M115- report firmware version
-		  case 115:
-			  sersendf("FIRMWARE_NAME:Teacup_R2C2 FIRMWARE_URL:http%%3A//github.com/bitboxelectronics/R2C2 PROTOCOL_VERSION:1.0 MACHINE_TYPE:Mendel\r\n");
-		  break;
+      case 115:
+        sersendf("FIRMWARE_NAME:Teacup_R2C2 FIRMWARE_URL:http%%3A//github.com/bitboxelectronics/R2C2 PROTOCOL_VERSION:1.0 MACHINE_TYPE:Mendel\r\n");
+      break;
 
       case 119:
       // M119 - Get Endstop Status

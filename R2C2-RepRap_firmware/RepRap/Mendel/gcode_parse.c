@@ -28,15 +28,15 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include	"gcode_parse.h"
 
 #include	<string.h>
 #include <stdbool.h>
 
 #include	"serial.h"
 #include	"sermsg.h"
-#include	"dda_queue.h"
+//#include	"dda_queue.h"
 
+#include	"gcode_parse.h"
 #include	"gcode_process.h"
 #include        "machine.h"
 #include        "config.h"
@@ -65,6 +65,14 @@ double steps_per_in_y;
 double steps_per_in_z;
 double steps_per_in_e;
 
+uint8_t last_field = 0;
+
+#define crc(a, b)		(a ^ b)
+
+decfloat read_digit;
+
+GCODE_COMMAND next_target;
+
 
 void gcode_parse_init(void)
 {
@@ -80,13 +88,6 @@ void gcode_parse_init(void)
   steps_per_in_e = ((double) (25.4 * config.steps_per_mm_e));
 }
 
-uint8_t last_field = 0;
-
-#define crc(a, b)		(a ^ b)
-
-decfloat read_digit;
-
-GCODE_COMMAND next_target;
 
 /*
 	utility functions
@@ -133,42 +134,6 @@ int32_t	decfloat_to_int(decfloat *df, int32_t multiplicand, int32_t denominator)
 	public functions
 */
 
-void SpecialMoveXY(int32_t x, int32_t y, uint32_t f) {
-	TARGET t = startpoint;
-#ifdef ACCELERATION_REPRAP
-	// no accel for ACCEL_REPRAP
-	startpoint.F = f;
-#endif
-	t.X = x;
-	t.Y = y;
-	t.F = f;
-	t.options.g28 = 1; /* signal a G28 command */
-	enqueue(&t);
-}
-
-void SpecialMoveZ(int32_t z, uint32_t f) {
-	TARGET t = startpoint;
-#ifdef ACCELERATION_REPRAP
-	// no accel for ACCEL_REPRAP
-	startpoint.F = f;
-#endif
-	t.Z = z;
-	t.F = f;
-	t.options.g28 = 1; /* signal a G28 command */
-	enqueue(&t);
-}
-
-void SpecialMoveE(int32_t e, uint32_t f) {
-	TARGET t = startpoint;
-#ifdef ACCELERATION_REPRAP
-	// no accel for ACCEL_REPRAP
-	startpoint.F = f;
-#endif
-	t.E = e;
-	t.F = f;
-	//t.options.g28 = 1; /* signal a G28 command */
-	enqueue(&t);
-}
 
 void gcode_parse_line (tLineBuffer *pLine) 
 {

@@ -28,6 +28,8 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <stdlib.h>
+
 #include	"dda_queue.h"
 #include	"timer.h"
 #include	"serial.h"

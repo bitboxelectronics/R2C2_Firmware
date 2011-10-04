@@ -35,7 +35,6 @@
 #include "usbapi.h"
 #include "usbdebug.h"
 #include "serial_fifo.h"
-#include "serial.h"
 
 #define BAUD_RATE   115200
 
@@ -62,6 +61,12 @@ typedef struct {
     U8      bParityType;
     U8      bDataBits;
 } TLineCoding;
+
+fifo_t txfifo;
+fifo_t rxfifo;
+
+static unsigned char txbuf[SERIAL_FIFO_SIZE];
+static unsigned char rxbuf[SERIAL_FIFO_SIZE];
 
 static TLineCoding LineCoding = {115200, 0, 0, 8};
 static U8 abBulkBuf[64];
@@ -329,7 +334,8 @@ void USBSerial_Init(void)
   USBHwNakIntEnable(INACK_BI);
 
   // initialise VCOM
-  serial_init();
+  fifo_init(&rxfifo, rxbuf);
+  fifo_init(&txfifo, txbuf);
 
   NVIC_EnableIRQ(USB_IRQn);
 

@@ -31,12 +31,7 @@
 #define	_SERIAL_H
 
 #include <stdint.h>
-#include "serial_fifo.h"
 
-fifo_t txfifo;
-fifo_t rxfifo;
-unsigned char txbuf[SERIAL_FIFO_SIZE];
-unsigned char rxbuf[SERIAL_FIFO_SIZE];
 
 // initialise serial subsystem
 void serial_init(void);

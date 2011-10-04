@@ -41,15 +41,10 @@
 #include "ios.h"
 #include "sdcard.h"
 #include "serial.h"
-#include "serial_fifo.h"
 #include "sermsg.h"
 #include "sersendf.h"
 #include "spi.h"
 #include "timer.h"
-#include "usb.h"
-
-#include "usbapi.h"
-#include "usbdebug.h"
 
 
 #endif

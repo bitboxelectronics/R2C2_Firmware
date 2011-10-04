@@ -34,8 +34,6 @@
 
 extern int app_main (void);
 
-extern void USBSerial_Init(void); // from USBSerial.c
-
 void startup_delay(void)
 {
   for (volatile unsigned long i = 0; i < 500000; i++) { ; }
@@ -61,7 +59,9 @@ int main(void)
   in case the user application uses interrupts */
   SCB->VTOR = (USER_FLASH_START & 0x1FFFFF80);
 
-  USBSerial_Init(); // Initialize USB<->Serial
+  // Initialize USB<->Serial
+  serial_init();
+  
   SysTickTimer_Init(); // Initialize the timer for millis()
 
   app_main ();

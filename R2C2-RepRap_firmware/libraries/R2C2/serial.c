@@ -28,11 +28,12 @@
 */
 
 #include "serial.h"
+#include "serial_fifo.h"
+#include "usb.h"
 
 void serial_init()
 {
-  fifo_init(&rxfifo, rxbuf);
-  fifo_init(&txfifo, txbuf);
+    USBSerial_Init();        
 }
 
 /*

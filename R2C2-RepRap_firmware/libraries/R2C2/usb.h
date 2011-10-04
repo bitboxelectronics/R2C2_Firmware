@@ -26,11 +26,16 @@
         THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-/* Initialize serial port */
-void serial_init(void);
+#ifndef _USB_H
+#define _USB_H
 
-/* Send char */
-char serial_write(char c);
-char serial_read(void);
-char serial_available(void);
-void serial_flush(void);
+#include "serial_fifo.h"
+
+extern fifo_t txfifo;
+extern fifo_t rxfifo;
+
+void USBSerial_Init(void);
+
+
+#endif
+

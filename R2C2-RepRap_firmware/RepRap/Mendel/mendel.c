@@ -33,6 +33,7 @@
 
 #include "lpc17xx_timer.h"
 #include "lpc17xx_wdt.h"
+#include "lpc17xx_adc.h"
 #include "r2c2.h"
 
 #include "machine.h"
@@ -43,6 +44,12 @@
 #include "pinout.h"
 #include "debug.h"
 #include "config.h"
+#include "temp.h"
+
+#ifdef USE_GRBL
+#include "planner.h"
+#include "stepper.h"
+#endif
 
 extern volatile uint8_t step_requested;
 
@@ -260,6 +267,7 @@ void init(void)
 int app_main (void)
 {
   long timer1 = 0;
+  eParseResult parse_result;
 
   buzzer_init();
   buzzer_play(1500, 100); /* low beep */
@@ -270,6 +278,12 @@ int app_main (void)
 
   read_config();
 
+#ifdef USE_GRBL
+  // grbl init
+  plan_init();      
+  st_init();    
+#endif
+  
   // main loop
   for (;;)
   {
@@ -318,13 +332,13 @@ int app_main (void)
       // give priority to user commands
       if (serial_line_buf.seen_lf)
       {
-        gcode_parse_line (&serial_line_buf);
+        parse_result = gcode_parse_line (&serial_line_buf);
         serial_line_buf.len = 0;
         serial_line_buf.seen_lf = 0;
       }
       else if (sd_line_buf.seen_lf)
       {
-        gcode_parse_line (&sd_line_buf);
+        parse_result = gcode_parse_line (&sd_line_buf);
         sd_line_buf.len = 0;
         sd_line_buf.seen_lf = 0;
       }

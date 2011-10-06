@@ -100,20 +100,24 @@ typedef struct
   uint8_t seen_lf :1;
 } tLineBuffer;
 
+typedef enum {
+  PR_OK,
+  PR_RESEND,
+  PR_ERROR,
+  PR_BUSY
+  } eParseResult;
+
+  
 // the command being processed
 extern GCODE_COMMAND next_target;
 
 // utility functions
-int32_t	decfloat_to_int(decfloat *df, int32_t multiplicand, int32_t denominator);
+//int32_t	decfloat_to_int(decfloat *df, int32_t multiplicand, int32_t denominator);
 
 
 void gcode_parse_init(void);
 
-void gcode_parse_line (tLineBuffer *pLine);
-// accept the next character and process it
-void gcode_parse_char(uint8_t c, tLineBuffer *pLine);
+eParseResult gcode_parse_line (tLineBuffer *pLine);
 
-// uses the global variable next_target.N
-void request_resend(void);
 
 #endif	/* GCODE_PARSE_H */

@@ -32,15 +32,21 @@
 #include	"gcode_process.h"
 #include	"gcode_parse.h"
 #include	"dda_queue.h"
+
 #include	"serial.h"
 #include	"sermsg.h"
 #include	"sersendf.h"
+
 #include	"temp.h"
 #include "timer.h"
 #include "pinout.h"
 #include "config.h"
 #include "ff.h"
 //#include "debug.h"
+
+#ifdef USE_GRBL
+#include "planner.h"
+#endif
 
 FIL       file;
 uint32_t  filesize = 0;
@@ -58,6 +64,21 @@ uint32_t  extruder_1_speed;         // in percent of 1:1 speed
 
 uint32_t  auto_prime_steps = 0;
 uint32_t  auto_reverse_steps = 0;
+
+static void enqueue_move (TARGET *pTarget)
+{
+#ifndef USE_GRBL
+  enqueue(pTarget);
+#else      
+  //grbl
+  plan_buffer_line ((double)pTarget->X / config.steps_per_mm_x, 
+    (double)pTarget->Y / config.steps_per_mm_y, 
+    (double)pTarget->Z / config.steps_per_mm_z, 
+    (double)pTarget->F, 
+    false);
+  startpoint = *pTarget;
+#endif
+}
 
 static void SpecialMoveXY(int32_t x, int32_t y, uint32_t f) {
 	TARGET t = startpoint;
@@ -314,11 +335,12 @@ void sd_seek(FIL *pFile, unsigned pos)
 *                                                                           *
 ****************************************************************************/
 
-bool process_gcode_command()
+eParseResult process_gcode_command()
 {
   uint32_t backup_f;
   uint8_t axisSelected = 0;
-  bool result = true;
+  eParseResult result = PR_OK;
+  bool reply_sent = false;
 
   // convert relative to absolute
   if (next_target.option_relative)
@@ -357,7 +379,7 @@ bool process_gcode_command()
         double d = calc_distance (ABS(next_target.target.X - startpoint.X), ABS(next_target.target.Y - startpoint.Y));
         next_target.target.E = startpoint.E + d * extruder_1_speed / 100;
       }
-      enqueue(&next_target.target);
+      enqueue_move(&next_target.target);
       break;
 
       //	G2 - Arc Clockwise
@@ -430,6 +452,12 @@ bool process_gcode_command()
       }
 
       startpoint.F = config.homing_feedrate_x;  //?
+      
+#ifdef USE_GRBL
+      plan_set_current_position ((double)startpoint.X / config.steps_per_mm_x, 
+        (double)startpoint.Y / config.steps_per_mm_y, 
+        (double)startpoint.Z / config.steps_per_mm_z);
+#endif
       break;
 
       // G90 - absolute positioning
@@ -478,6 +506,12 @@ bool process_gcode_command()
           startpoint.Z = current_position.Z = \
           startpoint.E = current_position.E = 0;
       }
+      
+#ifdef USE_GRBL
+      plan_set_current_position ((double)startpoint.X / config.steps_per_mm_x, 
+        (double)startpoint.Y / config.steps_per_mm_y, 
+        (double)startpoint.Z / config.steps_per_mm_z);
+#endif
       break;
 
       // unknown gcode: spit an error
@@ -619,7 +653,7 @@ bool process_gcode_command()
       // M105- get temperature
       case 105:
       temp_print();
-      result = false;
+      reply_sent = true;
       break;
 
       // M106- fan on
@@ -676,8 +710,8 @@ bool process_gcode_command()
 
       /* M114- report XYZE to host */
       case 114:
-      // wait for queue to complete
-      for (;queue_empty() == 0;) {}
+      // wait for queue to complete ???
+      //for (;queue_empty() == 0;) {}
 
       if (next_target.option_inches)
       {
@@ -691,7 +725,7 @@ bool process_gcode_command()
           (((double) current_position.Z) / ((double) config.steps_per_mm_z)), \
           (((double) current_position.E) / ((double) config.steps_per_mm_e)));
       }
-      result = false;
+      reply_sent = true;
       break;
       
       // M115- report firmware version
@@ -780,7 +814,7 @@ bool process_gcode_command()
       case 200:
       if ((next_target.seen_X | next_target.seen_Y | next_target.seen_Z | next_target.seen_E) == 0)
       {
-        result = false;
+        reply_sent = true;
         sersendf ("ok X%d Y%d Z%d E%d\r\n", 
           config.steps_per_mm_x,
           config.steps_per_mm_y,
@@ -808,7 +842,7 @@ bool process_gcode_command()
       case 202:
       if ((next_target.seen_X | next_target.seen_Y | next_target.seen_Z | next_target.seen_E) == 0)
       {
-        result = false;
+        reply_sent = true;
         sersendf ("ok X%d Y%d Z%d E%d\r\n", 
           config.maximum_feedrate_x,
           config.maximum_feedrate_y,
@@ -866,7 +900,7 @@ bool process_gcode_command()
         temp_set_table_entry (EXTRUDER_0, next_target.S, next_target.P);
       else if (next_target.seen_S)
       {
-        result = false;
+        reply_sent = true;
         sersendf ("ok [%d] = %d\r\n", next_target.S, temp_get_table_entry (EXTRUDER_0, next_target.S));
       }
       else
@@ -880,14 +914,21 @@ bool process_gcode_command()
       {
         // move above bed if ncessary
         if (startpoint.Z < 2 * config.steps_per_mm_z)
-          SpecialMoveZ (2 * config.steps_per_mm_z, config.maximum_feedrate_x);
-
-        // move to reset position
+        {
+          // SpecialMoveZ (2 * config.steps_per_mm_z, config.maximum_feedrate_x);
+          next_target.target = startpoint;
+          next_target.target.Z = 2 * config.steps_per_mm_z;
+          next_target.target.F = config.maximum_feedrate_z;
+          enqueue_move(&next_target.target);
+        }
+        
+        // move to rest position
         next_target.target.X = config.rest_pos_x * config.steps_per_mm_x;
         next_target.target.Y = config.rest_pos_y * config.steps_per_mm_y;
         next_target.target.Z = startpoint.Z;
         next_target.target.F = config.maximum_feedrate_x;
-        enqueue(&next_target.target);
+        
+        enqueue_move(&next_target.target);
       }
       break;
 
@@ -916,11 +957,16 @@ bool process_gcode_command()
                   
       // unknown mcode: spit an error
       default:
-      serial_writestr("E: Bad M-code ");
-      serwrite_uint8(next_target.M);
-      serial_writestr("\r\n");
+        serial_writestr("E: Bad M-code ");
+        serwrite_uint8(next_target.M);
+        serial_writestr("\r\n");
     }
   }
 
+  if (!reply_sent)
+  {
+    serial_writestr("ok\r\n");
+  }
+  
   return result;
 }

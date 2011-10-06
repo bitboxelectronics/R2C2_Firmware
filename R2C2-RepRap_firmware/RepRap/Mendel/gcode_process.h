@@ -50,6 +50,6 @@ extern bool sd_write_to_file(char *pStr, unsigned bytes_to_write);
 extern bool sd_read_file (tLineBuffer *pLine);
 
 // when we have a whole line, feed it to this
-bool process_gcode_command(void);
+eParseResult process_gcode_command(void);
 
 #endif	/* _GCODE_PROCESS_H */

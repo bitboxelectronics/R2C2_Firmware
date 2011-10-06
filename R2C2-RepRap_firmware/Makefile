@@ -139,7 +139,13 @@ APPSRC = $(APPDIR)/dda_queue.c \
 	$(APPDIR)/gcode_process.c \
 	$(APPDIR)/mendel.c \
 	$(APPDIR)/temp.c \
-	$(APPDIR)/config.c
+	$(APPDIR)/config.c \
+	app/grbl/planner.c \
+	app/grbl/print.c \
+	app/grbl/settings.c \
+	app/grbl/eeprom.c \
+	app/grbl/stepper.c
+
 
 #APPDIR = sample
 #APPSRC = $(APPDIR)/sample_app.c
@@ -151,6 +157,7 @@ INCLUDES = $(APPLIBDIR)/CMSISv1p30_LPC17xx/inc \
 	 $(APPLIBDIR)/NXP/Drivers/include \
 	 $(APPLIBDIR)/FatFs/src \
 	 $(APPLIBDIR)/R2C2/ \
+	 app/grbl/ \
 	 $(APPDIR)
 
 # List C source files here. (C dependencies are automatically generated.)

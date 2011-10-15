@@ -44,6 +44,9 @@ struct configuration
   int32_t maximum_feedrate_z;
   int32_t maximum_feedrate_e;
 
+  double  acceleration;
+  double  junction_deviation;
+
   int32_t search_feedrate_x;
   int32_t search_feedrate_y;
   int32_t search_feedrate_z;
@@ -96,5 +99,6 @@ struct configuration
 extern struct configuration config;
 
 void read_config (void);
+void print_config (void);
 
 #endif /* CONFIG_H */

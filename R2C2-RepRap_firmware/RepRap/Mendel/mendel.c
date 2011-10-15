@@ -60,6 +60,7 @@ uint16_t led_on_time;
 uint16_t led_off_time;
 
 tTimer blinkTimer;
+tTimer temperatureTimer;
 
 tLineBuffer serial_line_buf;
 tLineBuffer sd_line_buf;
@@ -128,6 +129,10 @@ void io_init(void)
   adc_init();
 }
 
+void temperatureTimerCallback (tTimer *pTimer)
+{
+  temp_tick();
+}
 
 void blinkTimerCallback (tTimer *pTimer)
 {
@@ -173,7 +178,7 @@ void timerCallback (tHwTimer *pTimer, uint32_t int_mask)
   if (int_mask & _BIT(TIM_MR0_INT))
   {
     // decide which outputs need stepping
-    queue_step();
+//!    queue_step();
   }
 
   if (int_mask & _BIT(TIM_MR1_INT))
@@ -233,15 +238,19 @@ void init(void)
   // set up inputs and outputs
   io_init();
 
+#ifndef USE_GRBL
   /* Initialize DDA variables */
   dda_init();
+#endif
 
   /* Initialize Gcode parse variables */
   gcode_parse_init();
 
+#ifndef USE_GRBL
   // set up default feedrate
   current_position.F = startpoint.F = next_target.target.F = \
       config.search_feedrate_z;
+#endif
 
   // set up timers
   // we use hardware timer 0
@@ -259,6 +268,10 @@ void init(void)
   led_off_time = 50;
 
   AddSlowTimer (&blinkTimer);
+
+  AddSlowTimer (&temperatureTimer);
+  StartSlowTimer (&temperatureTimer, 10, temperatureTimerCallback);
+  temperatureTimer.AutoReload = 1;
 
   // say hi to host
   serial_writestr("Start\r\nOK\r\n");
@@ -320,7 +333,7 @@ int app_main (void)
     }
 
     // if queue is full, we wait
-    if (queue_full() == 0)
+    if (!plan_queue_full())
     {
   
       /* At end of each line, put the "GCode" on movebuffer.
@@ -352,7 +365,7 @@ int app_main (void)
       timer1 = millis() + DELAY1;
 
       /* Manage the extruder temperature */
-      temp_tick();
+//      temp_tick();
 
       /* If there are no activity during 30 seconds, power off the machine */
       if (steptimeout > (30 * 1000/DELAY1))

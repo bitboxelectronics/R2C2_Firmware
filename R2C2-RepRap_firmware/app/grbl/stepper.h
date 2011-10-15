@@ -24,6 +24,75 @@
 //#include <avr/io.h>
 //#include <avr/sleep.h>
 
+// from nuts_bolts.h:
+#define square(x) ((x)*(x))
+#define sleep_mode(x) do {} while (0)
+#define sei(x) 
+
+#define NUM_AXES 4
+
+#define X_AXIS 0
+#define Y_AXIS 1
+#define Z_AXIS 2
+#define E_AXIS 3
+
+#define clear_vector(a) memset(a, 0, sizeof(a))
+#define clear_vector_double(a) memset(a, 0.0, sizeof(a))
+#define max(a,b) (((a) > (b)) ? (a) : (b))
+#define min(a,b) (((a) < (b)) ? (a) : (b))
+// end
+
+// From grbl/config.h
+
+#define E_STEP_BIT           0
+#define E_DIRECTION_BIT      1
+
+#define X_STEP_BIT           2
+#define Y_STEP_BIT           3
+#define Z_STEP_BIT           4
+#define X_DIRECTION_BIT      5
+#define Y_DIRECTION_BIT      6
+#define Z_DIRECTION_BIT      7
+
+// This parameter sets the delay time before disabling the steppers after the final block of movement.
+// A short delay ensures the steppers come to a complete stop and the residual inertial force in the 
+// CNC axes don't cause the axes to drift off position. This is particularly important when manually 
+// entering g-code into grbl, i.e. locating part zero or simple manual machining. If the axes drift,
+// grbl has no way to know this has happened, since stepper motors are open-loop control. Depending
+// on the machine, this parameter may need to be larger or smaller than the default time.
+#define STEPPER_IDLE_LOCK_TIME 25 // (milliseconds)
+
+// The temporal resolution of the acceleration management subsystem. Higher number give smoother
+// acceleration but may impact performance.
+// NOTE: Increasing this parameter will help any resolution related issues, especially with machines 
+// requiring very high accelerations and/or very fast feedrates. In general, this will reduce the 
+// error between how the planner plans the motions and how the stepper program actually performs them.
+// However, at some point, the resolution can be high enough, where the errors related to numerical 
+// round-off can be great enough to cause problems and/or it's too fast for the Arduino. The correct
+// value for this parameter is machine dependent, so it's advised to set this only as high as needed.
+// Approximate successful values can range from 30L to 100L or more.
+#define ACCELERATION_TICKS_PER_SECOND 50L
+
+// Minimum planner junction speed. Sets the default minimum speed the planner plans for at the end
+// of the buffer and all stops. This should not be much greater than zero and should only be changed
+// if unwanted behavior is observed on a user's machine when running at very slow speeds.
+#define MINIMUM_PLANNER_SPEED 0.0 // (mm/min)
+
+// Minimum stepper rate. Sets the absolute minimum stepper rate in the stepper program and never run
+// slower than this value, except when sleeping. This parameter overrides the minimum planner speed.
+// This is primarily used to guarantee that the end of a movement is always reached and not stop to
+// never reach its target. This parameter should always be greater than zero.
+#define MINIMUM_STEPS_PER_MINUTE 800 // (steps/min) - Integer value only
+
+// Number of arc generation iterations by small angle approximation before exact arc
+// trajectory correction. Value must be 1-255. This parameter maybe decreased if there are issues
+// with the accuracy of the arc generations. In general, the default value is more than enough for
+// the intended CNC applications of grbl, and should be on the order or greater than the size of
+// the buffer to help with the computational efficiency of generating arcs.
+#define N_ARC_CORRECTION 25 
+
+// end
+
 #define LIMIT_MASK ((1<<X_LIMIT_BIT)|(1<<Y_LIMIT_BIT)|(1<<Z_LIMIT_BIT)) // All limit bits
 #define STEP_MASK ((1<<X_STEP_BIT)|(1<<Y_STEP_BIT)|(1<<Z_STEP_BIT)) // All step bits
 #define DIRECTION_MASK ((1<<X_DIRECTION_BIT)|(1<<Y_DIRECTION_BIT)|(1<<Z_DIRECTION_BIT)) // All direction bits

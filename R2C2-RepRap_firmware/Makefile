@@ -133,18 +133,22 @@ TARGET = project
 
 # application dir and source
 APPDIR = RepRap/Mendel
-APPSRC = $(APPDIR)/dda_queue.c \
-	$(APPDIR)/dda.c \
+APPSRC = \
 	$(APPDIR)/gcode_parse.c \
 	$(APPDIR)/gcode_process.c \
 	$(APPDIR)/mendel.c \
 	$(APPDIR)/temp.c \
 	$(APPDIR)/config.c \
+	$(APPDIR)/endstops.c \
+	$(APPDIR)/geometry.c \
 	app/grbl/planner.c \
-	app/grbl/print.c \
-	app/grbl/settings.c \
-	app/grbl/eeprom.c \
 	app/grbl/stepper.c
+
+#	app/grbl/print.c \
+#	app/grbl/eeprom.c \
+#	app/grbl/settings.c \
+# $(APPDIR)/dda_queue.c \
+#	$(APPDIR)/dda.c \
 
 
 #APPDIR = sample

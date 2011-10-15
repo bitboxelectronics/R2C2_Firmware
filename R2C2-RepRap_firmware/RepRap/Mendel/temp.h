@@ -39,9 +39,6 @@
 #include <stdbool.h>
 #include "adc.h"
 
-// read temperature from sensors
-uint16_t read_temp(uint8_t sensor_number);
-
 // set target temperature
 void temp_set(uint16_t t, uint8_t sensor_number);
 
@@ -59,8 +56,6 @@ void temp_print(void);
 
 // periodically read temperature and update heater with PID
 void temp_tick(void);
-
-uint16_t extruder_read_temp(uint8_t sensor_number);
 
 #define NUMTEMPS 31
 extern uint16_t temptable[NUMTEMPS][3];

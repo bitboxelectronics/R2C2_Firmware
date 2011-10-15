@@ -31,12 +31,8 @@
 #include "temp.h"
 #include "machine.h"
 #include "pinout.h"
-#include "serial.h"
-#include "sermsg.h"
 #include "dda.h"
 #include "sersendf.h"
-#include "debug.h"
-#include "ios.h"
 
 /* Table for NTC EPCOS B57560G104F and R1 = 330R for Extruder0
  * Table for NTC EPCOS B57560G104F and R1 = 12K for HeatedBed0 */
@@ -76,23 +72,39 @@ uint16_t temptable[NUMTEMPS][3] = {
   {4092, 3954,   0}
 };
 
-uint16_t current_temp[NUMBER_OF_SENSORS] = {0, 0}, target_temp[NUMBER_OF_SENSORS] = {0, 0};
+static uint16_t current_temp [NUMBER_OF_SENSORS] = {0};
+static uint16_t target_temp  [NUMBER_OF_SENSORS] = {0};
+static uint32_t adc_filtered [NUMBER_OF_SENSORS] = {0};
+
+static uint16_t ticks;
+
+/* Define a value for sequencial number of reads of ADC, to average the readed
+ * value and try filter high frequency noise.
+ */
+#define ADC_READ_TIMES 4
+
+#define NUM_TICKS 20
 
 #ifndef	ABSDELTA
 #define	ABSDELTA(a, b)	(((a) >= (b))?((a) - (b)):((b) - (a)))
 #endif
 
-uint16_t temp_read(uint8_t sensor_number)
+static uint16_t read_temp(uint8_t sensor_number);
+
+#if 0
+static uint16_t temp_read(uint8_t sensor_number)
 {
   return current_temp[sensor_number];
 }
+#endif
+
 
 void temp_set(uint16_t t, uint8_t sensor_number)
 {
   if (t)
   {
     steptimeout = 0;
-    power_on();
+//?    power_on();
   }
 
   target_temp[sensor_number] = t;
@@ -124,55 +136,42 @@ void temp_print()
 void temp_tick(void)
 {
 
-/* Define a value for sequencial number of reads of ADC, to average the readed
- * value and try filter high frequency noise.
- */
-#define ADC_READ_TIMES 4
+  /* Read and average temperatures */
+  current_temp[EXTRUDER_0] = read_temp(EXTRUDER_0);
+  current_temp[HEATED_BED_0] = read_temp(HEATED_BED_0);
 
-  /* Read and average the ADC input signal */
-  current_temp[EXTRUDER_0] = 0;
-  for (uint8_t c = 0; c < ADC_READ_TIMES; c++)
+  ticks ++;
+  if (ticks == NUM_TICKS)
   {
-    /* Read EXTRUDER_0 temperature value and manage heater */
-    current_temp[EXTRUDER_0] += read_temp(EXTRUDER_0);
-  }
-  current_temp[EXTRUDER_0] = current_temp[EXTRUDER_0] / ADC_READ_TIMES;
+    /* Manage heater using simple ON/OFF logic, no PID */
+    if (current_temp[EXTRUDER_0] < target_temp[EXTRUDER_0])
+    {
+      extruder_heater_on();
+    }
+    else
+    {
+      extruder_heater_off();
+    }
 
-  /* Manage heater using simple ON/OFF logic, no PID */
-  if (current_temp[EXTRUDER_0] < target_temp[EXTRUDER_0])
-  {
-    extruder_heater_on();
-  }
-  else
-  {
-    extruder_heater_off();
-  }
-
-
-  /* Read and average the ADC input signal */
-  current_temp[HEATED_BED_0] = 0;
-  for (uint8_t c = 0; c < ADC_READ_TIMES; c++)
-  {
-    /* Read HEATED_BED_0 temperature value and manage heater */
-    current_temp[HEATED_BED_0] += read_temp(HEATED_BED_0);
-  }
-  current_temp[HEATED_BED_0] = current_temp[HEATED_BED_0] / ADC_READ_TIMES;
-
-  /* Manage heater using simple ON/OFF logic, no PID */
-  if (current_temp[HEATED_BED_0] < target_temp[HEATED_BED_0])
-  {
-    heated_bed_on();
-  }
-  else
-  {
-    heated_bed_off();
+    /* Manage heater using simple ON/OFF logic, no PID */
+    if (current_temp[HEATED_BED_0] < target_temp[HEATED_BED_0])
+    {
+      heated_bed_on();
+    }
+    else
+    {
+      heated_bed_off();
+    }
+    
+    ticks = 0;
   }
 }
 
-uint16_t read_temp(uint8_t sensor_number)
+/* Read and average the ADC input signal */
+static uint16_t read_temp(uint8_t sensor_number)
 {
-  uint16_t raw = 0;
-  uint16_t celsius = 0;
+  int32_t raw = 0;
+  int16_t celsius = 0;
   uint8_t i;
 
   if (sensor_number == EXTRUDER_0)
@@ -183,7 +182,12 @@ uint16_t read_temp(uint8_t sensor_number)
   {
     raw = analog_read(HEATED_BED_0_SENSOR_ADC_CHANNEL);
   }
-
+  
+  // filter the ADC values with simple IIR
+  adc_filtered[sensor_number] = ((adc_filtered[sensor_number] * 7) + raw) / 8;
+  
+  raw = adc_filtered[sensor_number];
+  
   /* Go and use the temperature table to math the temperature value... */
   if (raw < temptable[0][sensor_number]) /* Limit the smaller value... */
   {

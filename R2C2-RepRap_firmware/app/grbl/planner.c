@@ -356,10 +356,10 @@ void plan_buffer_line (tActionRequest *pAction)
   
   // Calculate target position in absolute steps
   int32_t target[NUM_AXES];
-  target[X_AXIS] = lround(x*config.steps_per_mm_x);
-  target[Y_AXIS] = lround(y*config.steps_per_mm_y);
-  target[Z_AXIS] = lround(z*config.steps_per_mm_z);     
-  target[E_AXIS] = lround(pAction->target.e*config.steps_per_mm_e);     
+  target[X_AXIS] = lround(x*(double)config.steps_per_mm_x);
+  target[Y_AXIS] = lround(y*(double)config.steps_per_mm_y);
+  target[Z_AXIS] = lround(z*(double)config.steps_per_mm_z);     
+  target[E_AXIS] = lround(pAction->target.e*(double)config.steps_per_mm_e);     
   
   // Calculate the buffer head after we push this byte
   int next_buffer_head = next_block_index( block_buffer_head );	
@@ -393,10 +393,10 @@ void plan_buffer_line (tActionRequest *pAction)
   
   // Compute path vector in terms of absolute step target and current positions
   double delta_mm[NUM_AXES];
-  delta_mm[X_AXIS] = (target[X_AXIS]-position[X_AXIS])/config.steps_per_mm_x;
-  delta_mm[Y_AXIS] = (target[Y_AXIS]-position[Y_AXIS])/config.steps_per_mm_y;
-  delta_mm[Z_AXIS] = (target[Z_AXIS]-position[Z_AXIS])/config.steps_per_mm_z;
-  delta_mm[E_AXIS] = (target[E_AXIS]-position[E_AXIS])/config.steps_per_mm_e;
+  delta_mm[X_AXIS] = (target[X_AXIS]-position[X_AXIS])/(double)config.steps_per_mm_x;
+  delta_mm[Y_AXIS] = (target[Y_AXIS]-position[Y_AXIS])/(double)config.steps_per_mm_y;
+  delta_mm[Z_AXIS] = (target[Z_AXIS]-position[Z_AXIS])/(double)config.steps_per_mm_z;
+  delta_mm[E_AXIS] = (target[E_AXIS]-position[E_AXIS])/(double)config.steps_per_mm_e;
   block->millimeters = sqrt(square(delta_mm[X_AXIS]) + square(delta_mm[Y_AXIS]) + 
                             square(delta_mm[Z_AXIS]));
   if (block->millimeters == 0)
@@ -612,10 +612,10 @@ void plan_set_current_position_xyz(double x, double y, double z)
 void plan_set_current_position(tTarget *new_position) 
 {
   startpoint = *new_position;
-  position[X_AXIS] = lround(new_position->x*config.steps_per_mm_x);
-  position[Y_AXIS] = lround(new_position->y*config.steps_per_mm_y);
-  position[Z_AXIS] = lround(new_position->z*config.steps_per_mm_z);    
-  position[E_AXIS] = lround(new_position->e*config.steps_per_mm_e);    
+  position[X_AXIS] = lround(new_position->x*(double)config.steps_per_mm_x);
+  position[Y_AXIS] = lround(new_position->y*(double)config.steps_per_mm_y);
+  position[Z_AXIS] = lround(new_position->z*(double)config.steps_per_mm_z);    
+  position[E_AXIS] = lround(new_position->e*(double)config.steps_per_mm_e);    
   previous_nominal_speed = 0.0; // Resets planner junction speeds. Assumes start from rest.
   clear_vector_double(previous_unit_vec);
 }

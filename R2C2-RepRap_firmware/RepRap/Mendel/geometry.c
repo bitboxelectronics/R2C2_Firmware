@@ -2,6 +2,8 @@
         utility functions
 */
 
+#include <math.h>
+
 double calc_distance( double dx, double dy )
 {
   return (sqrt(dx*dx + dy*dy));

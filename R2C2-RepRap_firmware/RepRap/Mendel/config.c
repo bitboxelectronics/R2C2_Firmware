@@ -195,7 +195,7 @@ char *get_token (char *pLine)
       {
         pNext ++;
       }
-      if (*pNext && pNext == '.')
+      if (*pNext && *pNext == '.')
       {
         pNext ++;
         while (*pNext && isdigit (*pNext) )
@@ -219,7 +219,7 @@ char *get_token (char *pLine)
 double atod (char *s)
 {
   double result = 0.0;
-  int num_places =0;
+  int num_places = 0;
   double frac = 0.0;
   
   while (*s && *s != '.')
@@ -232,7 +232,7 @@ double atod (char *s)
   {
     s++;
     
-    while (*s && *s != '.')
+    while (*s)
     {
       frac *= 10.0;
       frac += *s-'0';
@@ -240,7 +240,7 @@ double atod (char *s)
       num_places++;
     }
     while (num_places--)
-      frac /= 10;
+      frac /= 10.0;
     result += frac;
   }
   return result;

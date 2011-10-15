@@ -92,6 +92,8 @@ void gcode_parse_init(void)
   steps_per_in_y = ((double) (25.4 * config.steps_per_mm_y));
   steps_per_in_z = ((double) (25.4 * config.steps_per_mm_z));
   steps_per_in_e = ((double) (25.4 * config.steps_per_mm_e));
+  
+  next_target.target.F = config.homing_feedrate_z;
 }
 
 

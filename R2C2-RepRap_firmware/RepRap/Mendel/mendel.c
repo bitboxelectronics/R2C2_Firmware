@@ -51,7 +51,7 @@
 #include "stepper.h"
 #endif
 
-extern volatile uint8_t step_requested;
+volatile uint8_t step_requested;
 
 uint8_t leds_enabled;
 

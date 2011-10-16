@@ -44,15 +44,16 @@
 
 // From grbl/config.h
 
-#define E_STEP_BIT           0
-#define E_DIRECTION_BIT      1
 
-#define X_STEP_BIT           2
-#define Y_STEP_BIT           3
-#define Z_STEP_BIT           4
-#define X_DIRECTION_BIT      5
-#define Y_DIRECTION_BIT      6
-#define Z_DIRECTION_BIT      7
+#define X_STEP_BIT           0
+#define Y_STEP_BIT           1
+#define Z_STEP_BIT           2
+#define E_STEP_BIT           3
+
+#define X_DIRECTION_BIT      4
+#define Y_DIRECTION_BIT      5
+#define Z_DIRECTION_BIT      6
+#define E_DIRECTION_BIT      7
 
 // This parameter sets the delay time before disabling the steppers after the final block of movement.
 // A short delay ensures the steppers come to a complete stop and the residual inertial force in the 

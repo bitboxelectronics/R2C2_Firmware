@@ -56,8 +56,10 @@
 // Globals
       
 volatile uint16_t steptimeout = 0;
-volatile uint8_t step_requested;
-uint8_t led_count [4];
+
+static uint8_t led_count [NUM_AXES];
+static uint8_t led_on;
+
 
 // Locals
 
@@ -102,6 +104,18 @@ static void set_step_events_per_minute(uint32_t steps_per_minute);
 //
 // === Platform dependent: for R2C2
 //
+static inline void inc_led_count (uint8_t *pCount, uint8_t led_mask)
+{
+#ifdef STEP_LED_FLASH_VARIABLE
+  (*pCount) ++;
+  if (*pCount == 128)
+  {
+    led_on = led_on ^ led_mask;
+    *pCount = 0;
+  }
+#endif
+}
+
 static void  set_direction_pins (uint8_t bits) 
 {
     x_direction( (bits & (1<<X_DIRECTION_BIT))?0:1);
@@ -113,22 +127,35 @@ static void  set_direction_pins (uint8_t bits)
 static void  set_step_pins (uint8_t bits) 
 {
   if (bits & (1<<X_STEP_BIT))
+  {
     x_step();
+    inc_led_count (&led_count[X_AXIS], (1<<X_STEP_BIT));
+  }
   if (bits & (1<<Y_STEP_BIT))
+  {
     y_step();
+    inc_led_count (&led_count[Y_AXIS], (1<<Y_STEP_BIT));
+  }  
   if (bits & (1<<Z_STEP_BIT))
+  {
     z_step();
+    inc_led_count (&led_count[Z_AXIS], (1<<Z_STEP_BIT));
+  }
   if (bits & (1<<E_STEP_BIT))
+  {
     e_step();
+    inc_led_count (&led_count[E_AXIS], (1<<E_STEP_BIT));
+  }
 }
 
-static void  clear_step_pins (void) 
+static void  clear_step_pins (uint8_t bits) 
 {
-    x_unstep();
-    y_unstep();
-    z_unstep();
-    e_unstep();
+  if (bits & (1<<X_STEP_BIT))    x_unstep();
+  if (bits & (1<<Y_STEP_BIT))    y_unstep();
+  if (bits & (1<<Z_STEP_BIT))    z_unstep();
+  if (bits & (1<<E_STEP_BIT))    e_unstep();
 }
+
 
 //
 // =========================
@@ -161,7 +188,7 @@ static void st_go_idle() {
 //  digital_write (1, (1<<15), 0);
 
   disableHwTimer(1);
-  clear_step_pins();
+  clear_step_pins(0x0F);
 #endif
 }
 
@@ -204,7 +231,7 @@ void st_interrupt (void)
   
   // Then pulse the stepping pins
   //STEPPING_PORT = (STEPPING_PORT & ~STEP_MASK) | out_bits;
-  set_step_pins (out_bits);
+//!  set_step_pins (out_bits);
   
   // Reset step pulse reset timer so that The Stepper Port Reset Interrupt can reset the signal after
   // exactly settings.pulse_microseconds microseconds.
@@ -225,7 +252,7 @@ void st_interrupt (void)
       counter_x = -(current_block->step_event_count >> 1);
       counter_y = counter_x;
       counter_z = counter_x;
-      counter_e = counter_x; // ??
+      counter_e = counter_x;
       step_events_completed = 0;     
     } else {
       st_go_idle();
@@ -355,7 +382,7 @@ void st_reset_interrupt (void)
 {
   // reset stepping pins (leave the direction pins)
   // STEPPING_PORT = (STEPPING_PORT & ~STEP_MASK) | (settings.invert_mask & STEP_MASK); 
-  clear_step_pins ();
+  clear_step_pins (0x0F);
 }
 
 void stepCallback (tHwTimer *pTimer, uint32_t int_mask)
@@ -366,12 +393,44 @@ void stepCallback (tHwTimer *pTimer, uint32_t int_mask)
 
   if (int_mask & _BIT(TIM_MR0_INT))
   {
+    // decide which outputs need stepping
     st_interrupt();
+    clear_step_pins (out_bits);
   }
 
   if (int_mask & _BIT(TIM_MR1_INT))
   { 
-    st_reset_interrupt();
+    // step the required channels
+    set_step_pins (out_bits);
+      
+    //st_reset_interrupt();
+  }
+  
+  if (int_mask & _BIT(TIM_MR2_INT))
+  { 
+#ifdef STEP_LED_NONE
+    // turn off all step outputs
+    unstep();
+#elif !defined(STEP_LED_ON_WHEN_ACTIVE)
+    // turn off step outputs
+    if ((led_on & (1<<X_STEP_BIT)) == 0)
+    {
+      x_unstep();
+    }
+    if ((led_on & (1<<Y_STEP_BIT)) == 0)
+    {
+      y_unstep();
+    }
+    if ((led_on & (1<<Z_STEP_BIT)) == 0)
+    {
+      z_unstep();
+    }
+    if ((led_on & (1<<E_STEP_BIT)) == 0)
+    {
+      e_unstep();
+    }
+    // else leave as is (important!)
+#endif
   }
   
   digital_write (1, (1<<15), 0);
@@ -410,6 +469,7 @@ void st_init()
   // and the time from Match1 to Match 2 defines the minimum high pulse period of the step output-
   // if the LED is in a blink ON period the step output will be left high until next required step
   setHwTimerMatch(1, 1, 500); // Match1 about Match0 + 5 us
+  setHwTimerMatch(1, 2, 1000); // Match2, about Match0 + 10 us
   
   //debug
   pin_mode(1, (1 << 15), OUTPUT);

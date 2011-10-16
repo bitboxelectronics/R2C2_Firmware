@@ -8,6 +8,11 @@ MAXIMUM_FEEDRATE_X = 30000
 MAXIMUM_FEEDRATE_Y = 30000
 MAXIMUM_FEEDRATE_Z = 120
 MAXIMUM_FEEDRATE_E = 6000
+
+# acceleration settings
+acceleration = 300.0
+junction_deviation = 0.05
+
 # very slow speed for fine search
 SEARCH_FEEDRATE_X = 120
 SEARCH_FEEDRATE_Y = 120
@@ -44,4 +49,5 @@ printing_vol_y = 205
 printing_vol_z = 210
 # options
 wait_on_temp=1
+enable_extruder_1=1
 

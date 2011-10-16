@@ -402,7 +402,7 @@ void plan_buffer_line (tActionRequest *pAction)
   if (block->millimeters == 0)
   {
     e_only = true;
-    block->millimeters = delta_mm[E_AXIS];
+    block->millimeters = fabs(delta_mm[E_AXIS]);
   }
   double inverse_millimeters = 1.0/block->millimeters;  // Inverse millimeters to remove multiple divides	
   

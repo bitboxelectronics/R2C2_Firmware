@@ -53,10 +53,10 @@
 
 
 /* Stepper LED Flashing options */
-//#define STEP_LED_NONE             // No LED control, easier to see stepper output
+#define STEP_LED_NONE             // No LED control, easier to see stepper output
 //#define STEP_LED_ON_WHEN_ACTIVE   // LED on when stepper output is active
 //#define STEP_LED_FLASH_FIXED      // LED Flash at fixed rate
-#define STEP_LED_FLASH_VARIABLE   // LED Flash at variable rate
+//#define STEP_LED_FLASH_VARIABLE   // LED Flash at variable rate
 
 //#define USE_BOOT_BUTTON
 

@@ -55,6 +55,8 @@
 #define Z_DIRECTION_BIT      6
 #define E_DIRECTION_BIT      7
 
+#define ALL_STEP_PINS 0x0F
+
 // This parameter sets the delay time before disabling the steppers after the final block of movement.
 // A short delay ensures the steppers come to a complete stop and the residual inertial force in the 
 // CNC axes don't cause the axes to drift off position. This is particularly important when manually 

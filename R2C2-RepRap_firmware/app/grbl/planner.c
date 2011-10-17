@@ -371,7 +371,7 @@ void plan_buffer_line (tActionRequest *pAction)
   // Prepare to set up new block
   block_t *block = &block_buffer[block_buffer_head];
 
-  block->action_type = pAction->ActionType;
+  block->action_type = AT_MOVE;
   
   // Compute direction bits for this block
   block->direction_bits = 0;

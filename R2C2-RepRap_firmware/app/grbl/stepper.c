@@ -227,7 +227,7 @@ void st_interrupt (void)
   
   // Set the direction pins a cuple of nanoseconds before we step the steppers
   //STEPPING_PORT = (STEPPING_PORT & ~DIRECTION_MASK) | (out_bits & DIRECTION_MASK);
-  set_direction_pins (out_bits);
+//  set_direction_pins (out_bits);
   
   // Then pulse the stepping pins
   //STEPPING_PORT = (STEPPING_PORT & ~STEP_MASK) | out_bits;
@@ -254,6 +254,9 @@ void st_interrupt (void)
       counter_z = counter_x;
       counter_e = counter_x;
       step_events_completed = 0;     
+      
+      out_bits = current_block->direction_bits;
+      set_direction_pins (out_bits);
     } else {
       st_go_idle();
     }    
@@ -261,7 +264,7 @@ void st_interrupt (void)
 
   if (current_block != NULL) 
   {
-    if ((current_block->action_type == AT_MOVE) || (current_block->action_type == AT_MOVE_ENDSTOP) ) 
+    if (current_block->action_type == AT_MOVE)
     {
       // Execute step displacement profile by bresenham line algorithm
       out_bits = current_block->direction_bits;
@@ -295,7 +298,10 @@ void st_interrupt (void)
              (current_block->steps_y && hit_home_stop_y (out_bits & (1<<Y_DIRECTION_BIT)) ) ||
              (current_block->steps_z && hit_home_stop_z (out_bits & (1<<Z_DIRECTION_BIT)) )
            )
+        {
           step_events_completed = current_block->step_event_count;
+          out_bits = 0;
+        }
       }
       
       // While in block steps, check for de/ac-celeration events and execute them accordingly.
@@ -382,7 +388,7 @@ void st_reset_interrupt (void)
 {
   // reset stepping pins (leave the direction pins)
   // STEPPING_PORT = (STEPPING_PORT & ~STEP_MASK) | (settings.invert_mask & STEP_MASK); 
-  clear_step_pins (0x0F);
+  clear_step_pins (ALL_STEP_PINS);
 }
 
 void stepCallback (tHwTimer *pTimer, uint32_t int_mask)
@@ -410,7 +416,7 @@ void stepCallback (tHwTimer *pTimer, uint32_t int_mask)
   { 
 #ifdef STEP_LED_NONE
     // turn off all step outputs
-    unstep();
+    clear_step_pins (ALL_STEP_PINS);
 #elif !defined(STEP_LED_ON_WHEN_ACTIVE)
     // turn off step outputs
     if ((led_on & (1<<X_STEP_BIT)) == 0)
@@ -468,8 +474,8 @@ void st_init()
   // The time from Match0 to Match 1 defines the low pulse period of the step output
   // and the time from Match1 to Match 2 defines the minimum high pulse period of the step output-
   // if the LED is in a blink ON period the step output will be left high until next required step
-  setHwTimerMatch(1, 1, 500); // Match1 about Match0 + 5 us
-  setHwTimerMatch(1, 2, 1000); // Match2, about Match0 + 10 us
+  setHwTimerMatch(1, 1, 1000); // Match1 about Match0 + 5 us
+  setHwTimerMatch(1, 2, 1500); // Match2, about Match0 + 10 us
   
   //debug
   pin_mode(1, (1 << 15), OUTPUT);

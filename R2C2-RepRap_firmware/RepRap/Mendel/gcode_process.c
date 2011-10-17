@@ -45,6 +45,7 @@
 
 #include "planner.h"
 #include "stepper.h"
+#include "geometry.h"
 
 FIL       file;
 uint32_t  filesize = 0;

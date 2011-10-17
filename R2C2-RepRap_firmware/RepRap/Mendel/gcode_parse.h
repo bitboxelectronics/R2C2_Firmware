@@ -33,9 +33,8 @@
 
 #include	<stdint.h>
 
-#include	"dda.h"
 
-// wether the asterisk (checksum-command) is included for checksum calculation
+// whether the asterisk (checksum-command) is included for checksum calculation
 // undefined for RepRap host software
 //#define ASTERISK_IN_CHECKSUM_INCLUDED
 
@@ -46,12 +45,29 @@
 // wether to insist on a checksum
 //#define	REQUIRE_CHECKSUM
 
+#ifndef ABS
+#define ABS(v)          (((v) >= 0)?(v):(-(v)))
+#endif
+
 // this is a very crude decimal-based floating point structure. a real floating point would at least have signed exponent
 typedef struct {
 	uint32_t	sign			:1;
 	uint64_t	mantissa	:24;
 	uint32_t	exponent	:7;
 } decfloat;
+
+// target is simply a point in space/time
+typedef struct {
+        int64_t                                         X;
+        int64_t                                         Y;
+        int64_t                                         Z;
+        int64_t                                         E;
+        uint64_t                                        F;
+        struct
+        {
+          uint8_t g28;
+        } options;
+} TARGET;
 
 // this holds all the possible data from a received command
 typedef struct {

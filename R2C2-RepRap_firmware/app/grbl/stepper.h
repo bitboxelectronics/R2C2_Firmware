@@ -112,4 +112,7 @@ void st_go_home();
 // to notify the subsystem that it is time to go to work.
 void st_wake_up();
 
+// steptimeout is set to zero when we step, and increases over time so we can turn the motors off when they've been idle for a while
+extern volatile uint16_t steptimeout;
+
 #endif

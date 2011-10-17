@@ -37,7 +37,6 @@
 #include "ff.h"
 #include "debug.h"
 #include "gcode_parse.h"
-#include "dda.h"
 #include "uart.h"
 
 /* values reflecting the gearing of your machine

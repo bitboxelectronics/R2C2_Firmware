@@ -37,8 +37,8 @@
 #include "r2c2.h"
 
 #include "machine.h"
-#include "dda_queue.h"
-#include "dda.h"
+//#include "dda_queue.h"
+//#include "dda.h"
 #include "gcode_parse.h"
 #include "gcode_process.h"
 #include "pinout.h"
@@ -46,10 +46,8 @@
 #include "config.h"
 #include "temp.h"
 
-#ifdef USE_GRBL
 #include "planner.h"
 #include "stepper.h"
-#endif
 
 volatile uint8_t step_requested;
 
@@ -238,19 +236,12 @@ void init(void)
   // set up inputs and outputs
   io_init();
 
-#ifndef USE_GRBL
-  /* Initialize DDA variables */
-  dda_init();
-#endif
 
   /* Initialize Gcode parse variables */
   gcode_parse_init();
 
-#ifndef USE_GRBL
   // set up default feedrate
-  current_position.F = startpoint.F = next_target.target.F = \
-      config.search_feedrate_z;
-#endif
+//TODO  current_position.F = startpoint.F = next_target.target.F =       config.search_feedrate_z;
 
   // set up timers
   // we use hardware timer 0
@@ -291,11 +282,9 @@ int app_main (void)
 
   read_config();
 
-#ifdef USE_GRBL
   // grbl init
   plan_init();      
   st_init();    
-#endif
   
   // main loop
   for (;;)

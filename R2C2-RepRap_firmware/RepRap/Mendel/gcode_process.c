@@ -43,11 +43,8 @@
 #include "ff.h"
 //#include "debug.h"
 
-#ifdef USE_GRBL
 #include "planner.h"
-#else
-#include	"dda_queue.h"
-#endif
+#include "stepper.h"
 
 FIL       file;
 uint32_t  filesize = 0;

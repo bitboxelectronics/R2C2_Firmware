@@ -31,8 +31,8 @@
 #include "temp.h"
 #include "machine.h"
 #include "pinout.h"
-#include "dda.h"
 #include "sersendf.h"
+#include "stepper.h"
 
 /* Table for NTC EPCOS B57560G104F and R1 = 330R for Extruder0
  * Table for NTC EPCOS B57560G104F and R1 = 12K for HeatedBed0 */

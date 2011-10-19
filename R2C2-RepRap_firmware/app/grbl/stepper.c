@@ -30,6 +30,8 @@
 //#include <avr/interrupt.h>
 #else
 #include "lpc17xx_timer.h"
+#include "lpc17xx_gpio.h"
+
 #include "timer.h"
 #include "pinout.h"
 #include "ios.h"
@@ -58,7 +60,7 @@
 volatile uint16_t steptimeout = 0;
 
 static uint8_t led_count [NUM_AXES];
-static uint8_t led_on;
+static uint8_t led_on;         // a bit mask
 
 
 // Locals
@@ -66,7 +68,11 @@ static uint8_t led_on;
 static block_t *current_block;  // A pointer to the block currently being traced
 
 // Variables used by The Stepper Driver Interrupt
-static uint8_t out_bits;        // The next stepping-bits to be output
+//static uint8_t out_bits;        // The next stepping-bits to be output
+static uint32_t direction_bits; // all axes (different ports)    
+static uint32_t step_bits_e;    // for extruder     
+static uint32_t step_bits_xyz;  // for XYZ steppers (same port)
+
 static int32_t counter_x,       // Counter variables for the bresenham line tracer
                counter_y, 
                counter_z;       
@@ -116,39 +122,69 @@ static inline void inc_led_count (uint8_t *pCount, uint8_t led_mask)
 #endif
 }
 
-static void  set_direction_pins (uint8_t bits) 
+static inline void  set_direction_pins (void) 
 {
-    x_direction( (bits & (1<<X_DIRECTION_BIT))?0:1);
-    y_direction( (bits & (1<<Y_DIRECTION_BIT))?0:1);
-    z_direction( (bits & (1<<Z_DIRECTION_BIT))?0:1);
-    e_direction( (bits & (1<<E_DIRECTION_BIT))?0:1);
+    x_direction( (direction_bits & (1<<X_DIRECTION_BIT))?0:1);
+    y_direction( (direction_bits & (1<<Y_DIRECTION_BIT))?0:1);
+    z_direction( (direction_bits & (1<<Z_DIRECTION_BIT))?0:1);
+    e_direction( (direction_bits & (1<<E_DIRECTION_BIT))?0:1);
 }
 
-static void  set_step_pins (uint8_t bits) 
+static inline void  set_step_pins (void) 
 {
-  if (bits & (1<<X_STEP_BIT))
+  // XYZ Steppers on same port
+#ifdef STEP_LED_FLASH_VARIABLE
+  if (step_bits_xyz & (1<<X_STEP_BIT))
   {
-    x_step();
-    inc_led_count (&led_count[X_AXIS], (1<<X_STEP_BIT));
+//    x_step();
+    inc_led_count (&led_count[X_AXIS], (1<<X_AXIS));
   }
-  if (bits & (1<<Y_STEP_BIT))
+  if (step_bits_xyz & (1<<Y_STEP_BIT))
   {
-    y_step();
-    inc_led_count (&led_count[Y_AXIS], (1<<Y_STEP_BIT));
+//    y_step();
+    inc_led_count (&led_count[Y_AXIS], (1<<Y_AXIS));
   }  
-  if (bits & (1<<Z_STEP_BIT))
+  if (step_bits_xyz & (1<<Z_STEP_BIT))
   {
-    z_step();
-    inc_led_count (&led_count[Z_AXIS], (1<<Z_STEP_BIT));
+//    z_step();
+    inc_led_count (&led_count[Z_AXIS], (1<<Z_AXIS));
   }
-  if (bits & (1<<E_STEP_BIT))
+#endif
+  
+  GPIO_SetValue (X_STEP_PORT, step_bits_xyz);
+    
+  // extruder stepper    
+  if (step_bits_e)
   {
-    e_step();
-    inc_led_count (&led_count[E_AXIS], (1<<E_STEP_BIT));
+#ifdef STEP_LED_FLASH_VARIABLE
+    if (step_bits_e & (1<<E_STEP_BIT))
+    {
+//    e_step();
+      inc_led_count (&led_count[E_AXIS], (1<<E_AXIS));
+    }
+#endif  
+  
+    GPIO_SetValue (E_STEP_PORT, step_bits_e);
   }
+  
 }
 
-static void  clear_step_pins (uint8_t bits) 
+static inline void  clear_all_step_pins (void) 
+{
+#if 0
+  x_unstep();
+  y_unstep();
+  z_unstep();
+  e_unstep();
+#endif
+ 
+  // Note: XYZ on same port 
+  GPIO_ClearValue (X_STEP_PORT, X_STEP_PIN | Y_STEP_PIN | Z_STEP_PIN);
+  
+  GPIO_ClearValue (E_STEP_PORT, E_STEP_PIN);
+}
+
+static inline void  clear_step_pins (uint32_t bits) 
 {
   if (bits & (1<<X_STEP_BIT))    x_unstep();
   if (bits & (1<<Y_STEP_BIT))    y_unstep();
@@ -188,7 +224,7 @@ static void st_go_idle() {
 //  digital_write (1, (1<<15), 0);
 
   disableHwTimer(1);
-  clear_step_pins(0x0F);
+  clear_all_step_pins();
 #endif
 }
 
@@ -231,7 +267,9 @@ void st_interrupt (void)
   
   // Then pulse the stepping pins
   //STEPPING_PORT = (STEPPING_PORT & ~STEP_MASK) | out_bits;
-//!  set_step_pins (out_bits);
+#ifdef STEP_LED_NONE
+  set_step_pins ();
+#endif  
   
   // Reset step pulse reset timer so that The Stepper Port Reset Interrupt can reset the signal after
   // exactly settings.pulse_microseconds microseconds.
@@ -255,8 +293,9 @@ void st_interrupt (void)
       counter_e = counter_x;
       step_events_completed = 0;     
       
-      out_bits = current_block->direction_bits;
-      set_direction_pins (out_bits);
+      direction_bits = current_block->direction_bits;
+      set_direction_pins ();
+      step_bits_xyz = step_bits_e = 0;
     } else {
       st_go_idle();
     }    
@@ -267,26 +306,26 @@ void st_interrupt (void)
     if (current_block->action_type == AT_MOVE)
     {
       // Execute step displacement profile by bresenham line algorithm
-      out_bits = current_block->direction_bits;
+      step_bits_xyz = step_bits_e = 0;
       counter_x += current_block->steps_x;
       if (counter_x > 0) {
-        out_bits |= (1<<X_STEP_BIT);
+        step_bits_xyz |= (1<<X_STEP_BIT);
         counter_x -= current_block->step_event_count;
       }
       counter_y += current_block->steps_y;
       if (counter_y > 0) {
-        out_bits |= (1<<Y_STEP_BIT);
+        step_bits_xyz |= (1<<Y_STEP_BIT);
         counter_y -= current_block->step_event_count;
       }
       counter_z += current_block->steps_z;
       if (counter_z > 0) {
-        out_bits |= (1<<Z_STEP_BIT);
+        step_bits_xyz |= (1<<Z_STEP_BIT);
         counter_z -= current_block->step_event_count;
       }
       
       counter_e += current_block->steps_e;
       if (counter_e > 0) {
-        out_bits |= (1<<E_STEP_BIT);
+        step_bits_e |= (1<<E_STEP_BIT);
         counter_e -= current_block->step_event_count;
       }
 
@@ -294,13 +333,13 @@ void st_interrupt (void)
 
       if (current_block->check_endstops)
       {
-        if ( (current_block->steps_x && hit_home_stop_x (out_bits & (1<<X_DIRECTION_BIT)) ) ||
-             (current_block->steps_y && hit_home_stop_y (out_bits & (1<<Y_DIRECTION_BIT)) ) ||
-             (current_block->steps_z && hit_home_stop_z (out_bits & (1<<Z_DIRECTION_BIT)) )
+        if ( (current_block->steps_x && hit_home_stop_x (direction_bits & (1<<X_DIRECTION_BIT)) ) ||
+             (current_block->steps_y && hit_home_stop_y (direction_bits & (1<<Y_DIRECTION_BIT)) ) ||
+             (current_block->steps_z && hit_home_stop_z (direction_bits & (1<<Z_DIRECTION_BIT)) )
            )
         {
           step_events_completed = current_block->step_event_count;
-          out_bits = 0;
+          step_bits_xyz = step_bits_e = 0;
         }
       }
       
@@ -363,7 +402,7 @@ void st_interrupt (void)
     }
     else if (current_block->action_type == AT_WAIT_TEMPS) 
     {
-      out_bits = 0;
+      step_bits_xyz = step_bits_e = 0;
       if (temp_achieved(EXTRUDER_0))
       {
         current_block = NULL;
@@ -374,9 +413,12 @@ void st_interrupt (void)
   else 
   {
     // Still no block? Set the stepper pins to low before sleeping.
-    out_bits = 0;
+    step_bits_xyz = step_bits_e = 0;
   }          
   
+#ifdef STEP_LED_NONE
+  clear_all_step_pins ();
+#endif  
 //  out_bits ^= settings.invert_mask;  // Apply stepper invert mask    
   busy=false;
 }
@@ -388,7 +430,7 @@ void st_reset_interrupt (void)
 {
   // reset stepping pins (leave the direction pins)
   // STEPPING_PORT = (STEPPING_PORT & ~STEP_MASK) | (settings.invert_mask & STEP_MASK); 
-  clear_step_pins (ALL_STEP_PINS);
+  clear_all_step_pins ();
 }
 
 void stepCallback (tHwTimer *pTimer, uint32_t int_mask)
@@ -401,37 +443,37 @@ void stepCallback (tHwTimer *pTimer, uint32_t int_mask)
   {
     // decide which outputs need stepping
     st_interrupt();
-    clear_step_pins (out_bits);
+#ifndef STEP_LED_NONE
+    clear_step_pins ();
+#endif
   }
 
   if (int_mask & _BIT(TIM_MR1_INT))
   { 
     // step the required channels
-    set_step_pins (out_bits);
-      
-    //st_reset_interrupt();
+    set_step_pins ();
   }
   
   if (int_mask & _BIT(TIM_MR2_INT))
   { 
 #ifdef STEP_LED_NONE
     // turn off all step outputs
-    clear_step_pins (ALL_STEP_PINS);
+    //! clear_step_pins (ALL_STEP_PINS);
 #elif !defined(STEP_LED_ON_WHEN_ACTIVE)
     // turn off step outputs
-    if ((led_on & (1<<X_STEP_BIT)) == 0)
+    if ((led_on & (1<<X_AXIS)) == 0)
     {
       x_unstep();
     }
-    if ((led_on & (1<<Y_STEP_BIT)) == 0)
+    if ((led_on & (1<<Y_AXIS)) == 0)
     {
       y_unstep();
     }
-    if ((led_on & (1<<Z_STEP_BIT)) == 0)
+    if ((led_on & (1<<Z_AXIS)) == 0)
     {
       z_unstep();
     }
-    if ((led_on & (1<<E_STEP_BIT)) == 0)
+    if ((led_on & (1<<E_AXIS)) == 0)
     {
       e_unstep();
     }
@@ -470,12 +512,14 @@ void st_init()
   // we use hardware timer 1
   setupHwTimer(1, stepCallback);
 
+#ifndef STEP_LED_NONE
   // Set the Match 1 and Match 2 interrupts
   // The time from Match0 to Match 1 defines the low pulse period of the step output
   // and the time from Match1 to Match 2 defines the minimum high pulse period of the step output-
   // if the LED is in a blink ON period the step output will be left high until next required step
   setHwTimerMatch(1, 1, 1000); // Match1 about Match0 + 5 us
   setHwTimerMatch(1, 2, 1500); // Match2, about Match0 + 10 us
+#endif
   
   //debug
   pin_mode(1, (1 << 15), OUTPUT);

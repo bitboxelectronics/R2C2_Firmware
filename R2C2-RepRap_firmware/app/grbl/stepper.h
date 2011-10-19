@@ -24,6 +24,8 @@
 //#include <avr/io.h>
 //#include <avr/sleep.h>
 
+#include "pinout.h"
+
 // from nuts_bolts.h:
 #define square(x) ((x)*(x))
 #define sleep_mode(x) do {} while (0)
@@ -45,17 +47,15 @@
 // From grbl/config.h
 
 
-#define X_STEP_BIT           0
-#define Y_STEP_BIT           1
-#define Z_STEP_BIT           2
-#define E_STEP_BIT           3
+#define X_STEP_BIT    20           
+#define Y_STEP_BIT    25       
+#define Z_STEP_BIT    29       
+#define E_STEP_BIT    10       
 
-#define X_DIRECTION_BIT      4
-#define Y_DIRECTION_BIT      5
-#define Z_DIRECTION_BIT      6
-#define E_DIRECTION_BIT      7
-
-#define ALL_STEP_PINS 0x0F
+#define X_DIRECTION_BIT   23     
+#define Y_DIRECTION_BIT   26   
+#define Z_DIRECTION_BIT   0   
+#define E_DIRECTION_BIT   11   
 
 // This parameter sets the delay time before disabling the steppers after the final block of movement.
 // A short delay ensures the steppers come to a complete stop and the residual inertial force in the 

@@ -37,8 +37,6 @@
 #include "r2c2.h"
 
 #include "machine.h"
-//#include "dda_queue.h"
-//#include "dda.h"
 #include "gcode_parse.h"
 #include "gcode_process.h"
 #include "pinout.h"
@@ -49,10 +47,8 @@
 #include "planner.h"
 #include "stepper.h"
 
-volatile uint8_t step_requested;
 
-uint8_t leds_enabled;
-
+uint8_t  leds_enabled;
 uint8_t  led_on;
 uint16_t led_on_time;
 uint16_t led_off_time;
@@ -129,6 +125,7 @@ void io_init(void)
 
 void temperatureTimerCallback (tTimer *pTimer)
 {
+  /* Manage the temperatures */
   temp_tick();
 }
 
@@ -169,57 +166,6 @@ void stopBlink (void)
   unstep();
 }
 
-void timerCallback (tHwTimer *pTimer, uint32_t int_mask)
-{
-  (void)pTimer;
-
-  if (int_mask & _BIT(TIM_MR0_INT))
-  {
-    // decide which outputs need stepping
-//!    queue_step();
-  }
-
-  if (int_mask & _BIT(TIM_MR1_INT))
-  { 
-    // step the required channels
-    if (step_requested & 1)
-      x_step();
-    if (step_requested & 2)
-      y_step();
-    if (step_requested & 4)
-      z_step();
-    if (step_requested & 8)
-      e_step();
-  }
-
-  if (int_mask & _BIT(TIM_MR2_INT))
-  { 
-#ifdef STEP_LED_NONE
-    // turn off all step outputs
-    unstep();
-#elif !defined(STEP_LED_ON_WHEN_ACTIVE)
-    // turn off step outputs
-    if ((led_on & 1) == 0)
-    {
-      x_unstep();
-    }
-    if ((led_on & 2) == 0)
-    {
-      y_unstep();
-    }
-    if ((led_on & 4) == 0)
-    {
-      z_unstep();
-    }
-    if ((led_on & 8) == 0)
-    {
-      e_unstep();
-    }
-    // else leave as is (important!)
-#endif
-  }
-
-}
 
 void check_boot_request (void)
 {
@@ -236,23 +182,11 @@ void init(void)
   // set up inputs and outputs
   io_init();
 
-
   /* Initialize Gcode parse variables */
   gcode_parse_init();
 
   // set up default feedrate
 //TODO  current_position.F = startpoint.F = next_target.target.F =       config.search_feedrate_z;
-
-  // set up timers
-  // we use hardware timer 0
-  setupHwTimer(0, timerCallback);
-
-  // Set the Match 1 and Match 2 interrupts
-  // The time from Match0 to Match 1 defines the low pulse period of the step output
-  // and the time from Match1 to Match 2 defines the minimum high pulse period of the step output-
-  // if the LED is in a blink ON period the step output will be left high until next required step
-  setHwTimerMatch(0, 1, 500); // Match1 about Match0 + 5 us
-  setHwTimerMatch(0, 2, 1000); // Match2, about Match0 + 10 us
 
   // set the LED blink times, 50 ms on/off = 10 flashes per second
   led_on_time = 50;
@@ -352,9 +286,6 @@ int app_main (void)
     if (timer1 < millis())
     {
       timer1 = millis() + DELAY1;
-
-      /* Manage the extruder temperature */
-//      temp_tick();
 
       /* If there are no activity during 30 seconds, power off the machine */
       if (steptimeout > (30 * 1000/DELAY1))

@@ -61,6 +61,12 @@ volatile uint16_t steptimeout = 0;
 
 static uint8_t led_count [NUM_AXES];
 static uint8_t led_on;         // a bit mask
+static uint8_t  leds_enabled;
+static uint8_t  led_on;
+static uint16_t led_on_time;
+static uint16_t led_off_time;
+
+static tTimer blinkTimer;
 
 
 // Locals
@@ -124,29 +130,49 @@ static inline void inc_led_count (uint8_t *pCount, uint8_t led_mask)
 
 static inline void  set_direction_pins (void) 
 {
-    x_direction( (direction_bits & (1<<X_DIRECTION_BIT))?0:1);
-    y_direction( (direction_bits & (1<<Y_DIRECTION_BIT))?0:1);
-    z_direction( (direction_bits & (1<<Z_DIRECTION_BIT))?0:1);
-    e_direction( (direction_bits & (1<<E_DIRECTION_BIT))?0:1);
+  // x_direction( (direction_bits & (1<<X_DIRECTION_BIT))?0:1);
+
+  if (direction_bits & X_DIR_PIN)
+    GPIO_ClearValue (X_DIR_PORT, X_DIR_PIN);
+  else
+    GPIO_SetValue (X_DIR_PORT, X_DIR_PIN);
+  
+  // y_direction( (direction_bits & (1<<Y_DIRECTION_BIT))?0:1);
+  if (direction_bits & Y_DIR_PIN)
+    GPIO_ClearValue (Y_DIR_PORT, Y_DIR_PIN);
+  else
+    GPIO_SetValue (Y_DIR_PORT, Y_DIR_PIN);
+      
+  // z_direction( (direction_bits & (1<<Z_DIRECTION_BIT))?0:1);
+  if (direction_bits & Z_DIR_PIN)
+    GPIO_ClearValue (Z_DIR_PORT, Z_DIR_PIN);
+  else
+    GPIO_SetValue (Z_DIR_PORT, Z_DIR_PIN);
+
+  // e_direction( (direction_bits & (1<<E_DIRECTION_BIT))?0:1);
+  if (direction_bits & E_DIR_PIN)
+    GPIO_ClearValue (E_DIR_PORT, E_DIR_PIN);
+  else
+    GPIO_SetValue (E_DIR_PORT, E_DIR_PIN);
+    
+    
 }
 
+// step selected pins (output high)
 static inline void  set_step_pins (void) 
 {
   // XYZ Steppers on same port
 #ifdef STEP_LED_FLASH_VARIABLE
   if (step_bits_xyz & (1<<X_STEP_BIT))
   {
-//    x_step();
     inc_led_count (&led_count[X_AXIS], (1<<X_AXIS));
   }
   if (step_bits_xyz & (1<<Y_STEP_BIT))
   {
-//    y_step();
     inc_led_count (&led_count[Y_AXIS], (1<<Y_AXIS));
   }  
   if (step_bits_xyz & (1<<Z_STEP_BIT))
   {
-//    z_step();
     inc_led_count (&led_count[Z_AXIS], (1<<Z_AXIS));
   }
 #endif
@@ -159,7 +185,6 @@ static inline void  set_step_pins (void)
 #ifdef STEP_LED_FLASH_VARIABLE
     if (step_bits_e & (1<<E_STEP_BIT))
     {
-//    e_step();
       inc_led_count (&led_count[E_AXIS], (1<<E_AXIS));
     }
 #endif  
@@ -169,29 +194,93 @@ static inline void  set_step_pins (void)
   
 }
 
+// unstep all stepper pins (output low)
 static inline void  clear_all_step_pins (void) 
 {
-#if 0
-  x_unstep();
-  y_unstep();
-  z_unstep();
-  e_unstep();
-#endif
- 
   // Note: XYZ on same port 
   GPIO_ClearValue (X_STEP_PORT, X_STEP_PIN | Y_STEP_PIN | Z_STEP_PIN);
   
   GPIO_ClearValue (E_STEP_PORT, E_STEP_PIN);
 }
 
-static inline void  clear_step_pins (uint32_t bits) 
+// unstep selected pins
+static inline void  clear_step_pins (void) 
 {
-  if (bits & (1<<X_STEP_BIT))    x_unstep();
-  if (bits & (1<<Y_STEP_BIT))    y_unstep();
-  if (bits & (1<<Z_STEP_BIT))    z_unstep();
-  if (bits & (1<<E_STEP_BIT))    e_unstep();
+  // XYZ Steppers on same port
+  GPIO_ClearValue (X_STEP_PORT, step_bits_xyz);
+    
+  // extruder stepper    
+  if (step_bits_e)
+  {
+    GPIO_ClearValue (E_STEP_PORT, step_bits_e);
+  }
 }
 
+// unstep pins according to led_on bit mask
+static inline void  clear_step_pins_by_state (void) 
+{
+  uint32_t step_pins = 0;
+  
+  // can turn off stepper pins but must NOT turn on 
+  // stepper pins because it would cause an unwanted step
+  
+  if ((led_on & (1<<X_AXIS)) == 0)
+  {
+    step_pins |= X_STEP_PIN;
+  }
+  if ((led_on & (1<<Y_AXIS)) == 0)
+  {
+    step_pins |= Y_STEP_PIN;
+  }
+  if ((led_on & (1<<Z_AXIS)) == 0)
+  {
+    step_pins |= Z_STEP_PIN;
+  }
+  
+  // XYZ Steppers on same port
+  GPIO_ClearValue (X_STEP_PORT, step_pins);
+
+  if ((led_on & (1<<E_AXIS)) == 0)
+  {
+    GPIO_ClearValue (E_STEP_PORT, E_STEP_PIN);
+  }
+}
+
+void startBlink(void)
+{
+  leds_enabled = 1;
+#ifdef STEP_LED_FLASH_FIXED  
+  StartSlowTimer (&blinkTimer, led_on_time, blinkTimerCallback);
+  led_on = 0x0F;
+#else
+  led_on = 0x00;
+#endif
+}
+
+void stopBlink (void)
+{
+  leds_enabled = 0;
+  led_on = 0x00;
+  StopSlowTimer (&blinkTimer);
+  unstep();
+}
+
+void blinkTimerCallback (tTimer *pTimer)
+{
+  if (leds_enabled)
+  {
+    led_on = led_on ^ 0x0F;
+
+    if (led_on)
+      StartSlowTimer (&blinkTimer, led_on_time, blinkTimerCallback);
+    else
+      StartSlowTimer (&blinkTimer, led_off_time, blinkTimerCallback);
+  }
+  else
+  {
+    led_on = 0x00;
+  }
+}
 
 //
 // =========================
@@ -204,7 +293,6 @@ void st_wake_up() {
   // Enable stepper driver interrupt
   TIMSK1 |= (1<<OCIE1A);
 #else
-//  digital_write (1, (1<<15), 1);
 
   enableHwTimer(1);
   
@@ -221,8 +309,6 @@ static void st_go_idle() {
   // Disable stepper driver interrupt
   TIMSK1 &= ~(1<<OCIE1A); 
 #else
-//  digital_write (1, (1<<15), 0);
-
   disableHwTimer(1);
   clear_all_step_pins();
 #endif
@@ -301,6 +387,7 @@ void st_interrupt (void)
     }    
   } 
 
+
   if (current_block != NULL) 
   {
     if (current_block->action_type == AT_MOVE)
@@ -329,6 +416,10 @@ void st_interrupt (void)
         counter_e -= current_block->step_event_count;
       }
 
+#ifndef STEP_LED_NONE
+      clear_step_pins ();
+#endif
+
       step_events_completed++; // Iterate step events
 
       if (current_block->check_endstops)
@@ -343,6 +434,10 @@ void st_interrupt (void)
         }
       }
       
+#ifndef STEP_LED_NONE
+      set_step_pins ();
+#endif
+
       // While in block steps, check for de/ac-celeration events and execute them accordingly.
       if (step_events_completed < current_block->step_event_count) {
         
@@ -409,6 +504,7 @@ void st_interrupt (void)
         plan_discard_current_block();
       }
     }  
+    
   } 
   else 
   {
@@ -418,6 +514,15 @@ void st_interrupt (void)
   
 #ifdef STEP_LED_NONE
   clear_all_step_pins ();
+#else
+  if (current_block == NULL)
+  {
+    leds_enabled = 0;
+    led_on = 0x00;
+    clear_all_step_pins();
+  }
+  else
+    clear_step_pins_by_state ();
 #endif  
 //  out_bits ^= settings.invert_mask;  // Apply stepper invert mask    
   busy=false;
@@ -439,46 +544,10 @@ void stepCallback (tHwTimer *pTimer, uint32_t int_mask)
 
   digital_write (1, (1<<15), 1);
 
-  if (int_mask & _BIT(TIM_MR0_INT))
+//  if (int_mask & _BIT(TIM_MR0_INT))
   {
-    // decide which outputs need stepping
+    // call stepper function
     st_interrupt();
-#ifndef STEP_LED_NONE
-    clear_step_pins ();
-#endif
-  }
-
-  if (int_mask & _BIT(TIM_MR1_INT))
-  { 
-    // step the required channels
-    set_step_pins ();
-  }
-  
-  if (int_mask & _BIT(TIM_MR2_INT))
-  { 
-#ifdef STEP_LED_NONE
-    // turn off all step outputs
-    //! clear_step_pins (ALL_STEP_PINS);
-#elif !defined(STEP_LED_ON_WHEN_ACTIVE)
-    // turn off step outputs
-    if ((led_on & (1<<X_AXIS)) == 0)
-    {
-      x_unstep();
-    }
-    if ((led_on & (1<<Y_AXIS)) == 0)
-    {
-      y_unstep();
-    }
-    if ((led_on & (1<<Z_AXIS)) == 0)
-    {
-      z_unstep();
-    }
-    if ((led_on & (1<<E_AXIS)) == 0)
-    {
-      e_unstep();
-    }
-    // else leave as is (important!)
-#endif
   }
   
   digital_write (1, (1<<15), 0);
@@ -512,16 +581,7 @@ void st_init()
   // we use hardware timer 1
   setupHwTimer(1, stepCallback);
 
-#ifndef STEP_LED_NONE
-  // Set the Match 1 and Match 2 interrupts
-  // The time from Match0 to Match 1 defines the low pulse period of the step output
-  // and the time from Match1 to Match 2 defines the minimum high pulse period of the step output-
-  // if the LED is in a blink ON period the step output will be left high until next required step
-  setHwTimerMatch(1, 1, 1000); // Match1 about Match0 + 5 us
-  setHwTimerMatch(1, 2, 1500); // Match2, about Match0 + 10 us
-#endif
-  
-  //debug
+  // setup debug pin
   pin_mode(1, (1 << 15), OUTPUT);
     
 #endif
@@ -583,6 +643,14 @@ static uint32_t config_step_timer(uint32_t cycles)
     cycles = 0x4000000;
     
   setHwTimerInterval (1, cycles);
+
+#if 0
+  // set the LED blink times, 50 ms on/off = 10 flashes per second
+  led_on_time = 50;
+  led_off_time = 50;
+
+  AddSlowTimer (&blinkTimer);
+#endif
   
   return cycles;
 #endif

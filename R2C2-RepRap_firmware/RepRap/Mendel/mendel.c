@@ -48,12 +48,6 @@
 #include "stepper.h"
 
 
-uint8_t  leds_enabled;
-uint8_t  led_on;
-uint16_t led_on_time;
-uint16_t led_off_time;
-
-tTimer blinkTimer;
 tTimer temperatureTimer;
 
 tLineBuffer serial_line_buf;
@@ -129,44 +123,6 @@ void temperatureTimerCallback (tTimer *pTimer)
   temp_tick();
 }
 
-void blinkTimerCallback (tTimer *pTimer)
-{
-  if (leds_enabled)
-  {
-    led_on = led_on ^ 0x0F;
-
-    if (led_on)
-      StartSlowTimer (&blinkTimer, led_on_time, blinkTimerCallback);
-    else
-      StartSlowTimer (&blinkTimer, led_off_time, blinkTimerCallback);
-  }
-  else
-  {
-    led_on = 0x00;
-  }
-
-}
-
-void startBlink(void)
-{
-  leds_enabled = 1;
-#ifdef STEP_LED_FLASH_FIXED  
-  StartSlowTimer (&blinkTimer, led_on_time, blinkTimerCallback);
-  led_on = 0x0F;
-#else
-  led_on = 0x00;
-#endif
-}
-
-void stopBlink (void)
-{
-  leds_enabled = 0;
-  led_on = 0x00;
-  StopSlowTimer (&blinkTimer);
-  unstep();
-}
-
-
 void check_boot_request (void)
 {
   if (digital_read (4, (1<<29)) == 0)
@@ -187,12 +143,6 @@ void init(void)
 
   // set up default feedrate
 //TODO  current_position.F = startpoint.F = next_target.target.F =       config.search_feedrate_z;
-
-  // set the LED blink times, 50 ms on/off = 10 flashes per second
-  led_on_time = 50;
-  led_off_time = 50;
-
-  AddSlowTimer (&blinkTimer);
 
   AddSlowTimer (&temperatureTimer);
   StartSlowTimer (&temperatureTimer, 10, temperatureTimerCallback);

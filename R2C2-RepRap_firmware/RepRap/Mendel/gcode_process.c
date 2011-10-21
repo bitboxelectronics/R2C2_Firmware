@@ -950,6 +950,22 @@ eParseResult process_gcode_command()
           config.maximum_feedrate_e = next_target.target.E / config.steps_per_mm_e;
       }
       break;
+
+      // M206 - set accel in mm/sec^2
+      case 206:
+      if ((next_target.seen_X | next_target.seen_Y | next_target.seen_Z | next_target.seen_E) == 0)
+      {
+        reply_sent = true;
+        sersendf ("ok X%g\r\n", 
+          config.acceleration
+          );
+      }
+      else
+      {
+        if (next_target.seen_X)
+          config.acceleration = next_target.target.X / config.steps_per_mm_x;
+      }
+      break;
       
       // M227 - Enable Auto-prime/reverse (steps)
       // P: prime on start (steps)

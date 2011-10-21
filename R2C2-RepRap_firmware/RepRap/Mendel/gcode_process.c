@@ -91,17 +91,27 @@ static void enqueue_move (TARGET *pTarget)
 
 static void enqueue_moved (tTarget *pTarget)
 {
-  //grbl
+  // grbl
   tActionRequest request;
   
-  request.ActionType = AT_MOVE;
-  request.target= *pTarget;
-  request.target.invert_feed_rate =  false;
-  
-  if (config.enable_extruder_1 == 0)
-    request.target.e = startpoint.e;
+  if (pTarget->x != startpoint.x || pTarget->y != startpoint.y ||
+      pTarget->z != startpoint.z || pTarget->e != startpoint.e
+     )
+  {  
+    request.ActionType = AT_MOVE;
+    request.target= *pTarget;
+    request.target.invert_feed_rate =  false;
+    
+    if (config.enable_extruder_1 == 0)
+      request.target.e = startpoint.e;
 
-  plan_buffer_action (&request);
+    plan_buffer_action (&request);
+  }
+  else
+  {
+    // no move, just set feed rate
+    plan_set_feed_rate (pTarget);
+  }
 }
 
 static void enqueue_wait_temp (void)
@@ -588,9 +598,7 @@ eParseResult process_gcode_command()
           new_pos.e = 0;
       }
       
-#ifdef USE_GRBL
       plan_set_current_position (&new_pos);
-#endif
       }
       break;
 

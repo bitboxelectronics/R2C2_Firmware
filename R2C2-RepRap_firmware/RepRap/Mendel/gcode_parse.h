@@ -63,10 +63,6 @@ typedef struct {
         int64_t                                         Z;
         int64_t                                         E;
         uint64_t                                        F;
-        struct
-        {
-          uint8_t g28;
-        } options;
 } TARGET;
 
 // this holds all the possible data from a received command

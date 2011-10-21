@@ -114,6 +114,8 @@ void plan_set_current_position(tTarget *new_position);
 
 void plan_set_current_position_xyz(double x, double y, double z); 
 
+void plan_set_feed_rate (tTarget *new_position);
+
 uint8_t plan_queue_full (void);
 
 uint8_t plan_queue_empty(void);

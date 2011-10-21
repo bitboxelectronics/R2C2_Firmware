@@ -616,8 +616,15 @@ void plan_set_current_position(tTarget *new_position)
   position[Y_AXIS] = lround(new_position->y*(double)config.steps_per_mm_y);
   position[Z_AXIS] = lround(new_position->z*(double)config.steps_per_mm_z);    
   position[E_AXIS] = lround(new_position->e*(double)config.steps_per_mm_e);    
+  
   previous_nominal_speed = 0.0; // Resets planner junction speeds. Assumes start from rest.
   clear_vector_double(previous_unit_vec);
+}
+
+void plan_set_feed_rate (tTarget *new_position) 
+{
+  startpoint.feed_rate = new_position->feed_rate;
+  startpoint.invert_feed_rate = new_position->invert_feed_rate;
 }
 
 uint8_t plan_queue_full (void)

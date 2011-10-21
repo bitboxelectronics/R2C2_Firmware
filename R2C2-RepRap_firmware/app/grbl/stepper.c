@@ -31,6 +31,8 @@
 #else
 #include "lpc17xx_timer.h"
 #include "lpc17xx_gpio.h"
+#include "lpc17xx_dac.h"
+#include "lpc17xx_pinsel.h"
 
 #include "timer.h"
 #include "pinout.h"
@@ -553,6 +555,28 @@ void stepCallback (tHwTimer *pTimer, uint32_t int_mask)
   digital_write (1, (1<<15), 0);
 }
 
+static void init_dac (void)
+{
+	PINSEL_CFG_Type PinCfg;
+
+	/*
+	 * Init DAC pin connect
+	 * AOUT on P0.26
+	 */
+	PinCfg.Funcnum = 2;
+	PinCfg.OpenDrain = 0;
+	PinCfg.Pinmode = 0;
+	PinCfg.Pinnum = 26;
+	PinCfg.Portnum = 0;
+	PINSEL_ConfigPin(&PinCfg);
+
+	/* init DAC structure to default
+	 * Maximum	current is 700 uA
+	 * First value to AOUT is 0
+	 */
+	DAC_Init(LPC_DAC);
+}
+
 // Initialize and start the stepper motor subsystem
 void st_init()
 {
@@ -577,6 +601,8 @@ void st_init()
   TCCR2B = (1<<CS21); // Full speed, 1/8 prescaler
   TIMSK2 |= (1<<TOIE2);      
 #else
+  init_dac();
+  
   // set up timers
   // we use hardware timer 1
   setupHwTimer(1, stepCallback);
@@ -656,9 +682,19 @@ static uint32_t config_step_timer(uint32_t cycles)
 #endif
 }
 
-static void set_step_events_per_minute(uint32_t steps_per_minute) {
-  if (steps_per_minute < MINIMUM_STEPS_PER_MINUTE) { steps_per_minute = MINIMUM_STEPS_PER_MINUTE; }
+static void set_step_events_per_minute(uint32_t steps_per_minute) 
+{
+  // scale is calculated as voltage range * 10 (3.3V=33/10) and seconds, steps per mm, and finally mm/s per volt divided by DAC range (10 bits)
+  const uint32_t mm_per_sec_per_volt = 200;
+  const uint32_t scale = (33 * 60 * config.steps_per_mm_x * mm_per_sec_per_volt) / 1024/10;
+  
+  if (steps_per_minute < MINIMUM_STEPS_PER_MINUTE) 
+  { 
+    steps_per_minute = MINIMUM_STEPS_PER_MINUTE; 
+  }
   cycles_per_step_event = config_step_timer((TICKS_PER_MICROSECOND*1000000*6)/steps_per_minute*10);
+  
+  DAC_UpdateValue (LPC_DAC, steps_per_minute/scale);
 }
 
 #if 0

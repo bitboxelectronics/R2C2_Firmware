@@ -61,10 +61,9 @@
       
 volatile uint16_t steptimeout = 0;
 
-static uint8_t led_count [NUM_AXES];
-static uint8_t led_on;         // a bit mask
+static uint8_t  led_count [NUM_AXES];
+static uint8_t  led_on;         // a bit mask
 static uint8_t  leds_enabled;
-static uint8_t  led_on;
 static uint16_t led_on_time;
 static uint16_t led_off_time;
 

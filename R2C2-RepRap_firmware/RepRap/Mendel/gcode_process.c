@@ -59,10 +59,12 @@ bool      sd_writing_file = false;  // writing to SD file
 #define EXTRUDER_NUM_3  4
 
 uint8_t   extruders_on;
-double    extruder_1_speed;         // in percent of 1:1 speed
+double    extruder_1_speed;         // in RPM
 
 uint32_t  auto_prime_steps = 0;
 uint32_t  auto_reverse_steps = 0;
+const double auto_prime_feed_rate = 12000;
+const double auto_reverse_feed_rate = 12000;
 
 #if 0
 static void enqueue_move (TARGET *pTarget)
@@ -188,6 +190,19 @@ static void SpecialMoveE(int32_t e, uint32_t f) {
 	enqueue(&t);
 }
 #endif
+
+static void SpecialMoveE (double e, double feed_rate) 
+{
+  tTarget next_targetd;
+  
+  if (config.enable_extruder_1)
+  {
+    next_targetd = startpoint;
+    next_targetd.e = startpoint.e + e;
+    next_targetd.feed_rate = feed_rate;
+    enqueue_moved(&next_targetd);
+  }
+}
 
 static void zero_x(void)
 {
@@ -455,10 +470,11 @@ eParseResult process_gcode_command()
       case 1:
       if ( (extruders_on == EXTRUDER_NUM_1) && !next_target.seen_E)
       {
-        // approximate translation for 3D code. distance to extrude is percentage of move distance
+        // approximate translation for 3D code. distance to extrude is move distance times extruder speed factor
         //TODO: extrude distance for Z moves
         double d = calc_distance (ABS(next_targetd.x - startpoint.x), ABS(next_targetd.y - startpoint.y));
-        next_targetd.e = startpoint.e + d * extruder_1_speed / 100.0;
+        
+        next_targetd.e = startpoint.e + d * extruder_1_speed / next_targetd.feed_rate * 24.0;
       }
       enqueue_moved(&next_targetd);
       break;
@@ -717,6 +733,11 @@ eParseResult process_gcode_command()
       // M101- extruder on
       case 101:
       extruders_on = EXTRUDER_NUM_1;
+      if (auto_prime_steps != 0)
+      {      
+        SpecialMoveE ((double)auto_prime_steps / config.steps_per_mm_e, auto_prime_feed_rate);
+      }
+
       break;
 
       // M102- extruder reverse
@@ -724,6 +745,10 @@ eParseResult process_gcode_command()
       // M103- extruder off
       case 103:
       extruders_on = 0;
+      if (auto_reverse_steps != 0)
+      {      
+        SpecialMoveE (-(double)auto_reverse_steps / config.steps_per_mm_e, auto_reverse_feed_rate);
+      }
       break;
 
       // M104- set temperature
@@ -759,10 +784,7 @@ eParseResult process_gcode_command()
       case 108:
       if (next_target.seen_S)
       {
-        // convert to a percent of nominal speed
-        // where 20.0 RPM = nominal 100%
-        //TODO: how to derive 20.0 from config
-        extruder_1_speed = (double)next_target.S / 4.0;
+        extruder_1_speed = (double)next_target.S / 10.0;
       }
       break;
 
@@ -1053,10 +1075,13 @@ eParseResult process_gcode_command()
         // calc E distance, use approximate conversion to get distance, not critical
         // TODO: how to derive magic number
         // S is RPM*10, but happens to give about the right speed in mm/min        
+#if 0
         next_targetd = startpoint;
         next_targetd.e = startpoint.e + (double)next_target.P / 256;
         next_targetd.feed_rate = next_target.S;
         enqueue_moved(&next_targetd);
+#endif        
+        SpecialMoveE ((double)next_target.P / 256.0, next_target.S);
       }
       break;
                   

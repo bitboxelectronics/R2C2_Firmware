@@ -85,7 +85,7 @@
 // slower than this value, except when sleeping. This parameter overrides the minimum planner speed.
 // This is primarily used to guarantee that the end of a movement is always reached and not stop to
 // never reach its target. This parameter should always be greater than zero.
-#define MINIMUM_STEPS_PER_MINUTE 800 // (steps/min) - Integer value only
+#define MINIMUM_STEPS_PER_MINUTE 1200 // (steps/min) - Integer value only
 
 // Number of arc generation iterations by small angle approximation before exact arc
 // trajectory correction. Value must be 1-255. This parameter maybe decreased if there are issues

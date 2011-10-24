@@ -72,6 +72,11 @@ static tTimer blinkTimer;
 
 // Locals
 
+// DAC scale is calculated as voltage range * 10 (3.3V=33/10) and seconds, steps per mm, and finally mm/s per volt divided by DAC range (10 bits)
+const uint32_t mm_per_sec_per_volt = 200;
+uint32_t dac_scale;
+
+
 static block_t *current_block;  // A pointer to the block currently being traced
 
 // Variables used by The Stepper Driver Interrupt
@@ -94,6 +99,8 @@ static uint32_t trapezoid_tick_cycle_counter; // The cycles since last trapezoid
 static uint32_t trapezoid_adjusted_rate;      // The current rate of step_events according to the trapezoid generator
 static uint32_t min_safe_rate;  // Minimum safe rate for full deceleration rate reduction step. Otherwise halves step_rate.
 //static uint8_t cycle_start;     // Cycle start flag to indicate program start and block processing.
+
+static volatile uint8_t    accel_flag;
 
 //         __________________________
 //        /|                        |\     _________________         ^
@@ -297,6 +304,8 @@ void st_wake_up() {
 
   enableHwTimer(1);
   
+  dac_scale = (33 * 60 * config.steps_per_mm_x * mm_per_sec_per_volt) / 1024/10;
+
 #endif
 }
 
@@ -317,25 +326,32 @@ static void st_go_idle() {
 
 // Initializes the trapezoid generator from the current block. Called whenever a new 
 // block begins.
-static void trapezoid_generator_reset() {
+static void trapezoid_generator_reset() 
+{
   trapezoid_adjusted_rate = current_block->initial_rate;
   min_safe_rate = current_block->rate_delta + (current_block->rate_delta >> 1); // 1.5 x rate_delta
   trapezoid_tick_cycle_counter = CYCLES_PER_ACCELERATION_TICK/2; // Start halfway for midpoint rule.
   set_step_events_per_minute(trapezoid_adjusted_rate); // Initialize cycles_per_step_event
 }
 
+#if 0
 // This function determines an acceleration velocity change every CYCLES_PER_ACCELERATION_TICK by
 // keeping track of the number of elapsed cycles during a de/ac-celeration. The code assumes that 
 // step_events occur significantly more often than the acceleration velocity iterations.
-static uint8_t iterate_trapezoid_cycle_counter() {
+static uint8_t iterate_trapezoid_cycle_counter() 
+{
   trapezoid_tick_cycle_counter += cycles_per_step_event;  
-  if(trapezoid_tick_cycle_counter > CYCLES_PER_ACCELERATION_TICK) {
+  if(trapezoid_tick_cycle_counter > CYCLES_PER_ACCELERATION_TICK) 
+  {
     trapezoid_tick_cycle_counter -= CYCLES_PER_ACCELERATION_TICK;
     return(true);
-  } else {
+  } 
+  else 
+  {
     return(false);
   }
 }          
+#endif
 
 // "The Stepper Driver Interrupt" - This timer interrupt is the workhorse of Grbl. It is  executed at the rate set with
 // config_step_timer. It pops blocks from the block_buffer and executes them by pulsing the stepper pins appropriately. 
@@ -451,28 +467,31 @@ void st_interrupt (void)
         // round-off errors can effect this, if set too high. This is important to note if a user has 
         // very high acceleration and/or feedrate requirements for their machine.
         
-        if (step_events_completed < current_block->accelerate_until) {
-          // Iterate cycle counter and check if speeds need to be increased.
-          if ( iterate_trapezoid_cycle_counter() ) {
+        if (step_events_completed < current_block->accelerate_until) 
+        {
+          // check if speeds need to be increased.
+          if ( accel_flag ) {
             trapezoid_adjusted_rate += current_block->rate_delta;
             if (trapezoid_adjusted_rate >= current_block->nominal_rate) {
               // Reached nominal rate a little early. Cruise at nominal rate until decelerate_after.
               trapezoid_adjusted_rate = current_block->nominal_rate;
             }
             set_step_events_per_minute(trapezoid_adjusted_rate);
+            accel_flag = false;
           }
-        } else if (step_events_completed >= current_block->decelerate_after) {
+        } 
+        else if (step_events_completed >= current_block->decelerate_after) {
           // Reset trapezoid tick cycle counter to make sure that the deceleration is performed the
           // same every time. Reset to CYCLES_PER_ACCELERATION_TICK/2 to follow the midpoint rule for
           // an accurate approximation of the deceleration curve.
           if (step_events_completed == current_block-> decelerate_after) {
             trapezoid_tick_cycle_counter = CYCLES_PER_ACCELERATION_TICK/2;
           } else {
-            // Iterate cycle counter and check if speeds need to be reduced.
-            if ( iterate_trapezoid_cycle_counter() ) {  
-            // NOTE: We will only reduce speed if the result will be > 0. This catches small
-            // rounding errors that might leave steps hanging after the last trapezoid tick.
-            if (trapezoid_adjusted_rate > current_block->rate_delta) {
+            // check if speeds need to be reduced.
+            if ( accel_flag ) {  
+              // NOTE: We will only reduce speed if the result will be > 0. This catches small
+              // rounding errors that might leave steps hanging after the last trapezoid tick.
+              if (trapezoid_adjusted_rate > current_block->rate_delta) {
                 trapezoid_adjusted_rate -= current_block->rate_delta;
               }
               if (trapezoid_adjusted_rate < current_block->final_rate) {
@@ -480,6 +499,7 @@ void st_interrupt (void)
                 trapezoid_adjusted_rate = current_block->final_rate;
               }
               set_step_events_per_minute(trapezoid_adjusted_rate);
+              accel_flag = 0;
             }
           }
         } else {
@@ -537,6 +557,12 @@ void st_reset_interrupt (void)
   // reset stepping pins (leave the direction pins)
   // STEPPING_PORT = (STEPPING_PORT & ~STEP_MASK) | (settings.invert_mask & STEP_MASK); 
   clear_all_step_pins ();
+}
+
+void accelCallback (tHwTimer *pTimer, uint32_t int_mask)
+{
+  (void)pTimer;
+  accel_flag = 1;
 }
 
 void stepCallback (tHwTimer *pTimer, uint32_t int_mask)
@@ -603,8 +629,21 @@ void st_init()
   init_dac();
   
   // set up timers
-  // we use hardware timer 1
+  // use hardware timer 0 and 1
   setupHwTimer(1, stepCallback);
+
+  setupHwTimer(0, accelCallback);
+  setHwTimerInterval (0, TICKS_PER_MICROSECOND*1000);
+  enableHwTimer(0);
+
+
+#if 0
+  // set the LED blink times, 50 ms on/off = 10 flashes per second
+  led_on_time = 50;
+  led_off_time = 50;
+
+  AddSlowTimer (&blinkTimer);
+#endif
 
   // setup debug pin
   pin_mode(1, (1 << 15), OUTPUT);
@@ -669,23 +708,12 @@ static uint32_t config_step_timer(uint32_t cycles)
     
   setHwTimerInterval (1, cycles);
 
-#if 0
-  // set the LED blink times, 50 ms on/off = 10 flashes per second
-  led_on_time = 50;
-  led_off_time = 50;
-
-  AddSlowTimer (&blinkTimer);
-#endif
-  
   return cycles;
 #endif
 }
 
 static void set_step_events_per_minute(uint32_t steps_per_minute) 
 {
-  // scale is calculated as voltage range * 10 (3.3V=33/10) and seconds, steps per mm, and finally mm/s per volt divided by DAC range (10 bits)
-  const uint32_t mm_per_sec_per_volt = 200;
-  const uint32_t scale = (33 * 60 * config.steps_per_mm_x * mm_per_sec_per_volt) / 1024/10;
   
   if (steps_per_minute < MINIMUM_STEPS_PER_MINUTE) 
   { 
@@ -693,7 +721,7 @@ static void set_step_events_per_minute(uint32_t steps_per_minute)
   }
   cycles_per_step_event = config_step_timer((TICKS_PER_MICROSECOND*1000000*6)/steps_per_minute*10);
   
-  DAC_UpdateValue (LPC_DAC, steps_per_minute/scale);
+  DAC_UpdateValue (LPC_DAC, steps_per_minute/dac_scale);
 }
 
 #if 0

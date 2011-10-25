@@ -27,6 +27,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "r2c2.h"
+
 #include "planner.h"
 //#include "nuts_bolts.h"
 #include "stepper.h"
@@ -347,6 +349,8 @@ void plan_buffer_line (tActionRequest *pAction)
   double feed_rate;
   uint8_t invert_feed_rate;
   bool e_only = false;
+  double speed_x, speed_y, speed_z, speed_e; // Nominal mm/minute for each axis
+
   
   x = pAction->target.x;
   y = pAction->target.y;
@@ -406,6 +410,54 @@ void plan_buffer_line (tActionRequest *pAction)
   }
   double inverse_millimeters = 1.0/block->millimeters;  // Inverse millimeters to remove multiple divides	
   
+//
+// Speed limit code from Marlin firmware
+//
+//TODO: handle invert_feed_rate
+  double microseconds;
+  //if(feedrate<minimumfeedrate)
+  //  feedrate=minimumfeedrate;
+  microseconds = lround((block->millimeters/feed_rate*60.0)*1000000.0);
+
+  // Calculate speed in mm/minute for each axis
+  double multiplier = 60.0*1000000.0/(double)microseconds;
+  speed_x = delta_mm[X_AXIS] * multiplier;
+  speed_y = delta_mm[Y_AXIS] * multiplier;
+  speed_z = delta_mm[Z_AXIS] * multiplier;
+  speed_e = delta_mm[E_AXIS] * multiplier;
+
+  // Limit speed per axis
+  double speed_factor = 1; //factor <=1 do decrease speed
+  if(fabs(speed_x) > config.maximum_feedrate_x) 
+  {
+    speed_factor = (double)config.maximum_feedrate_x / fabs(speed_x);
+  }
+  if(fabs(speed_y) > config.maximum_feedrate_y)
+  {
+    double tmp_speed_factor = (double)config.maximum_feedrate_y / fabs(speed_y);
+    if(speed_factor > tmp_speed_factor) speed_factor = tmp_speed_factor;
+  }
+  if(fabs(speed_z) > config.maximum_feedrate_z)
+  {
+    double tmp_speed_factor = (double)config.maximum_feedrate_z / fabs(speed_z);
+    if(speed_factor > tmp_speed_factor) speed_factor = tmp_speed_factor;
+  }
+  if(fabs(speed_e) > config.maximum_feedrate_e)
+  {
+    double tmp_speed_factor = (double)config.maximum_feedrate_e / fabs(speed_e);
+    if(speed_factor > tmp_speed_factor) speed_factor = tmp_speed_factor;
+  }
+
+  multiplier = multiplier * speed_factor;
+  speed_x = delta_mm[X_AXIS] * multiplier;
+  speed_y = delta_mm[Y_AXIS] * multiplier;
+  speed_z = delta_mm[Z_AXIS] * multiplier;
+  speed_e = delta_mm[E_AXIS] * multiplier;
+  block->nominal_speed = block->millimeters * multiplier;    // mm per min
+  block->nominal_rate = ceil(block->step_event_count * multiplier);   // steps per minute
+
+//---  
+#if 0
   // Calculate speed in mm/minute for each axis. No divide by zero due to previous checks.
   // NOTE: Minimum stepper speed is limited by MINIMUM_STEPS_PER_MINUTE in stepper.c
   double inverse_minute;
@@ -416,6 +468,7 @@ void plan_buffer_line (tActionRequest *pAction)
   }
   block->nominal_speed = block->millimeters * inverse_minute; // (mm/min) Always > 0
   block->nominal_rate = ceil(block->step_event_count * inverse_minute); // (step/min) Always > 0
+#endif
   
 #if 0
   double axis_speed;

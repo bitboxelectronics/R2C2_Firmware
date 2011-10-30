@@ -71,7 +71,7 @@ static uint8_t last_field = 0;
 #define crc(a, b)		(a ^ b)
 
 static decfloat read_digit;
-
+static double value;
 
 // accept the next character and process it
 void gcode_parse_char(uint8_t c);
@@ -137,6 +137,13 @@ static int32_t	decfloat_to_int(decfloat *df, int32_t multiplicand, int32_t denom
 	return r;
 }
 
+double power (double x, int exp)
+{  
+  double result = 1.0;
+  while (exp--)  
+    result = result * x;
+  return result;
+}
 
 /*
 	public functions
@@ -231,6 +238,7 @@ eParseResult gcode_parse_line (tLineBuffer *pLine)
 		next_target.chpos = 0;
 		last_field = 0;
 		read_digit.sign = read_digit.mantissa = read_digit.exponent = 0;
+		value = 0;
 
 		// dont assume a G1 by default
 		next_target.seen_G = 0;
@@ -307,7 +315,8 @@ void gcode_parse_char(uint8_t c)
 					if (next_target.option_inches)
 						next_target.target.E = decfloat_to_int(&read_digit, steps_per_in_e, 1);
 					else
-						next_target.target.E = decfloat_to_int(&read_digit, steps_per_m_e, 1000);
+//						next_target.target.E = decfloat_to_int(&read_digit, steps_per_m_e, 1000);
+						next_target.target.E = value;
 					break;
 				case 'F':
 					// just use raw integer, we need move distance and n_steps to convert it to a useful value, so wait until we have those to convert it
@@ -336,6 +345,7 @@ void gcode_parse_char(uint8_t c)
 			// reset for next field
 			last_field = 0;
 			read_digit.sign = read_digit.mantissa = read_digit.exponent = 0;
+			value = 0;
 		}
 	}
 
@@ -427,6 +437,13 @@ void gcode_parse_char(uint8_t c)
 			default:
 				// can't do ranges in switch..case, so process actual digits here
 				if (c >= '0' && c <= '9') {
+					if (read_digit.exponent == 0)
+					{
+					  value = value * 10 + (c - '0');
+					}
+					else
+					  value += (double)(c - '0') / power(10, read_digit.exponent);
+
 					// this is simply mantissa = (mantissa * 10) + atoi(c) in different clothes
 					read_digit.mantissa = (read_digit.mantissa << 3) + (read_digit.mantissa << 1) + (c - '0');
 					if (read_digit.exponent)

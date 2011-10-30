@@ -61,7 +61,8 @@ typedef struct {
         int64_t                                         X;
         int64_t                                         Y;
         int64_t                                         Z;
-        int64_t                                         E;
+//        int64_t                                         E;
+        double E;
         uint64_t                                        F;
 } TARGET;
 

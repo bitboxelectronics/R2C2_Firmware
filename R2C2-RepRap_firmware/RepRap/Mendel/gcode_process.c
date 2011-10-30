@@ -63,8 +63,10 @@ double    extruder_1_speed;         // in RPM
 
 uint32_t  auto_prime_steps = 0;
 uint32_t  auto_reverse_steps = 0;
-const double auto_prime_feed_rate = 12000;
-const double auto_reverse_feed_rate = 12000;
+const double auto_prime_feed_rate = 18000;
+const double auto_reverse_feed_rate = 18000;
+const double auto_forward_factor = 640;
+const double auto_reverse_factor = 320;
 
 #if 0
 static void enqueue_move (TARGET *pTarget)
@@ -444,11 +446,14 @@ eParseResult process_gcode_command()
     if (next_target.seen_Z)
       next_targetd.z = (double)next_target.target.Z / config.steps_per_mm_z;
     if (next_target.seen_E)
-      next_targetd.e = (double)next_target.target.E / config.steps_per_mm_e;  
+//      next_targetd.e = (double)next_target.target.E / config.steps_per_mm_e;  
+      next_targetd.e = next_target.target.E;  
     if (next_target.seen_F)
       next_targetd.feed_rate = next_target.target.F;
   }
 
+//  sersendf(" X:%ld Y:%ld Z:%ld E:%ld F:%ld\r\n", (int32_t)next_target.target.X, (int32_t)next_target.target.Y, (int32_t)next_target.target.Z, (int32_t)next_target.target.E, (uint32_t)next_target.target.F);
+//  sersendf(" X:%g Y:%g Z:%g E:%g F:%g\r\n", next_targetd.x, next_targetd.y, next_targetd.z, next_targetd.e, next_targetd.feed_rate);
     
   // E ALWAYS absolute 
   // host should periodically reset E with "G92 E0", otherwise we overflow our registers after only a few layers
@@ -735,7 +740,7 @@ eParseResult process_gcode_command()
       extruders_on = EXTRUDER_NUM_1;
       if (auto_prime_steps != 0)
       {      
-        SpecialMoveE ((double)auto_prime_steps / config.steps_per_mm_e, auto_prime_feed_rate);
+        SpecialMoveE ((double)auto_prime_steps / auto_forward_factor, auto_prime_feed_rate);
       }
 
       break;
@@ -747,7 +752,7 @@ eParseResult process_gcode_command()
       extruders_on = 0;
       if (auto_reverse_steps != 0)
       {      
-        SpecialMoveE (-(double)auto_reverse_steps / config.steps_per_mm_e, auto_reverse_feed_rate);
+        SpecialMoveE (-(double)auto_reverse_steps / auto_reverse_factor, auto_reverse_feed_rate);
       }
       break;
 

@@ -10,7 +10,7 @@ MAXIMUM_FEEDRATE_Z = 120
 MAXIMUM_FEEDRATE_E = 6000
 
 # acceleration settings
-acceleration = 300.0
+acceleration = 750.0
 junction_deviation = 0.05
 
 # very slow speed for fine search

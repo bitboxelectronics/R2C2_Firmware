@@ -33,6 +33,7 @@
 
 #include	<stdint.h>
 
+#include "planner.h"
 
 // whether the asterisk (checksum-command) is included for checksum calculation
 // undefined for RepRap host software
@@ -49,6 +50,7 @@
 #define ABS(v)          (((v) >= 0)?(v):(-(v)))
 #endif
 
+#if 0
 // this is a very crude decimal-based floating point structure. a real floating point would at least have signed exponent
 typedef struct {
 	uint32_t	sign			:1;
@@ -65,6 +67,7 @@ typedef struct {
         double E;
         uint64_t                                        F;
 } TARGET;
+#endif
 
 // this holds all the possible data from a received command
 typedef struct {
@@ -89,7 +92,7 @@ typedef struct {
 
 	uint8_t						G;
 	uint16_t				  M;
-	TARGET						target;
+	tTarget						target;
 
 	int16_t						S;
 	uint16_t					P;

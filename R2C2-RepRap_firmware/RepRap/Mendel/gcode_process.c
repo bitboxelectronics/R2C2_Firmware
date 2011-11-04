@@ -429,27 +429,26 @@ eParseResult process_gcode_command()
   // convert relative to absolute
   if (next_target.option_relative)
   {  
-    next_targetd.x = startpoint.x + (double)next_target.target.X / config.steps_per_mm_x;
-    next_targetd.y = startpoint.y + (double)next_target.target.Y / config.steps_per_mm_y;
-    next_targetd.z = startpoint.z + (double)next_target.target.Z / config.steps_per_mm_z;
-    next_targetd.e = startpoint.e + (double)next_target.target.E / config.steps_per_mm_e;
+    next_targetd.x = startpoint.x + next_target.target.x;
+    next_targetd.y = startpoint.y + next_target.target.y;
+    next_targetd.z = startpoint.z + next_target.target.z;
+    next_targetd.e = startpoint.e + next_target.target.e;
     if (next_target.seen_F)
-      next_targetd.feed_rate = next_target.target.F;
+      next_targetd.feed_rate = next_target.target.feed_rate;
   }
   else
   {
     // absolute
     if (next_target.seen_X)
-      next_targetd.x = (double)next_target.target.X / config.steps_per_mm_x;
+      next_targetd.x = next_target.target.x;
     if (next_target.seen_Y)
-      next_targetd.y = (double)next_target.target.Y / config.steps_per_mm_y;
+      next_targetd.y = next_target.target.y;
     if (next_target.seen_Z)
-      next_targetd.z = (double)next_target.target.Z / config.steps_per_mm_z;
+      next_targetd.z = next_target.target.z;
     if (next_target.seen_E)
-//      next_targetd.e = (double)next_target.target.E / config.steps_per_mm_e;  
-      next_targetd.e = next_target.target.E;  
+      next_targetd.e = next_target.target.e;  
     if (next_target.seen_F)
-      next_targetd.feed_rate = next_target.target.F;
+      next_targetd.feed_rate = next_target.target.feed_rate;
   }
 
 //  sersendf(" X:%ld Y:%ld Z:%ld E:%ld F:%ld\r\n", (int32_t)next_target.target.X, (int32_t)next_target.target.Y, (int32_t)next_target.target.Z, (int32_t)next_target.target.E, (uint32_t)next_target.target.F);
@@ -938,13 +937,13 @@ eParseResult process_gcode_command()
       else
       {
         if (next_target.seen_X)
-          config.steps_per_mm_x = next_target.target.X / config.steps_per_mm_x;
+          config.steps_per_mm_x = next_target.target.x;
         if (next_target.seen_Y)
-          config.steps_per_mm_y = next_target.target.Y / config.steps_per_mm_y;
+          config.steps_per_mm_y = next_target.target.y;
         if (next_target.seen_Z)
-          config.steps_per_mm_z = next_target.target.Z / config.steps_per_mm_z;
+          config.steps_per_mm_z = next_target.target.z;
         if (next_target.seen_E)
-          config.steps_per_mm_e = next_target.target.E / config.steps_per_mm_e;
+          config.steps_per_mm_e = next_target.target.e;
           
         gcode_parse_init();  
 #ifndef USE_GRBL        
@@ -968,13 +967,13 @@ eParseResult process_gcode_command()
       else
       {
         if (next_target.seen_X)
-          config.maximum_feedrate_x = next_target.target.X / config.steps_per_mm_x;
+          config.maximum_feedrate_x = next_target.target.x;
         if (next_target.seen_Y)
-          config.maximum_feedrate_y = next_target.target.Y / config.steps_per_mm_y;
+          config.maximum_feedrate_y = next_target.target.y;
         if (next_target.seen_Z)
-          config.maximum_feedrate_z = next_target.target.Z / config.steps_per_mm_z;
+          config.maximum_feedrate_z = next_target.target.z;
         if (next_target.seen_E)
-          config.maximum_feedrate_e = next_target.target.E / config.steps_per_mm_e;
+          config.maximum_feedrate_e = next_target.target.e;
       }
       break;
 
@@ -990,7 +989,7 @@ eParseResult process_gcode_command()
       else
       {
         if (next_target.seen_X)
-          config.acceleration = next_target.target.X / config.steps_per_mm_x;
+          config.acceleration = next_target.target.x;
       }
       break;
       

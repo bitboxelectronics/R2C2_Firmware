@@ -56,6 +56,7 @@ GCODE_COMMAND next_target;
 	which is about the worst case we have. All other machines have a bigger build volume.
 */
 
+#if 0
 static uint32_t steps_per_m_x;
 static uint32_t steps_per_m_y;
 static uint32_t steps_per_m_z;
@@ -65,12 +66,16 @@ static double steps_per_in_x;
 static double steps_per_in_y;
 static double steps_per_in_z;
 static double steps_per_in_e;
+#endif
 
 static uint8_t last_field = 0;
 
 #define crc(a, b)		(a ^ b)
 
-static decfloat read_digit;
+static struct {
+  uint8_t sign; 
+  int exponent;
+  } read_digit;
 static double value;
 
 // accept the next character and process it
@@ -82,6 +87,7 @@ void request_resend(void);
 
 void gcode_parse_init(void)
 {
+#if 0
   steps_per_m_x = ((uint32_t) (config.steps_per_mm_x * 1000.0));
   steps_per_m_y = ((uint32_t) (config.steps_per_mm_y * 1000.0));
   steps_per_m_z = ((uint32_t) (config.steps_per_mm_z * 1000.0));
@@ -92,8 +98,8 @@ void gcode_parse_init(void)
   steps_per_in_y = ((double) (25.4 * config.steps_per_mm_y));
   steps_per_in_z = ((double) (25.4 * config.steps_per_mm_z));
   steps_per_in_e = ((double) (25.4 * config.steps_per_mm_e));
-  
-  next_target.target.F = config.homing_feedrate_z;
+#endif  
+  next_target.target.feed_rate = config.homing_feedrate_z;
 }
 
 
@@ -101,6 +107,7 @@ void gcode_parse_init(void)
 	utility functions
 */
 
+#if 0
 static int32_t	decfloat_to_int(decfloat *df, int32_t multiplicand, int32_t denominator) {
 	int64_t	r = df->mantissa;
 	uint8_t	e = df->exponent;
@@ -136,6 +143,7 @@ static int32_t	decfloat_to_int(decfloat *df, int32_t multiplicand, int32_t denom
 
 	return r;
 }
+#endif
 
 double power (double x, int exp)
 {  
@@ -143,6 +151,11 @@ double power (double x, int exp)
   while (exp--)  
     result = result * x;
   return result;
+}
+
+double inch_to_mm (double inches)
+{  
+  return inches * 25.4;
 }
 
 /*
@@ -237,7 +250,7 @@ eParseResult gcode_parse_line (tLineBuffer *pLine)
                 next_target.checksum_calculated = 0;
 		next_target.chpos = 0;
 		last_field = 0;
-		read_digit.sign = read_digit.mantissa = read_digit.exponent = 0;
+		read_digit.sign = read_digit.exponent = 0;
 		value = 0;
 
 		// dont assume a G1 by default
@@ -245,8 +258,8 @@ eParseResult gcode_parse_line (tLineBuffer *pLine)
 		next_target.G = 0;
 
 		if (next_target.option_relative) {
-			next_target.target.X = next_target.target.Y = next_target.target.Z = 0;
-			next_target.target.E = 0;
+			next_target.target.x = next_target.target.y = next_target.target.z = 0.0;
+			next_target.target.e = 0.0;
 		}
 	}
 	
@@ -279,12 +292,17 @@ void gcode_parse_char(uint8_t c)
 		// check if we're seeing a new field or end of line
 		// any character will start a new field, even invalid/unknown ones
 		if ((c >= 'A' && c <= 'Z') || c == '*' || (c == 10) || (c == 13)) {
+		
+		  // before using value, apply the sign
+		  if (read_digit.sign)
+		    value = -value;
+		    
 			switch (last_field) {
 				case 'G':
-					next_target.G = read_digit.mantissa;
+					next_target.G = value;
 					break;
 				case 'M':
-					next_target.M = read_digit.mantissa;
+					next_target.M = value;
 					// this is a bit hacky since string parameters don't fit in general G code syntax
 					// NB: filename MUST start with a letter and MUST NOT contain spaces
 					// letters will also be converted to uppercase
@@ -295,56 +313,54 @@ void gcode_parse_char(uint8_t c)
 					break;
 				case 'X':
 					if (next_target.option_inches)
-						next_target.target.X = decfloat_to_int(&read_digit, steps_per_in_x, 1);
+						next_target.target.x = inch_to_mm(value);
 					else
-						next_target.target.X = decfloat_to_int(&read_digit, steps_per_m_x, 1000);
+						next_target.target.x = value;
 					break;
 				case 'Y':
 					if (next_target.option_inches)
-						next_target.target.Y = decfloat_to_int(&read_digit, steps_per_in_y, 1);
+						next_target.target.y = inch_to_mm(value);
 					else
-						next_target.target.Y = decfloat_to_int(&read_digit, steps_per_m_y, 1000);
+						next_target.target.y = value;
 					break;
 				case 'Z':
 					if (next_target.option_inches)
-						next_target.target.Z = decfloat_to_int(&read_digit, steps_per_in_z, 1);
+						next_target.target.z = inch_to_mm(value);
 					else
-						next_target.target.Z = decfloat_to_int(&read_digit, steps_per_m_z, 1000);
+						next_target.target.z = value;
 					break;
 				case 'E':
 					if (next_target.option_inches)
-						next_target.target.E = decfloat_to_int(&read_digit, steps_per_in_e, 1);
+						next_target.target.e = inch_to_mm(value);
 					else
-//						next_target.target.E = decfloat_to_int(&read_digit, steps_per_m_e, 1000);
-						next_target.target.E = value;
+						next_target.target.e = value;
 					break;
 				case 'F':
-					// just use raw integer, we need move distance and n_steps to convert it to a useful value, so wait until we have those to convert it
 					if (next_target.option_inches)
-						next_target.target.F = decfloat_to_int(&read_digit, 254, 10);
+						next_target.target.feed_rate = inch_to_mm(value);
 					else
-						next_target.target.F = decfloat_to_int(&read_digit, 1, 1);
+						next_target.target.feed_rate = value;
 					break;
 				case 'S':
-          next_target.S = decfloat_to_int(&read_digit, 1, 1);
+          next_target.S = value;
           break;
 				case 'P':
 					// if this is dwell, multiply by 1000 to convert seconds to milliseconds
 					if (next_target.G == 4)
-						next_target.P = decfloat_to_int(&read_digit, 1000, 1);
+						next_target.P = value * 1000.0;
 					else
-						next_target.P = decfloat_to_int(&read_digit, 1, 1);
+						next_target.P = value;
 					break;
 				case 'N':
-					next_target.N = decfloat_to_int(&read_digit, 1, 1);
+					next_target.N = value;
 					break;
 				case '*':
-					next_target.checksum_read = decfloat_to_int(&read_digit, 1, 1);
+					next_target.checksum_read = value;
 					break;
 			}
 			// reset for next field
 			last_field = 0;
-			read_digit.sign = read_digit.mantissa = read_digit.exponent = 0;
+			read_digit.sign = read_digit.exponent = 0;
 			value = 0;
 		}
 	}
@@ -426,7 +442,6 @@ void gcode_parse_char(uint8_t c)
 				read_digit.sign = 1;
 				// force sign to be at start of number, so 1-2 = -2 instead of -12
 				read_digit.exponent = 0;
-				read_digit.mantissa = 0;
 				break;
 			case '.':
 				if (read_digit.exponent == 0)
@@ -444,8 +459,6 @@ void gcode_parse_char(uint8_t c)
 					else
 					  value += (double)(c - '0') / power(10, read_digit.exponent);
 
-					// this is simply mantissa = (mantissa * 10) + atoi(c) in different clothes
-					read_digit.mantissa = (read_digit.mantissa << 3) + (read_digit.mantissa << 1) + (c - '0');
 					if (read_digit.exponent)
 						read_digit.exponent++;
 				}

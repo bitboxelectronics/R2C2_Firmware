@@ -142,7 +142,8 @@ APPSRC = \
 	$(APPDIR)/endstops.c \
 	$(APPDIR)/geometry.c \
 	app/grbl/planner.c \
-	app/grbl/stepper.c
+	app/grbl/stepper.c \
+	app/grbl/fixedpt.c
 
 #	app/grbl/print.c \
 #	app/grbl/eeprom.c \

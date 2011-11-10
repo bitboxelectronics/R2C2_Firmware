@@ -34,10 +34,10 @@
 
 struct configuration
 {
-  int32_t steps_per_mm_x;
-  int32_t steps_per_mm_y;
-  int32_t steps_per_mm_z;
-  int32_t steps_per_mm_e;
+  double steps_per_mm_x;
+  double steps_per_mm_y;
+  double steps_per_mm_z;
+  double steps_per_mm_e;
 
   int32_t maximum_feedrate_x;
   int32_t maximum_feedrate_y;

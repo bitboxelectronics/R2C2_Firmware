@@ -59,10 +59,10 @@ typedef struct {
 /* calculate the default values appropriate for your machine */
 tConfigItem config_lookup [] = 
 {
-  { "steps_per_mm_x", &config.steps_per_mm_x, TYPE_INT, {.val_i=80}},
-  { "steps_per_mm_y", &config.steps_per_mm_y, TYPE_INT, {.val_i=80}},
-  { "steps_per_mm_z", &config.steps_per_mm_z, TYPE_INT, {.val_i=6400}},
-  { "steps_per_mm_e", &config.steps_per_mm_e, TYPE_INT, {.val_i=36}},    /* Wades extruder, NEMA 17 geared extruder (1/39 * 6.5mm) */
+  { "steps_per_mm_x", &config.steps_per_mm_x, TYPE_DOUBLE, {.val_d=80}},
+  { "steps_per_mm_y", &config.steps_per_mm_y, TYPE_DOUBLE, {.val_d=80}},
+  { "steps_per_mm_z", &config.steps_per_mm_z, TYPE_DOUBLE, {.val_d=6400}},
+  { "steps_per_mm_e", &config.steps_per_mm_e, TYPE_DOUBLE, {.val_d=36}},    /* Wades extruder, NEMA 17 geared extruder (1/39 * 6.5mm) */
 
   /* used for G0 rapid moves and as a cap for all other feedrates */
   { "maximum_feedrate_x", &config.maximum_feedrate_x, TYPE_INT, {.val_i=3000}}, /* 50mm / second */

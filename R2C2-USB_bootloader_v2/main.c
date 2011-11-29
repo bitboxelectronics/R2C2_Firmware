@@ -74,90 +74,100 @@ int main() {
 		uart_init();
 	#endif
 
-	BlockDevInit();
-
+        if (BlockDevInit() == 0)
+        {
+        /* uSDCard is present */
 #ifdef	UARTDEBUG
-	if (1) {
-		U32 size;
-		BlockDevGetSize(&size);
-		DBG("Found SD card of size %d", size);
-		BlockDevGetBlockLength(&size);
-		DBG("block length %d", size);
-	}
+            if (1) {
+                U32 size;
+                BlockDevGetSize(&size);
+                DBG("Found SD card of size %d", size);
+                BlockDevGetBlockLength(&size);
+                DBG("block length %d", size);
+            }
 #endif
 
-	if (bootloader_button_pressed() || (user_code_present() == 0)) {
-		DBG("entering bootloader");
-		init_usb_msc_device();
+            if (bootloader_button_pressed() || (user_code_present() == 0)) {
+                DBG("entering bootloader");
+                init_usb_msc_device();
 
-		for (;usb_msc_not_ejected();)
-			USBHwISR();
+                for (;usb_msc_not_ejected();)
+                  USBHwISR();
 
-		DBG("usb ejected, rebooting");
+                DBG("usb ejected, rebooting");
 
-		USBHwConnect(FALSE);
-		spi_close();
-	}
-	else {
-		if ((r = f_mount(0, &fatfs)) == FR_OK) {
-			if ((r = f_open(&f, "/firmware.bin", FA_READ | FA_OPEN_EXISTING)) == FR_OK) {
-				unsigned int fs = f_size(&f);
-				DBG("found firmware.bin with %u bytes", fs);
-				if ((fs > 0) && (fs <= USER_FLASH_SIZE)) {
-					U8 buffer[FLASH_BUF_SIZE];
-					for (unsigned int i = 0; i < fs; i += FLASH_BUF_SIZE) {
-						unsigned int j = FLASH_BUF_SIZE;
-						if (i + j > fs)
-							j = fs - i;
-						DBG("writing %d-%d", i, i+j);
-						if ((r = f_read(&f, buffer, j, &j)) == FR_OK) {
-							// pad last block to a full sector size
-							while (j < FLASH_BUF_SIZE) {
-								buffer[j++] = 0xFF;
-							}
-							write_flash((unsigned int *) (USER_FLASH_START + i), (char *) &buffer, j);
-						}
-						else {
-							DBG("read failed: %d", r);
-							i = fs;
-						}
-					}
-					r = f_close(&f);
-					r = f_unlink("/firmware.bck");
-					r = f_rename("/firmware.bin", "/firmware.bck");
-				}
-			}
-			else {
-				DBG("open \"/firmware.bin\" failed: %d", r);
-			}
-			#ifdef	GENERATE_FIRMWARE_CUR
-				if (f_open(&f, "/firmware.bck", FA_READ | FA_OPEN_EXISTING)) {
-					f_close(&f);
-				}
-				else {
-					// no firmware.bck, generate one!
-					if (f_open(&f, "/firmware.bck", FA_WRITE | FA_CREATE_NEW) == FR_OK) {
-						U8 *flash = (U8 *) USER_FLASH_START;
+                USBHwConnect(FALSE);
+                spi_close();
+            }
+            else {
+                if ((r = f_mount(0, &fatfs)) == FR_OK) {
+                    if ((r = f_open(&f, "/firmware.bin", FA_READ | FA_OPEN_EXISTING)) == FR_OK) {
+                        unsigned int fs = f_size(&f);
+                        DBG("found firmware.bin with %u bytes", fs);
+                        if ((fs > 0) && (fs <= USER_FLASH_SIZE)) {
+                            U8 buffer[FLASH_BUF_SIZE];
+                            for (unsigned int i = 0; i < fs; i += FLASH_BUF_SIZE) {
+                                unsigned int j = FLASH_BUF_SIZE;
+                                if (i + j > fs)
+                                  j = fs - i;
+                                DBG("writing %d-%d", i, i+j);
+                                if ((r = f_read(&f, buffer, j, &j)) == FR_OK) {
+                                    // pad last block to a full sector size
+                                    while (j < FLASH_BUF_SIZE) {
+                                        buffer[j++] = 0xFF;
+                                    }
+                                    write_flash((unsigned int *) (USER_FLASH_START + i), (char *) &buffer, j);
+                                }
+                                else {
+                                    DBG("read failed: %d", r);
+                                    i = fs;
+                                }
+                            }
+                            r = f_close(&f);
+                            r = f_unlink("/firmware.bck");
+                            r = f_rename("/firmware.bin", "/firmware.bck");
+                        }
+                    }
+                    else {
+                        DBG("open \"/firmware.bin\" failed: %d", r);
+                    }
+#ifdef	GENERATE_FIRMWARE_CUR
+                    if (f_open(&f, "/firmware.bck", FA_READ | FA_OPEN_EXISTING)) {
+                        f_close(&f);
+                    }
+                    else {
+                        // no firmware.bck, generate one!
+                        if (f_open(&f, "/firmware.bck", FA_WRITE | FA_CREATE_NEW) == FR_OK) {
+                            U8 *flash = (U8 *) USER_FLASH_START;
 
-						f_close(&f);
-					}
-				}
-			#endif
-			// elm-chan's fatfs doesn't have an unmount function
-			// f_umount(&fatfs);
-		}
-		else {
-			DBG("mount failed: %d", r);
-		}
-		spi_close();
+                            f_close(&f);
+                        }
+                    }
+#endif
+                    // elm-chan's fatfs doesn't have an unmount function
+                    // f_umount(&fatfs);
+                }
+                else {
+                    DBG("mount failed: %d", r);
+                }
+                spi_close();
 
-		if (user_code_present()) {
-			DBG("starting user code...");
-			execute_user_code();
-		}
-		else {
-			DBG("user code invalid, rebooting");
-		}
-	}
-	NVIC_SystemReset();
+                if (user_code_present()) {
+                    DBG("starting user code...");
+                    execute_user_code();
+                }
+                else {
+                    DBG("user code invalid, rebooting");
+                }
+            }
+            NVIC_SystemReset();
+        }
+
+        else
+        {
+          /* probably uSDCard is not on the socket so we should execute user code/firmware */
+          DBG("uSDCard init failed...");
+          DBG("starting user code...");
+          execute_user_code();
+        }
 }

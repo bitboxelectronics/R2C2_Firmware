@@ -41,7 +41,7 @@
 //volatile unsigned char clock_flag = 0;
 
 
-static long millis_ticks;
+static volatile long millis_ticks;
 
 static tTimer *SlowTimerHead;
 static tTimer *SlowTimerTail;
@@ -258,6 +258,7 @@ long millis(void)
 void delay_ms(int ms)
 {
   int start = millis();
+
   while (millis() - start <= ms)
     ;
 }

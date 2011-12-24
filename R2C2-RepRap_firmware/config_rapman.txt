@@ -1,6 +1,6 @@
 # Config file for Rapman 3.1 machines
-STEPS_PER_MM_X = 86
-STEPS_PER_MM_Y = 86
+STEPS_PER_MM_X = 87.58
+STEPS_PER_MM_Y = 87.58
 STEPS_PER_MM_Z = 2560
 STEPS_PER_MM_E = 187
 # max rate

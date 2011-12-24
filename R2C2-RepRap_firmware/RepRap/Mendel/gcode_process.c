@@ -41,6 +41,7 @@
 #include "pinout.h"
 #include "config.h"
 #include "ff.h"
+#include "buzzer.h"
 //#include "debug.h"
 
 #include "planner.h"
@@ -65,8 +66,8 @@ uint32_t  auto_prime_steps = 0;
 uint32_t  auto_reverse_steps = 0;
 const double auto_prime_feed_rate = 18000;
 const double auto_reverse_feed_rate = 18000;
-const double auto_forward_factor = 640;
-const double auto_reverse_factor = 320;
+double auto_prime_factor = 640;
+double auto_reverse_factor = 640;
 
 #if 0
 static void enqueue_move (TARGET *pTarget)
@@ -733,13 +734,16 @@ eParseResult process_gcode_command()
       // processed in gcode_parse_char()
       break;
     
-    
+      case 82: // M82 - use absolute distance for extrusion
+      // no-op, we always do absolute
+      break;
+      
       // M101- extruder on
       case 101:
       extruders_on = EXTRUDER_NUM_1;
       if (auto_prime_steps != 0)
       {      
-        SpecialMoveE ((double)auto_prime_steps / auto_forward_factor, auto_prime_feed_rate);
+        SpecialMoveE ((double)auto_prime_steps / auto_prime_factor, auto_prime_feed_rate);
       }
 
       break;
@@ -927,7 +931,7 @@ eParseResult process_gcode_command()
       if ((next_target.seen_X | next_target.seen_Y | next_target.seen_Z | next_target.seen_E) == 0)
       {
         reply_sent = true;
-        sersendf ("ok X%d Y%d Z%d E%d\r\n", 
+        sersendf ("ok X%g Y%g Z%g E%g\r\n", 
           config.steps_per_mm_x,
           config.steps_per_mm_y,
           config.steps_per_mm_z,
@@ -1021,6 +1025,23 @@ eParseResult process_gcode_command()
       }
       break;
       
+      // M300 - beep
+      // S: frequency
+      // P: duration
+      case 300:
+      {
+        uint16_t frequency = 1000;  // 1kHz
+        uint16_t duration = 1000; // 1 second
+        
+        if (next_target.seen_S)
+          frequency = next_target.S;
+        if (next_target.seen_P)
+          duration = next_target.P;
+
+        buzzer_wait ();          
+        buzzer_play (frequency, duration);
+      }  
+      break;
       
       // M500 - set/get adc value for temperature
       // S: temperature (degrees C, 0-300)
@@ -1037,9 +1058,29 @@ eParseResult process_gcode_command()
         serial_writestr ("E: bad param\r\n");
       break;
 
+      // M501 - set/get adc value for temperature
+      // S: temperature (degrees C, 0-300)
+      // P: ADC val
+      case 501:
+      if (next_target.seen_S && next_target.seen_P)
+        temp_set_table_entry (HEATED_BED_0, next_target.S, next_target.P);
+      else if (next_target.seen_S)
+      {
+        reply_sent = true;
+        sersendf ("ok [%d] = %d\r\n", next_target.S, temp_get_table_entry (HEATED_BED_0, next_target.S));
+      }
+      else
+        serial_writestr ("E: bad param\r\n");
+      break;
+
       // M542 - nozzle wipe/move to rest location
       case 542:
       // TODO: this depends on current origin being same as home position
+      /* order should be:
+        move to nozzle wipe entry
+        move to rest
+        [move to dump
+        */
       if (config.have_rest_pos)
       {
         // move above bed if ncessary
@@ -1088,7 +1129,8 @@ eParseResult process_gcode_command()
         SpecialMoveE ((double)next_target.P / 256.0, next_target.S);
       }
       break;
-                  
+                
+      // M600 print the values read from the config file                  
       case 600:
       {
         print_config();

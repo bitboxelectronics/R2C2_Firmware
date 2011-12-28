@@ -262,16 +262,15 @@ static void zero_y(void)
 static void zero_z(void)
 {
   // hit endstops, no acceleration- we don't care about skipped steps
-  SpecialMoveZ(startpoint.z - 250, config.homing_feedrate_z);
-  
+  SpecialMoveZ(startpoint.z - 250, config.homing_feedrate_z);  
   synch_queue();
   
   // move forward a bit
   SpecialMoveZ(startpoint.z + 1, config.search_feedrate_z);
+  synch_queue();
 
   // move back in to endstops slowly
   SpecialMoveZ(startpoint.z - 6, config.search_feedrate_z);
-  
   synch_queue();
 
   // this is our home point

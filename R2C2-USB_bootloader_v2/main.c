@@ -87,7 +87,7 @@ int main() {
             }
 #endif
 
-            if (bootloader_button_pressed() || (user_code_present() == 0)) {
+            if (bootloader_button_pressed()) {
                 DBG("entering bootloader");
                 init_usb_msc_device();
 

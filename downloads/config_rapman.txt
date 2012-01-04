@@ -1,0 +1,53 @@
+# Config file for Rapman 3.1 machines
+STEPS_PER_MM_X = 87.58
+STEPS_PER_MM_Y = 87.58
+STEPS_PER_MM_Z = 2560
+STEPS_PER_MM_E = 187
+# max rate
+MAXIMUM_FEEDRATE_X = 30000
+MAXIMUM_FEEDRATE_Y = 30000
+MAXIMUM_FEEDRATE_Z = 120
+MAXIMUM_FEEDRATE_E = 6000
+
+# acceleration settings
+acceleration = 750.0
+junction_deviation = 0.05
+
+# very slow speed for fine search
+SEARCH_FEEDRATE_X = 120
+SEARCH_FEEDRATE_Y = 120
+SEARCH_FEEDRATE_Z = 60
+SEARCH_FEEDRATE_E = 600
+# slow speed for initial search
+homing_feedrate_x = 2000
+homing_feedrate_y = 2000
+homing_feedrate_z = 60
+# direction of travel to find "home" endstop
+# +1 = move in positive, -1 = move negative
+home_direction_x = -1
+home_direction_y = 1
+home_direction_z = -1
+# the coordinates to set when home found
+home_pos_x = -135
+home_pos_y = 115
+home_pos_z = 0
+# set to 1 if there is a dump position, for priming extruder
+have_dump_pos = 1
+rest_pos_x = 130
+rest_pos_y = -85
+# set to 1 if there is a rest position, e.g. at end print, temperature wait
+have_rest_pos = 1
+rest_pos_x = 130
+rest_pos_y = -85
+# set to 1 if there is a wipe position
+have_wipe_pos = 1
+wipe_pos_x = 120
+wipe_pos_y = -85
+# size of print area 
+printing_vol_x = 270
+printing_vol_y = 205
+printing_vol_z = 210
+# options
+wait_on_temp=1
+enable_extruder_1=1
+

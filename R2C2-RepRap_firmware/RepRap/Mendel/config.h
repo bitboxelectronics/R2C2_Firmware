@@ -94,6 +94,8 @@ struct configuration
   // options
   int32_t wait_on_temp;
   int32_t enable_extruder_1;
+  
+  int32_t beep_on_events;
 };
 
 extern struct configuration config;

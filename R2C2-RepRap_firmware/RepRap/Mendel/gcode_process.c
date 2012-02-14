@@ -1042,14 +1042,6 @@ eParseResult process_gcode_command()
       }  
       break;
       
-      // M301 - reports the X Y and Z minimum limit switchs state
-      // Example of output: "X=0 Y=0 Z=1" <-- means that only Z minimum limit switch is active
-      case 301:
-      {
-        sersendf ("X=%d Y=%d Z=%d\r\n", x_min(), y_min(), z_min());
-      }
-      break;
-
       // M500 - set/get adc value for temperature
       // S: temperature (degrees C, 0-300)
       // P: ADC val

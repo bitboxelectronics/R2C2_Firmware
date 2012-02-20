@@ -21,6 +21,21 @@
 #include	"spi.h"
 #include	"uart.h"
 #include	"debug.h"
+#include        "ios.h"
+
+#define EXTRUDER_0_HEATER_PORT          2        /* P2.4 */
+#define EXTRUDER_0_HEATER_PIN           (1 << 4) /* P2.4 */
+#define HEATED_BED_0_HEATER_PORT        2        /* P2.5 */
+#define HEATED_BED_0_HEATER_PIN         (1 << 5) /* P2.5 */
+#define EXTRUDER_0_FAN_PORT             2         /* P2.3 */
+#define EXTRUDER_0_FAN_PIN              (1<<3)
+#define BUZZER_PORT                     2         /* P2.2 PWM1[3] */
+#define BUZZER_PIN                      (1 << 22) /* P2.2 PWM1[3] */
+
+#define extruder_heater_off() digital_write(EXTRUDER_0_HEATER_PORT, EXTRUDER_0_HEATER_PIN, LOW);
+#define heated_bed_off() digital_write(HEATED_BED_0_HEATER_PORT, HEATED_BED_0_HEATER_PIN, LOW);
+#define extruder_fan_off() digital_write(EXTRUDER_0_FAN_PORT, EXTRUDER_0_FAN_PIN, LOW);
+#define buzzer_off() digital_write(BUZZER_PORT, BUZZER_PIN, LOW);
 
 FATFS fatfs;
 FIL f;
@@ -69,6 +84,22 @@ int main() {
 	NVIC_SetPriorityGrouping(0x05);
 
 	NVIC_SetVTOR(0x00000000);
+
+	/*
+	 * Disable some pins like the ones for heaters while on bootloader, if not, the heaters would be ON
+         */
+        /* Extruder 0 Heater pin */
+        pin_mode(EXTRUDER_0_HEATER_PORT, EXTRUDER_0_HEATER_PIN, OUTPUT);
+        extruder_heater_off();
+        /* Heated Bed 0 Heater pin */
+        pin_mode(HEATED_BED_0_HEATER_PORT, HEATED_BED_0_HEATER_PIN, OUTPUT);
+        heated_bed_off();
+        /* Extruder fan pin */
+        pin_mode(EXTRUDER_0_FAN_PORT, EXTRUDER_0_FAN_PIN, OUTPUT);
+        extruder_fan_off();
+        /* Buzzer fan pin */
+        pin_mode(BUZZER_PORT, BUZZER_PIN, OUTPUT);
+        buzzer_off();
 
 	#ifdef	UARTDEBUG
 		uart_init();

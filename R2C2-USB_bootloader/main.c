@@ -31,11 +31,37 @@
 #define EXTRUDER_0_FAN_PIN              (1<<3)
 #define BUZZER_PORT                     2         /* P2.2 PWM1[3] */
 #define BUZZER_PIN                      (1 << 22) /* P2.2 PWM1[3] */
+#define STEPPERS_RESET_PORT             0         /* P0.22 */
+#define STEPPERS_RESET_PIN              (1 << 22) /* P0.22 */
 
 #define extruder_heater_off() digital_write(EXTRUDER_0_HEATER_PORT, EXTRUDER_0_HEATER_PIN, LOW);
 #define heated_bed_off() digital_write(HEATED_BED_0_HEATER_PORT, HEATED_BED_0_HEATER_PIN, LOW);
 #define extruder_fan_off() digital_write(EXTRUDER_0_FAN_PORT, EXTRUDER_0_FAN_PIN, LOW);
 #define buzzer_off() digital_write(BUZZER_PORT, BUZZER_PIN, LOW);
+#define X_ENABLE_PORT                   1         /* P1.24 */
+#define X_ENABLE_PIN                    (1 << 24) /* P1.24 */
+#define X_STEP_PORT                     1         /* P1.20 */
+#define X_STEP_PIN                      (1 << 20) /* P1.20 */
+#define Y_ENABLE_PORT                   1         /* P1.28 */
+#define Y_ENABLE_PIN                    (1 << 28) /* P1.28 */
+#define Y_STEP_PORT                     1         /* P1.25 */
+#define Y_STEP_PIN                      (1 << 25) /* P1.25 */
+#define Z_ENABLE_PORT                   0         /* P0. 1 */
+#define Z_ENABLE_PIN                    (1 <<  1) /* P0. 1 */
+#define Z_STEP_PORT                     1         /* P1.29 */
+#define Z_STEP_PIN                      (1 << 29) /* P1.29 */
+#define E_ENABLE_PORT                   2         /* P2.10 */
+#define E_ENABLE_PIN                    (1 << 10) /* P2.10 */
+#define E_STEP_PORT                     0         /* P0.10 */
+#define E_STEP_PIN                      (1 << 10) /* P0.10 */
+#define x_disable() digital_write(X_ENABLE_PORT, X_ENABLE_PIN, 1)
+#define x_step() digital_write(X_STEP_PORT, X_STEP_PIN, 1)
+#define y_disable() digital_write(Y_ENABLE_PORT, Y_ENABLE_PIN, 1)
+#define y_step() digital_write(Y_STEP_PORT, Y_STEP_PIN, 1)
+#define z_disable() digital_write(Z_ENABLE_PORT, Z_ENABLE_PIN, 1)
+#define z_step() digital_write(Z_STEP_PORT, Z_STEP_PIN, 1)
+#define e_disable() digital_write(E_ENABLE_PORT, E_ENABLE_PIN, 1)
+#define e_step() digital_write(E_STEP_PORT, E_STEP_PIN, 1)
 
 FATFS fatfs;
 FIL f;
@@ -100,6 +126,27 @@ int main() {
         /* Buzzer fan pin */
         pin_mode(BUZZER_PORT, BUZZER_PIN, OUTPUT);
         buzzer_off();
+        /* Disable reset for all stepper motors */
+        pin_mode(STEPPERS_RESET_PORT, STEPPERS_RESET_PIN, OUTPUT);
+        digital_write(STEPPERS_RESET_PORT, STEPPERS_RESET_PIN, 1);
+        /* Disable all motors BUT enable step pin, so each LED will be ON */
+        pin_mode(X_STEP_PORT, X_STEP_PIN, OUTPUT);
+        pin_mode(X_ENABLE_PORT, X_ENABLE_PIN, OUTPUT);
+        x_disable();
+        x_step();
+        pin_mode(Y_STEP_PORT, Y_STEP_PIN, OUTPUT);
+        pin_mode(Y_ENABLE_PORT, Y_ENABLE_PIN, OUTPUT);
+        y_disable();
+        y_step();
+        pin_mode(Z_STEP_PORT, Z_STEP_PIN, OUTPUT);
+        pin_mode(Z_ENABLE_PORT, Z_ENABLE_PIN, OUTPUT);
+        z_disable();
+        z_step();
+        pin_mode(E_STEP_PORT, E_STEP_PIN, OUTPUT);
+        pin_mode(E_ENABLE_PORT, E_ENABLE_PIN, OUTPUT);
+        e_disable();
+        e_step();
+
 
 	#ifdef	UARTDEBUG
 		uart_init();

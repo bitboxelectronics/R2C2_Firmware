@@ -172,21 +172,8 @@ SRC = \
 	$(wildcard $(APPLIBDIR)/LPCUSB/src/*.c) \
 	$(APPLIBDIR)/CMSISv1p30_LPC17xx/src/system_LPC17xx.c \
 	$(wildcard $(APPLIBDIR)/NXP/Drivers/source/lpc17xx_*.c) \
-	$(APPLIBDIR)/FatFs/src/ff.c \
-	$(APPLIBDIR)/FatFs/src/diskio.c \
-	$(APPLIBDIR)/FatFs/src/fattime.c \
-	$(APPLIBDIR)/R2C2/ios.c \
-	$(APPLIBDIR)/R2C2/usb.c \
-	$(APPLIBDIR)/R2C2/serial_fifo.c \
-	$(APPLIBDIR)/R2C2/serial.c \
-	$(APPLIBDIR)/R2C2/sermsg.c \
-	$(APPLIBDIR)/R2C2/sersendf.c \
-	$(APPLIBDIR)/R2C2/timer.c \
-	$(APPLIBDIR)/R2C2/adc.c \
-	$(APPLIBDIR)/R2C2/spi.c \
-	$(APPLIBDIR)/R2C2/sdcard.c \
-	$(APPLIBDIR)/R2C2/buzzer.c \
-	$(APPLIBDIR)/R2C2/uart.c \
+	$(wildcard $(APPLIBDIR)/FatFs/src/*.c) \
+	$(wildcard $(APPLIBDIR)/R2C2/*.c) \
 	$(APPSRC) \
 	main.c
 	

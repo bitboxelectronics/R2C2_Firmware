@@ -64,8 +64,8 @@ void sersendf(char *format, ...) {
 
                                 /* print a double in normal notation */
                                 case 'g':
-                                serwrite_double(va_arg(args, double));
-                                j = 0;
+										serwrite_double(va_arg(args, double));
+										j = 0;
                                 break;
 
                                 case 'p':
@@ -85,6 +85,12 @@ void sersendf(char *format, ...) {
                                         serial_writestr(va_arg(args, char *));
                                         j = 0;
                                         break;
+										
+								/* escape % char */
+								case '%':
+										serial_writechar('%');
+										j = 0;
+										break;
                                 default:
                                         j = 0;
                                         break;

@@ -42,6 +42,8 @@
 #include "config.h"
 #include "ff.h"
 #include "buzzer.h"
+#include "soundplay.h"
+
 //#include "debug.h"
 
 #include "planner.h"
@@ -1029,19 +1031,41 @@ eParseResult process_gcode_command()
       // P: duration
       case 300:
       {
-        uint16_t frequency = 1000;  // 1kHz
-        uint16_t duration = 1000; // 1 second
+        float frequency = 1000;  // 1kHz
+        float duration = 1000; // 1 second
         
-        if (next_target.seen_S)
+		if (next_target.seen_S)
           frequency = next_target.S;
         if (next_target.seen_P)
           duration = next_target.P;
 
         buzzer_wait ();          
-        buzzer_play (frequency, duration);
+        buzzer_play (frequency, duration);		
       }  
       break;
       
+	  // Plays Jingle Bell from Static Library
+	  case 301:
+	  {
+	     play_jingle_bell();
+      }
+	  break;
+
+	  // Plays Music from command line:
+	  // Usage:
+	  //   M302 "music" P"tempo"
+	  // Example:
+	  //   M302 D4b3a3g3 P600
+	  //
+	  case 302:
+	  {
+		if (next_target.seen_P) {
+          set_whole_note_time(next_target.P);
+	    }
+		play_music_string(next_target.filename);		
+      }
+	  break;
+	  
       // M500 - set/get adc value for temperature
       // S: temperature (degrees C, 0-300)
       // P: ADC val

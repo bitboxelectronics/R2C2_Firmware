@@ -37,7 +37,7 @@ void buzzer_init (void);
  * 20Hz <= frequency <= 20000
  * 10ms <= duration <= (2^16 - 1)ms
  */
-void buzzer_play (uint16_t frequency, uint16_t duration);
+void buzzer_play (float frequency, uint16_t duration);
 void buzzer_wait(void);
 
 #endif  /* _BUZZER_ */

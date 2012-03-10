@@ -39,7 +39,7 @@ static tTimer buzzerTimer;
 // Internal functions
 //
 
-static void buzzer_pwm_set_frequency (uint16_t frequency)
+static void buzzer_pwm_set_frequency (float frequency)
 {
   uint32_t match_value = (((float) 1/frequency)) * 1000000;
 
@@ -119,7 +119,7 @@ static void buzzerTimerCallback (tTimer *pTimer)
 // Public functions
 //
 
-void buzzer_play (uint16_t frequency, uint16_t duration)
+void buzzer_play (float frequency, uint32_t duration)
 {
   buzzer_pwm_set_frequency(frequency);
   buzzer_pwm_start();

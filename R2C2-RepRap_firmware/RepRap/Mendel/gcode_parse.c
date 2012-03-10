@@ -306,7 +306,7 @@ void gcode_parse_char(uint8_t c)
 					// this is a bit hacky since string parameters don't fit in general G code syntax
 					// NB: filename MUST start with a letter and MUST NOT contain spaces
 					// letters will also be converted to uppercase
-					if ( (next_target.M == 23) || (next_target.M == 28) )
+					if ( (next_target.M == 23) || (next_target.M == 28) || (next_target.M == 302) )
 					{
 					    next_target.getting_string = 1;
 					}
@@ -342,8 +342,8 @@ void gcode_parse_char(uint8_t c)
 						next_target.target.feed_rate = value;
 					break;
 				case 'S':
-          next_target.S = value;
-          break;
+						next_target.S = value;
+					break;
 				case 'P':
 					// if this is dwell, multiply by 1000 to convert seconds to milliseconds
 					if (next_target.G == 4)

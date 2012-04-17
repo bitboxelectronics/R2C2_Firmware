@@ -206,8 +206,8 @@ void SysTickTimer_Init(void)
   }
 }
 
-//  SysTick_Handler happens every 1/1000 second
-void SysTick_Handler(void)
+// r2c2_SysTick should be called every 1/1000 second
+void r2c2_SysTick(void)
 {
   static uint8_t counter = 0;
   tTimer *pTimer;

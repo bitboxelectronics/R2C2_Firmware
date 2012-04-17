@@ -131,6 +131,13 @@ OUTDIR = $(RUN_MODE)
 # Target file name (without extension).
 TARGET = project
 
+# FreeRTOS paths
+FREERTOS_PATH = libraries/FreeRTOS
+#FREERTOS_DEMO_DIR = $(FREERTOS_PATH)/Demo/Common
+#FREERTOS_DEMO_TYPE_DIR = $(FREERTOS_DEMO_DIR)/Minimal
+FREERTOS_SOURCE_DIR = $(FREERTOS_PATH)/Source
+FREERTOS_PORT_DIR = $(FREERTOS_SOURCE_DIR)/portable/GCC/ARM_CM3
+
 # application dir and source
 APPDIR = RepRap/Mendel
 APPSRC = \
@@ -142,9 +149,10 @@ APPSRC = \
 	$(APPDIR)/endstops.c \
 	$(APPDIR)/geometry.c \
 	$(APPDIR)/alerter.c \
+    $(APPDIR)/usb_shell_task.c \
 	app/grbl/planner.c \
 	app/grbl/stepper.c \
-	app/grbl/fixedpt.c
+	app/grbl/fixedpt.c 
 
 #	app/grbl/print.c \
 #	app/grbl/eeprom.c \
@@ -163,8 +171,11 @@ INCLUDES = $(APPLIBDIR)/CMSISv1p30_LPC17xx/inc \
 	 $(APPLIBDIR)/NXP/Drivers/include \
 	 $(APPLIBDIR)/FatFs/src \
 	 $(APPLIBDIR)/R2C2/ \
+	 $(FREERTOS_SOURCE_DIR)/include \
+	 $(FREERTOS_PORT_DIR)/ \
 	 app/grbl/ \
 	 $(APPDIR)
+
 
 # List C source files here. (C dependencies are automatically generated.)
 # use file-extension c for "c-only"-files
@@ -174,6 +185,11 @@ SRC = \
 	$(wildcard $(APPLIBDIR)/NXP/Drivers/source/lpc17xx_*.c) \
 	$(wildcard $(APPLIBDIR)/FatFs/src/*.c) \
 	$(wildcard $(APPLIBDIR)/R2C2/*.c) \
+	  $(FREERTOS_SOURCE_DIR)/list.c \
+	  $(FREERTOS_SOURCE_DIR)/queue.c \
+	  $(FREERTOS_SOURCE_DIR)/tasks.c \
+	  $(FREERTOS_SOURCE_DIR)/portable/MemMang/heap_2.c \
+	  $(FREERTOS_PORT_DIR)/port.c \
 	$(APPSRC) \
 	main.c
 	

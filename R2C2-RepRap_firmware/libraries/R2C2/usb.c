@@ -26,15 +26,19 @@
         THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <stdio.h>
+#include <string.h>         // memcpy
+
 #include "LPC17xx.h"
 #include "lpc17xx_nvic.h"
 #include "lpc17xx_pinsel.h"
 #include "lpc17xx_gpio.h"
-#include <stdio.h>
-#include <string.h>         // memcpy
+
+#include "FreeRTOS.h"
+
+#include "serial_fifo.h"
 #include "usbapi.h"
 #include "usbdebug.h"
-#include "serial_fifo.h"
 
 #define BAUD_RATE   115200
 
@@ -337,6 +341,7 @@ void USBSerial_Init(void)
   fifo_init(&rxfifo, rxbuf);
   fifo_init(&txfifo, txbuf);
 
+  NVIC_SetPriority( USB_IRQn, configUSB_INTERRUPT_PRIORITY );
   NVIC_EnableIRQ(USB_IRQn);
 
   // connect to bus

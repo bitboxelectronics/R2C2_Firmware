@@ -76,6 +76,8 @@ uint8_t isHwTimerEnabled(uint16_t timerNum);
 void setHwTimerMatch (uint16_t timerNum, uint16_t matchReg, uint32_t interval);
 
 void SysTickTimer_Init(void);
+void r2c2_SysTick(void);
+
 void delay(int delay);
 void delay_ms(int delay);
 void delayMicrosecondsInterruptible(int us);

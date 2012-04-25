@@ -45,13 +45,11 @@ void USBShellTask( void *pvParameters )
 	// process received data (USB stuff is done inside interrupt)
 	for( ;; )
 	{
-        fifo_get(&rxfifo, &c);
-
-		if (c != 0) 
-		{
-			// Echo character
-			fifo_put (&txfifo, c);
-		}
+            if (fifo_get(&rxfifo, &c))
+            {
+		// Echo character
+		fifo_put (&txfifo, c);
+            }
 	}
 }
 

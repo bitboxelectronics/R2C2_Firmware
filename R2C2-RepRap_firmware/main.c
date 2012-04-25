@@ -88,7 +88,8 @@ int main(void)
    * Since the Number of Bits used for Priority Levels is five (5), so the
    * actual bit number of sub-priority is three (3)
    */
-  NVIC_SetPriorityGrouping(0x05);
+   // FreeRTOS requires 0 it seems
+  NVIC_SetPriorityGrouping(0x0);
 
   /* Change the Vector Table to the USER_FLASH_START
   in case the user application uses interrupts */

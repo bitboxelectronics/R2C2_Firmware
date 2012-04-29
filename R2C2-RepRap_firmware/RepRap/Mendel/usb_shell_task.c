@@ -4,52 +4,57 @@
 #include "task.h"
 
 #include "r2c2.h"
-#include "usb.h"
+
+#include "gcode_parse.h"
+#include "gcode_task.h"
 #include "serial_fifo.h"
 #include "uart.h"
-
-#define usbBUFFER_LEN			( 20 )
+#include "usb.h"
 
 #define DBG uart_writestr
 
-static xQueueHandle RxQueue = NULL;
-static xQueueHandle TxQueue = NULL;
+static tLineBuffer LineBuf;
+static tGcodeInputMsg GcodeInputMsg;
 
 void USBShellTask( void *pvParameters )
 {
-	uint8_t c;
-	( void ) pvParameters; /* Just to prevent compiler warnings about the unused parameter. */
+    (void) pvParameters; /* Just to prevent compiler warnings about the unused parameter. */
+    uint8_t c;
+    eParseResult parse_result;
 
     // TASK INIT
-
-	DBG("Initialising USB shell\n");
-//    buzzer_play(2500, 200); /* high beep */
-
-#if 0
-	RxQueue = xQueueCreate( usbBUFFER_LEN, sizeof( uint8_t ) );
-	TxQueue = xQueueCreate( usbBUFFER_LEN, sizeof( uint8_t ) );
-
-	if( ( RxQueue == NULL ) || ( TxQueue == NULL ) )
-	{
-		/* Not enough heap available to create the buffer queues, can't do
-		anything so just delete ourselves. */
-		vTaskDelete( NULL );
-	}
-#endif
-	
-	DBG("Starting USB shell\n");
     USBSerial_Init();
+
+    GcodeInputMsg.pLineBuf = &LineBuf;
+
+    // say hi to host
+    serial_writestr("Start\r\nOK\r\n");
 
     // TASK BODY
 
-	// process received data (USB stuff is done inside interrupt)
-	for( ;; )
-	{
-            if (fifo_get(&rxfifo, &c))
+    // process received data (USB stuff is done inside interrupt)
+    for( ;; )
+    {
+        // process characters from the serial port
+        while (!LineBuf.seen_lf && (serial_rxchars() != 0) )
+        {
+          unsigned char c = serial_popchar();
+      
+          if (LineBuf.len < MAX_LINE)
+            LineBuf.data [LineBuf.len++] = c;
+
+          if ((c==10) || (c==13))
+          {
+            if (LineBuf.len > 1)
             {
-		// Echo character
-		fifo_put (&txfifo, c);
+              LineBuf.seen_lf = 1;
+              xQueueSend (GcodeRxQueue, &GcodeInputMsg, portMAX_DELAY);
             }
-	}
+            else
+              LineBuf.len = 0;
+          }      
+        }
+
+    }
 }
 

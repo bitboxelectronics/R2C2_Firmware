@@ -31,27 +31,28 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+/* RTOS includes. */
+#include "FreeRTOS.h"
+#include "task.h"
+
 #include "lpc17xx_timer.h"
 #include "lpc17xx_wdt.h"
 #include "lpc17xx_adc.h"
-#include "r2c2.h"
 
+#include "r2c2.h"
 #include "machine.h"
 #include "gcode_parse.h"
-#include "gcode_process.h"
 #include "pinout.h"
 #include "debug.h"
 #include "config.h"
 #include "temp.h"
-
 #include "planner.h"
 #include "stepper.h"
+#include "usb_shell_task.h"
+#include "gcode_task.h"
 
 
 tTimer temperatureTimer;
-
-tLineBuffer serial_line_buf;
-tLineBuffer sd_line_buf;
 
 /* Initialize ADC for reading sensors */
 void adc_init(void)
@@ -133,104 +134,32 @@ void check_boot_request (void)
   }
 }
 
-void init(void)
+static void PrinterInit (void)
 {
+  buzzer_init();
+
   // set up inputs and outputs
   io_init();
-
-  /* Initialize Gcode parse variables */
-  gcode_parse_init();
-
-  // set up default feedrate
-//TODO  current_position.F = startpoint.F = next_target.target.F =       config.search_feedrate_z;
 
   AddSlowTimer (&temperatureTimer);
   StartSlowTimer (&temperatureTimer, 10, temperatureTimerCallback);
   temperatureTimer.AutoReload = 1;
 
-  // say hi to host
-  serial_writestr("Start\r\nOK\r\n");
 }
 
-int app_main (void)
+void PrinterTask( void *pvParameters )
 {
   long timer1 = 0;
-  eParseResult parse_result;
 
-  buzzer_init();
+  read_config();
+
   buzzer_play(1500, 100); /* low beep */
 	buzzer_wait();
   buzzer_play(2500, 200); /* high beep */
 
-  init();
-
-  read_config();
-
-  // grbl init
-  plan_init();      
-  st_init();    
-  
-  // main loop
+  // loop
   for (;;)
   {
-
-    // process characters from the serial port
-    while (!serial_line_buf.seen_lf && (serial_rxchars() != 0) )
-    {
-      unsigned char c = serial_popchar();
-      
-      if (serial_line_buf.len < MAX_LINE)
-        serial_line_buf.data [serial_line_buf.len++] = c;
-
-      if ((c==10) || (c==13))
-      {
-        if (serial_line_buf.len > 1)
-          serial_line_buf.seen_lf = 1;
-        else
-          serial_line_buf.len = 0;
-      }      
-    }
-
-    // process SD file if no serial command pending
-    if (!sd_line_buf.seen_lf && sd_printing)
-    {
-      if (sd_read_file (&sd_line_buf))
-      {
-          sd_line_buf.seen_lf = 1;
-      } 
-      else
-      {
-        sd_printing = false;
-        serial_writestr ("Done printing file\r\n");
-      }
-    }
-
-    // if queue is full, we wait
-    if (!plan_queue_full())
-    {
-  
-      /* At end of each line, put the "GCode" on movebuffer.
-       * If there are movement to do, Timer will start and execute code which
-       * will take data from movebuffer and generate the required step pulses
-       * for stepper motors.
-       */
-  
-      // give priority to user commands
-      if (serial_line_buf.seen_lf)
-      {
-        parse_result = gcode_parse_line (&serial_line_buf);
-        serial_line_buf.len = 0;
-        serial_line_buf.seen_lf = 0;
-      }
-      else if (sd_line_buf.seen_lf)
-      {
-        parse_result = gcode_parse_line (&sd_line_buf);
-        sd_line_buf.len = 0;
-        sd_line_buf.seen_lf = 0;
-      }
-
-    }
-
     /* Do every 100ms */
     #define DELAY1 100
     if (timer1 < millis())
@@ -255,3 +184,21 @@ int app_main (void)
 
   }
 }
+
+
+void app_main (void)
+{
+  PrinterInit();
+
+  /* Create the tasks */
+  xTaskCreate( PrinterTask,  (signed char *)"Print", 512, ( void * ) NULL, tskIDLE_PRIORITY, NULL );
+  xTaskCreate( GcodeTask,    (signed char *)"Gcode", 512, ( void * ) NULL, tskIDLE_PRIORITY, NULL );
+  xTaskCreate( USBShellTask, (signed char *)"USBsh", 128, ( void * ) NULL, tskIDLE_PRIORITY, NULL );
+
+  /* Start the scheduler. */
+  vTaskStartScheduler();
+
+  /* should not get here */
+}
+
+

@@ -35,7 +35,6 @@
 #include "r2c2.h"
 #include "uart.h"
 
-#include "usb_shell_task.h"
 
 #define DBG uart_writestr
 
@@ -95,30 +94,14 @@ int main(void)
   in case the user application uses interrupts */
   SCB->VTOR = (USER_FLASH_START & 0x1FFFFF80);
 
+#ifdef UARTDEBUG
   uart_init();
-  uart_writestr ("init\n");
-
-#if 0
-  // Initialize USB<->Serial
-  serial_init();
-
-  SysTickTimer_Init(); // Initialize the timer for millis()
+  DBG ("init\n");
+#endif 
 
   app_main ();
-#endif
-
-  /* Create the USB task. */
-  xTaskCreate( USBShellTask, (signed char *)"USBsh", 256, ( void * ) NULL, tskIDLE_PRIORITY, NULL );
-
-//  buzzer_init();
-//  buzzer_play(1500, 100); /* low beep */
-
-  DBG ("start\n");
-  /* Start the scheduler. */
-  vTaskStartScheduler();
 
   /* should never get here */
   DBG ("main:err\n");
   while(1) ;
 }
-

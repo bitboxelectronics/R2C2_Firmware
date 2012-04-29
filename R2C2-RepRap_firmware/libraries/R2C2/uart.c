@@ -32,7 +32,7 @@
 #include "lpc17xx_pinsel.h"
 
 //Debug UART can be 0 or 3
-#define DBG_UART_NUM  0 
+#define DBG_UART_NUM  3
 #define DBG_UART      LPC_UART3
 
 void uart_init(void)

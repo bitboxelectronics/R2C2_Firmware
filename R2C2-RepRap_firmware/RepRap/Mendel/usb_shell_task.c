@@ -13,7 +13,7 @@
 
 #define DBG uart_writestr
 
-static tLineBuffer LineBuf;
+static volatile tLineBuffer LineBuf;
 static tGcodeInputMsg GcodeInputMsg;
 
 void USBShellTask( void *pvParameters )

@@ -150,6 +150,7 @@ APPSRC = \
 	$(APPDIR)/geometry.c \
 	$(APPDIR)/alerter.c \
     $(APPDIR)/usb_shell_task.c \
+    $(APPDIR)/eth_shell_task.c \
     $(APPDIR)/gcode_task.c \
 	app/grbl/planner.c \
 	app/grbl/stepper.c \
@@ -172,6 +173,7 @@ INCLUDES = $(APPLIBDIR)/CMSISv1p30_LPC17xx/inc \
 	 $(APPLIBDIR)/NXP/Drivers/include \
 	 $(APPLIBDIR)/FatFs/src \
 	 $(APPLIBDIR)/R2C2/ \
+	 $(APPLIBDIR)/ethernet/ \
 	 $(FREERTOS_SOURCE_DIR)/include \
 	 $(FREERTOS_PORT_DIR)/ \
 	 app/grbl/ \
@@ -186,11 +188,12 @@ SRC = \
 	$(wildcard $(APPLIBDIR)/NXP/Drivers/source/lpc17xx_*.c) \
 	$(wildcard $(APPLIBDIR)/FatFs/src/*.c) \
 	$(wildcard $(APPLIBDIR)/R2C2/*.c) \
-	  $(FREERTOS_SOURCE_DIR)/list.c \
-	  $(FREERTOS_SOURCE_DIR)/queue.c \
-	  $(FREERTOS_SOURCE_DIR)/tasks.c \
-	  $(FREERTOS_SOURCE_DIR)/portable/MemMang/heap_2.c \
-	  $(FREERTOS_PORT_DIR)/port.c \
+	$(wildcard $(APPLIBDIR)/ethernet/*.c) \
+	$(FREERTOS_SOURCE_DIR)/list.c \
+	$(FREERTOS_SOURCE_DIR)/queue.c \
+	$(FREERTOS_SOURCE_DIR)/tasks.c \
+	$(FREERTOS_SOURCE_DIR)/portable/MemMang/heap_2.c \
+	$(FREERTOS_PORT_DIR)/port.c \
 	$(APPSRC) \
 	main.c
 	

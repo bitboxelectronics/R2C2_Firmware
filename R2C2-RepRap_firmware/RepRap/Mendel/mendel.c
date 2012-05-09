@@ -48,6 +48,8 @@
 #include "temp.h"
 #include "planner.h"
 #include "stepper.h"
+
+#include "eth_shell_task.h"
 #include "usb_shell_task.h"
 #include "gcode_task.h"
 
@@ -193,7 +195,8 @@ void app_main (void)
   /* Create the tasks */
   xTaskCreate( PrinterTask,  (signed char *)"Print", 512, ( void * ) NULL, tskIDLE_PRIORITY, NULL );
   xTaskCreate( GcodeTask,    (signed char *)"Gcode", 512, ( void * ) NULL, tskIDLE_PRIORITY, NULL );
-  xTaskCreate( USBShellTask, (signed char *)"USBsh", 128, ( void * ) NULL, tskIDLE_PRIORITY, NULL );
+  xTaskCreate( USBShellTask, (signed char *)"USBSh", 128, ( void * ) NULL, tskIDLE_PRIORITY, NULL );
+  xTaskCreate( EthShellTask, (signed char *)"EthSh", 128, ( void * ) NULL, tskIDLE_PRIORITY, NULL );
 
   /* Start the scheduler. */
   vTaskStartScheduler();

@@ -11,6 +11,8 @@
 #include "uart.h"
 #include "usb.h"
 
+#include "usb_shell_task.h"
+
 #define DBG uart_writestr
 
 static volatile tLineBuffer LineBuf;
@@ -38,7 +40,7 @@ void USBShellTask( void *pvParameters )
         // process characters from the serial port
         while (!LineBuf.seen_lf && (serial_rxchars() != 0) )
         {
-          unsigned char c = serial_popchar();
+          c = serial_popchar();
       
           if (LineBuf.len < MAX_LINE)
             LineBuf.data [LineBuf.len++] = c;

@@ -263,17 +263,23 @@ void delay_ms(int ms)
     ;
 }
 
-void delayMicrosecondsInterruptible(int us)
+void delayMicrosecondsInterruptible(volatile int us)
 {
-  (void) us;
-  /* todo: implement this delay for LPC17xx */
+  // approximate delay
+  us = us * 10;
+  while (us)
+  {
+      us--;
+  }
 }
 
 // delay( microseconds )
-void delay(int d){
-  while (d > 65535) {
-          delayMicrosecondsInterruptible(65534);
-          d -= 65535;
+void delay(int d)
+{
+  while (d > 65535) 
+  {
+    delayMicrosecondsInterruptible(65534);
+    d -= 65535;
   }
   delayMicrosecondsInterruptible(d & 0xFFFF);
 }

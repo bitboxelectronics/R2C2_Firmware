@@ -113,6 +113,7 @@ void io_init(void)
   e_enable();
 
   pin_mode(EXTRUDER_0_FAN_PORT, EXTRUDER_0_FAN_PIN, OUTPUT);
+  extruder_fan_off();
 
   adc_init();
 }

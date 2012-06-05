@@ -74,16 +74,7 @@ uint16_t temptable[NUMTEMPS][3] = {
 
 static uint16_t current_temp [NUMBER_OF_SENSORS] = {0};
 static uint16_t target_temp  [NUMBER_OF_SENSORS] = {0};
-static uint32_t adc_filtered [NUMBER_OF_SENSORS] = {0};
-
-static uint16_t ticks;
-
-/* Define a value for sequencial number of reads of ADC, to average the readed
- * value and try filter high frequency noise.
- */
-#define ADC_READ_TIMES 4
-
-#define NUM_TICKS 20
+static uint32_t adc_filtered [NUMBER_OF_SENSORS] = {4096, 4096}; // variable must have the higher value of ADC for filter start at the lowest temperature
 
 #ifndef	ABSDELTA
 #define	ABSDELTA(a, b)	(((a) >= (b))?((a) - (b)):((b) - (a)))
@@ -140,30 +131,24 @@ void temp_tick(void)
   current_temp[EXTRUDER_0] = read_temp(EXTRUDER_0);
   current_temp[HEATED_BED_0] = read_temp(HEATED_BED_0);
 
-  ticks ++;
-  if (ticks == NUM_TICKS)
+  /* Manage heater using simple ON/OFF logic, no PID */
+  if (current_temp[EXTRUDER_0] < target_temp[EXTRUDER_0])
   {
-    /* Manage heater using simple ON/OFF logic, no PID */
-    if (current_temp[EXTRUDER_0] < target_temp[EXTRUDER_0])
-    {
-      extruder_heater_on();
-    }
-    else
-    {
-      extruder_heater_off();
-    }
+    extruder_heater_on();
+  }
+  else
+  {
+    extruder_heater_off();
+  }
 
-    /* Manage heater using simple ON/OFF logic, no PID */
-    if (current_temp[HEATED_BED_0] < target_temp[HEATED_BED_0])
-    {
-      heated_bed_on();
-    }
-    else
-    {
-      heated_bed_off();
-    }
-    
-    ticks = 0;
+  /* Manage heater using simple ON/OFF logic, no PID */
+  if (current_temp[HEATED_BED_0] < target_temp[HEATED_BED_0])
+  {
+    heated_bed_on();
+  }
+  else
+  {
+    heated_bed_off();
   }
 }
 
@@ -184,7 +169,7 @@ static uint16_t read_temp(uint8_t sensor_number)
   }
   
   // filter the ADC values with simple IIR
-  adc_filtered[sensor_number] = ((adc_filtered[sensor_number] * 7) + raw) / 8;
+  adc_filtered[sensor_number] = ((adc_filtered[sensor_number] * 15) + raw) / 16;
   
   raw = adc_filtered[sensor_number];
   

@@ -588,19 +588,19 @@ eParseResult process_gcode_command()
       
       if (next_target.seen_X)
       {
-        new_pos.x = 0;
+        new_pos.x = next_target.target.x; //0;
         axisSelected = 1;
       }
 
       if (next_target.seen_Y)
       {
-        new_pos.y = 0;
+        new_pos.y = next_target.target.y; //0;
         axisSelected = 1;
       }
 
       if (next_target.seen_Z)
       {
-        new_pos.z = 0;
+        new_pos.z = next_target.target.z; //0;
         axisSelected = 1;
       }
 

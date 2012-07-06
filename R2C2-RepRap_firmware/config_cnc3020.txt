@@ -1,0 +1,47 @@
+# Config file for CNC 3020
+# 
+
+# Number of steps for each millimeter
+steps_per_mm_x = 800
+steps_per_mm_y = 800
+steps_per_mm_z = 800
+
+# Max feed rate of the machine (mm/min)
+maximum_feedrate_x = 2000
+maximum_feedrate_y = 2000
+maximum_feedrate_z = 800
+
+acceleration = 200
+
+x.dir.invert = 1
+y.dir.invert = 1
+z.dir.invert = 1
+
+# very slow speed for fine search
+search_feedrate_x = 120
+search_feedrate_y = 120
+search_feedrate_z = 60
+search_feedrate_e = 1600
+
+# slow speed for initial search
+homing_feedrate_x = 1200
+homing_feedrate_y = 1200
+homing_feedrate_z = 60
+
+# direction of travel to find "home" endstop
+# +1 = move in positive, -1 = move negative
+home_direction_x = -1
+home_direction_y = -1
+home_direction_z = -1
+
+# the coordinates to set when home found
+home_pos_x = 0
+home_pos_y = 0
+home_pos_z = 0
+
+# size of print area 
+printing_vol_x = 300
+printing_vol_y = 200
+printing_vol_z = 50
+
+

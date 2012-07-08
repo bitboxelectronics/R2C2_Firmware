@@ -136,14 +136,22 @@ static inline void inc_led_count (uint8_t *pCount, uint8_t led_mask)
 #endif
 }
 
+static inline void  gpio_WriteValue (uint8_t portNum, uint32_t bitMask, uint8_t value)
+{
+  if (value)
+    GPIO_SetValue (portNum, bitMask);
+  else
+    GPIO_ClearValue (portNum, bitMask);
+}
+
 static inline void  set_direction_pins (void) 
 {
   // x_direction( (direction_bits & (1<<X_DIRECTION_BIT))?0:1);
 
   if (direction_bits & X_DIR_PIN)
-    GPIO_ClearValue (X_DIR_PORT, X_DIR_PIN);
+    gpio_WriteValue (X_DIR_PORT, X_DIR_PIN, config.axis[X_AXIS].dir_invert);
   else
-    GPIO_SetValue (X_DIR_PORT, X_DIR_PIN);
+    gpio_WriteValue (X_DIR_PORT, X_DIR_PIN, !config.axis[X_AXIS].dir_invert);
   
   // y_direction( (direction_bits & (1<<Y_DIRECTION_BIT))?0:1);
   if (direction_bits & Y_DIR_PIN)
@@ -304,7 +312,7 @@ void st_wake_up() {
 
   enableHwTimer(1);
   
-  dac_scale = (33 * 60 * config.steps_per_mm_x * mm_per_sec_per_volt) / 1024/10;
+  dac_scale = (33 * 60 * config.axis[X_AXIS].steps_per_mm * mm_per_sec_per_volt) / 1024/10;
 
 #endif
 }

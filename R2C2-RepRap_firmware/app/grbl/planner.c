@@ -422,7 +422,7 @@ void plan_buffer_line (tActionRequest *pAction)
   invert_feed_rate = pAction->target.invert_feed_rate;
   
   // Calculate target position in absolute steps
-  target[X_AXIS] = lround(x*(double)config.steps_per_mm_x);
+  target[X_AXIS] = lround(x*(double)config.axis[X_AXIS].steps_per_mm);
   target[Y_AXIS] = lround(y*(double)config.steps_per_mm_y);
   target[Z_AXIS] = lround(z*(double)config.steps_per_mm_z);     
   target[E_AXIS] = lround(pAction->target.e*(double)config.steps_per_mm_e);     
@@ -458,7 +458,7 @@ void plan_buffer_line (tActionRequest *pAction)
   if (block->step_event_count == 0) { return; };
   
   // Compute path vector in terms of absolute step target and current positions
-  delta_mm[X_AXIS] = (target[X_AXIS]-position[X_AXIS])/(double)config.steps_per_mm_x;
+  delta_mm[X_AXIS] = (target[X_AXIS]-position[X_AXIS])/(double)config.axis[X_AXIS].steps_per_mm;
   delta_mm[Y_AXIS] = (target[Y_AXIS]-position[Y_AXIS])/(double)config.steps_per_mm_y;
   delta_mm[Z_AXIS] = (target[Z_AXIS]-position[Z_AXIS])/(double)config.steps_per_mm_z;
   delta_mm[E_AXIS] = (target[E_AXIS]-position[E_AXIS])/(double)config.steps_per_mm_e;
@@ -488,9 +488,9 @@ void plan_buffer_line (tActionRequest *pAction)
 
   // Limit speed per axis
   speed_factor = 1; //factor <=1 do decrease speed
-  if(fabs(speed_x) > config.maximum_feedrate_x) 
+  if(fabs(speed_x) > config.axis[X_AXIS].maximum_feedrate) 
   {
-    speed_factor = (double)config.maximum_feedrate_x / fabs(speed_x);
+    speed_factor = (double)config.axis[X_AXIS].maximum_feedrate / fabs(speed_x);
   }
   if(fabs(speed_y) > config.maximum_feedrate_y)
   {
@@ -742,7 +742,7 @@ void plan_set_current_position_xyz(double x, double y, double z)
 void plan_set_current_position(tTarget *new_position) 
 {
   startpoint = *new_position;
-  position[X_AXIS] = lround(new_position->x*(double)config.steps_per_mm_x);
+  position[X_AXIS] = lround(new_position->x*(double)config.axis[X_AXIS].steps_per_mm);
   position[Y_AXIS] = lround(new_position->y*(double)config.steps_per_mm_y);
   position[Z_AXIS] = lround(new_position->z*(double)config.steps_per_mm_z);    
   position[E_AXIS] = lround(new_position->e*(double)config.steps_per_mm_e);    

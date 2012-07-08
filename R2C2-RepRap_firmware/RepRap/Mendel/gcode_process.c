@@ -153,27 +153,27 @@ static void zero_x(void)
 {
   int dir;
   int max_travel;
-  
-  if (config.home_direction_x < 0)
+
+    if (config.home_direction_x < 0)
     dir = -1;
   else
     dir = 1;
   max_travel = max (300, config.printing_vol_x);
 
   // move to endstop
-  SpecialMoveXY(startpoint.x + dir * max_travel, startpoint.y, config.homing_feedrate_x);
+  SpecialMoveXY(startpoint.x + dir * max_travel, startpoint.y, config.axis[X_AXIS].homing_feedrate);
   synch_queue();
   
   // move forward a bit
-  SpecialMoveXY(startpoint.x - dir * 3, startpoint.y, config.search_feedrate_x);
+  SpecialMoveXY(startpoint.x - dir * 3, startpoint.y, config.axis[X_AXIS].search_feedrate);
   // move back in to endstop slowly
-  SpecialMoveXY(startpoint.x + dir * 6, startpoint.y, config.search_feedrate_x);
+  SpecialMoveXY(startpoint.x + dir * 6, startpoint.y, config.axis[X_AXIS].search_feedrate);
 
   synch_queue();
 
   // this is our home point
   tTarget new_pos = startpoint;
-  new_pos.x = config.home_pos_x;
+  new_pos.x = config.axis[X_AXIS].home_pos;
   plan_set_current_position (&new_pos);
 }
 
@@ -419,7 +419,7 @@ eParseResult process_gcode_command()
       // since it would be a major hassle to force the dda to not synchronise, just provide a fast feedrate and hope it's close enough to what host expects
       case 0:
       backup_f = next_targetd.feed_rate;
-      next_targetd.feed_rate = config.maximum_feedrate_x * 2;
+      next_targetd.feed_rate = config.axis[X_AXIS].maximum_feedrate * 2;
       enqueue_moved (&next_targetd);
       next_targetd.feed_rate = backup_f;
       break;
@@ -878,7 +878,7 @@ eParseResult process_gcode_command()
       {
         reply_sent = true;
         sersendf ("ok X%g Y%g Z%g E%g\r\n", 
-          config.steps_per_mm_x,
+          config.axis[X_AXIS].steps_per_mm,
           config.steps_per_mm_y,
           config.steps_per_mm_z,
           config.steps_per_mm_e
@@ -887,7 +887,7 @@ eParseResult process_gcode_command()
       else
       {
         if (next_target.seen_X)
-          config.steps_per_mm_x = next_target.target.x;
+          config.axis[X_AXIS].steps_per_mm = next_target.target.x;
         if (next_target.seen_Y)
           config.steps_per_mm_y = next_target.target.y;
         if (next_target.seen_Z)
@@ -905,7 +905,7 @@ eParseResult process_gcode_command()
       {
         reply_sent = true;
         sersendf ("ok X%d Y%d Z%d E%d\r\n", 
-          config.maximum_feedrate_x,
+          config.axis[X_AXIS].maximum_feedrate,
           config.maximum_feedrate_y,
           config.maximum_feedrate_z,
           config.maximum_feedrate_e
@@ -914,7 +914,7 @@ eParseResult process_gcode_command()
       else
       {
         if (next_target.seen_X)
-          config.maximum_feedrate_x = next_target.target.x;
+          config.axis[X_AXIS].maximum_feedrate = next_target.target.x;
         if (next_target.seen_Y)
           config.maximum_feedrate_y = next_target.target.y;
         if (next_target.seen_Z)
@@ -1036,7 +1036,7 @@ eParseResult process_gcode_command()
           next_targetd.x = config.wipe_entry_pos_x;
           next_targetd.y = config.wipe_entry_pos_y;
           next_targetd.z = startpoint.z;
-          next_targetd.feed_rate = config.maximum_feedrate_x;
+          next_targetd.feed_rate = config.axis[X_AXIS].maximum_feedrate;
         }
         else
         {
@@ -1044,7 +1044,7 @@ eParseResult process_gcode_command()
           next_targetd.x = config.rest_pos_x;
           next_targetd.y = config.rest_pos_y;
           next_targetd.z = startpoint.z;
-          next_targetd.feed_rate = config.maximum_feedrate_x;
+          next_targetd.feed_rate = config.axis[X_AXIS].maximum_feedrate;
         }
         
         enqueue_moved(&next_targetd);

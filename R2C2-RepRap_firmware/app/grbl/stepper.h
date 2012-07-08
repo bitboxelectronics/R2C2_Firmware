@@ -31,12 +31,14 @@
 #define sleep_mode(x) do {} while (0)
 #define sei(x) 
 
+/*
 #define NUM_AXES 4
 
 #define X_AXIS 0
 #define Y_AXIS 1
 #define Z_AXIS 2
 #define E_AXIS 3
+*/
 
 #define clear_vector(a) memset(a, 0, sizeof(a))
 #define clear_vector_double(a) memset(a, 0.0, sizeof(a))

@@ -31,6 +31,54 @@
 #define CONFIG_H
 
 #include "stdint.h"
+#include "stdbool.h"
+
+/*
+  // pin config
+  input
+  output
+  pullup/down/etc
+  special function: pwm etc
+*/
+
+typedef struct
+{
+  bool    configured;
+  char    letter_code;      // X,Y,Z,A,B,C
+  
+  double  steps_per_mm;
+  int32_t maximum_feedrate;
+  double  acceleration;
+  
+  // step, dir, enable, reset
+  // polarity: active low/high
+  // pulse len low,high
+  uint8_t pin_step;
+  uint8_t pin_dir;
+  uint8_t pin_enable;
+  uint8_t pin_reset;
+  
+  int32_t step_invert;
+  int32_t dir_invert;
+
+  int32_t search_feedrate;
+  int32_t homing_feedrate;
+  int32_t home_pos;
+  int32_t home_direction;
+  
+  int32_t printing_vol;
+  
+} tAxisSettings;
+
+// axis configs: 
+// X Y Z E
+// X Y Z A
+// X Y A B
+#define NUM_AXES 4
+#define X_AXIS 0
+#define Y_AXIS 1
+#define Z_AXIS 2
+#define E_AXIS 3
 
 #define MM_REPRAP_MENDEL  0
 #define MM_RAPMAN         1
@@ -39,12 +87,14 @@ struct configuration
 {
   int32_t  machine_model;
   
-  double steps_per_mm_x;
+  int32_t num_axes;
+  
+  tAxisSettings axis[NUM_AXES];
+
   double steps_per_mm_y;
   double steps_per_mm_z;
   double steps_per_mm_e;
 
-  int32_t maximum_feedrate_x;
   int32_t maximum_feedrate_y;
   int32_t maximum_feedrate_z;
   int32_t maximum_feedrate_e;
@@ -52,32 +102,33 @@ struct configuration
   double  acceleration;
   double  junction_deviation;
 
-  int32_t search_feedrate_x;
+  int32_t invert_dir_y;
+  int32_t invert_dir_z;
+  
   int32_t search_feedrate_y;
   int32_t search_feedrate_z;
   int32_t search_feedrate_e;
   
   // rate when homing (fast)
-  int32_t homing_feedrate_x;
   int32_t homing_feedrate_y;
   int32_t homing_feedrate_z;
   
   // direction to move when homing (depends on endstop locations)
-  int32_t home_direction_x;
   int32_t home_direction_y;
   int32_t home_direction_z;
   
   // position at home
-  int32_t home_pos_x;
   int32_t home_pos_y;
   int32_t home_pos_z;
 
+  
   // printable volume size
   // TODO: Need to define origin?
-  int32_t printing_vol_x;
   int32_t printing_vol_y;
   int32_t printing_vol_z;
   
+  // The following are specific to printers
+
   // dump pos
   int32_t have_dump_pos;
   int32_t dump_pos_x;

@@ -5,7 +5,7 @@
 
 bool hit_home_stop_x (unsigned dir)
 {
-  if (config.home_direction_x < 0)
+  if (config.axis[X_AXIS].home_direction < 0)
   {
     return x_min() && (dir != 0);
   }

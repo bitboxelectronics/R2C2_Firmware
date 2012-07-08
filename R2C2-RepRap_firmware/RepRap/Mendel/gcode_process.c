@@ -69,31 +69,6 @@ const double auto_reverse_feed_rate = 18000;
 double auto_prime_factor = 640;
 double auto_reverse_factor = 640;
 
-#if 0
-static void enqueue_move (TARGET *pTarget)
-{
-#ifndef USE_GRBL
-  enqueue(pTarget);
-#else      
-  //grbl
-  tActionRequest request;
-  
-  if (pTarget->options.g28)
-    request.ActionType = AT_MOVE_ENDSTOP;
-  else
-    request.ActionType = AT_MOVE;
-  request.target.x = (double)pTarget->X / config.steps_per_mm_x;
-  request.target.y = (double)pTarget->Y / config.steps_per_mm_y; 
-  request.target.z = (double)pTarget->Z / config.steps_per_mm_z; 
-  request.target.e = (double)pTarget->E / config.steps_per_mm_e; 
-  request.target.feed_rate = (double)pTarget->F; 
-  request.target.invert_feed_rate =  false;
-  plan_buffer_action (&request);
-  //startpoint = *pTarget;
-#endif
-}
-#endif
-
 static void enqueue_moved (tTarget *pTarget)
 {
   // grbl
@@ -121,34 +96,16 @@ static void enqueue_moved (tTarget *pTarget)
 
 static void enqueue_wait_temp (void)
 {
-#ifndef USE_GRBL
-  enqueue(NULL);
-#else      
-#if 1
-  //grbl
   tActionRequest request;
   
   request.ActionType = AT_WAIT_TEMPS;
   plan_buffer_action (&request);
-#else
-  while (!temp_achieved(EXTRUDER_0))
-  {
-    //temp_tick();
-  }
-  serial_writestr("Temp achieved\r\n");
-#endif
-#endif
 }
 
 // wait for move queue to be empty
 static void synch_queue (void)
 {
-#ifndef USE_GRBL
-  // wait for queue to complete
-  for (;queue_empty() == 0;) {}
-#else
   st_synchronize();
-#endif
 }
 
 static void SpecialMoveXY(double x, double y, double f) 
@@ -179,21 +136,6 @@ static void SpecialMoveZ(double z, double f)
   plan_buffer_action (&request);
 }
 
-#if 0
-// this function is not used
-static void SpecialMoveE(int32_t e, uint32_t f) {
-	TARGET t = startpoint;
-#ifdef ACCELERATION_REPRAP
-	// no accel for ACCEL_REPRAP
-	startpoint.F = f;
-#endif
-	t.E = e;
-	t.F = f;
-	//t.options.g28 = 1; /* signal a G28 command */
-	enqueue(&t);
-}
-#endif
-
 static void SpecialMoveE (double e, double feed_rate) 
 {
   tTarget next_targetd;
@@ -209,23 +151,27 @@ static void SpecialMoveE (double e, double feed_rate)
 
 static void zero_x(void)
 {
-  //TODO: move distance needs to be a least as big as print area
+  int dir;
+  int max_travel;
   
-  // hit endstops, no acceleration- we don't care about skipped steps
-  SpecialMoveXY(startpoint.x - 300, startpoint.y, config.homing_feedrate_x);
-  
+  if (config.home_direction_x < 0)
+    dir = -1;
+  else
+    dir = 1;
+  max_travel = max (300, config.printing_vol_x);
+
+  // move to endstop
+  SpecialMoveXY(startpoint.x + dir * max_travel, startpoint.y, config.homing_feedrate_x);
   synch_queue();
   
   // move forward a bit
-  SpecialMoveXY(startpoint.x + 3, startpoint.y, config.search_feedrate_x);
+  SpecialMoveXY(startpoint.x - dir * 3, startpoint.y, config.search_feedrate_x);
+  // move back in to endstop slowly
+  SpecialMoveXY(startpoint.x + dir * 6, startpoint.y, config.search_feedrate_x);
 
-  // move back in to endstops slowly
-  SpecialMoveXY(startpoint.x - 6, startpoint.y, config.search_feedrate_x);
-  
   synch_queue();
 
   // this is our home point
-  //startpoint.X = current_position.X = config.home_pos_x * config.steps_per_mm_x;
   tTarget new_pos = startpoint;
   new_pos.x = config.home_pos_x;
   plan_set_current_position (&new_pos);
@@ -234,26 +180,26 @@ static void zero_x(void)
 static void zero_y(void)
 {
   int dir;
+  int max_travel;
 
-  // hit endstops, no acceleration- we don't care about skipped steps
   if (config.home_direction_y < 0)
     dir = -1;
   else
     dir = 1;
+  max_travel = max (300, config.printing_vol_y);
     
-  SpecialMoveXY(startpoint.x, startpoint.y + dir * 250, config.homing_feedrate_y);
-  
+  // move to endstop
+  SpecialMoveXY(startpoint.x, startpoint.y + dir * max_travel, config.homing_feedrate_y);
   synch_queue();
   
   // move forward a bit
   SpecialMoveXY(startpoint.x, startpoint.y - dir * 3, config.search_feedrate_y);
-  // move back in to endstops slowly
+  // move back in to endstop slowly
   SpecialMoveXY(startpoint.x, startpoint.y + dir * 6, config.search_feedrate_y);
 
   synch_queue();
 
   // this is our home point
-  //startpoint.Y = current_position.Y = config.home_pos_y * config.steps_per_mm_y;
   tTarget new_pos = startpoint;
   new_pos.y = config.home_pos_y;
   plan_set_current_position (&new_pos);
@@ -261,20 +207,28 @@ static void zero_y(void)
 
 static void zero_z(void)
 {
-  // hit endstops, no acceleration- we don't care about skipped steps
-  SpecialMoveZ(startpoint.z - 250, config.homing_feedrate_z);  
+  int dir;
+  int max_travel;
+
+  if (config.home_direction_z < 0)
+    dir = -1;
+  else
+    dir = 1;
+  max_travel = max (300, config.printing_vol_z);
+
+  // move to endstop
+  SpecialMoveZ(startpoint.z + dir * max_travel, config.homing_feedrate_z);  
   synch_queue();
   
   // move forward a bit
-  SpecialMoveZ(startpoint.z + 1, config.search_feedrate_z);
+  SpecialMoveZ(startpoint.z - dir * 1, config.search_feedrate_z);
   synch_queue();
 
-  // move back in to endstops slowly
-  SpecialMoveZ(startpoint.z - 6, config.search_feedrate_z);
+  // move back in to endstop slowly
+  SpecialMoveZ(startpoint.z + dir * 6, config.search_feedrate_z);
   synch_queue();
 
   // this is our home point
-  //startpoint.Z = current_position.Z = config.home_pos_z * config.steps_per_mm_z;
   tTarget new_pos = startpoint;
   new_pos.z = config.home_pos_z;
   plan_set_current_position (&new_pos);
@@ -542,14 +496,16 @@ eParseResult process_gcode_command()
 
       if(!axisSelected)
       {
-        // move down to clear Z endstop
-        // Rapman only?
-//        SpecialMoveZ (startpoint.Z + 3 * config.steps_per_mm_z, config.homing_feedrate_x);
+        if (config.machine_model == MM_RAPMAN)
+        {
+          // move stage down to clear Z endstop
+          // Rapman only?
           next_targetd = startpoint;
           next_targetd.z += 3;
           next_targetd.feed_rate = config.homing_feedrate_z;
           enqueue_moved(&next_targetd);
-        
+        }
+                
         zero_x();
         zero_y();
         zero_z();
@@ -558,12 +514,6 @@ eParseResult process_gcode_command()
 
 //!      startpoint.F = config.homing_feedrate_x;  //?
       
-#ifdef USE_GRBLX
-      plan_set_current_position (
-        (double)startpoint.X / config.steps_per_mm_x, 
-        (double)startpoint.Y / config.steps_per_mm_y, 
-        (double)startpoint.Z / config.steps_per_mm_z);
-#endif
       break;
 
       // G90 - absolute positioning
@@ -817,9 +767,7 @@ eParseResult process_gcode_command()
       // M112- immediate stop
       case 112:
       disableHwTimer(0);
-#ifndef USE_GRBL
-      queue_flush();
-#endif
+      //TODO: queue_flush();
       power_off();
       break;
 
@@ -949,9 +897,6 @@ eParseResult process_gcode_command()
           config.steps_per_mm_e = next_target.target.e;
           
         gcode_parse_init();  
-#ifndef USE_GRBL        
-        dda_init();
-#endif      
       }
       break;
       

@@ -32,8 +32,13 @@
 
 #include "stdint.h"
 
+#define MM_REPRAP_MENDEL  0
+#define MM_RAPMAN         1
+
 struct configuration
 {
+  int32_t  machine_model;
+  
   double steps_per_mm_x;
   double steps_per_mm_y;
   double steps_per_mm_z;

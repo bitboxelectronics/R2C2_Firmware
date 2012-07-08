@@ -520,21 +520,18 @@ eParseResult process_gcode_command()
       
       if (next_target.seen_X)
       {
-        startpoint.x = - config.home_direction_x * config.printing_vol_x * 2;  
         zero_x();
         axisSelected = 1;
       }
 
       if (next_target.seen_Y)
       {
-        startpoint.y = - config.home_direction_y * config.printing_vol_y * 2;  
         zero_y();
         axisSelected = 1;
       }
 
       if (next_target.seen_Z)
       {
-        startpoint.z = - config.home_direction_z * config.printing_vol_z * 2;  
         zero_z();
         axisSelected = 1;
       }
@@ -550,25 +547,16 @@ eParseResult process_gcode_command()
         // move down to clear Z endstop
         // Rapman only?
 //        SpecialMoveZ (startpoint.Z + 3 * config.steps_per_mm_z, config.homing_feedrate_x);
-//          next_targetd = startpoint;
-//          next_targetd.z += 3;
-//          next_targetd.feed_rate = config.homing_feedrate_z;
-//          enqueue_moved(&next_targetd);
+          next_targetd = startpoint;
+          next_targetd.z += 3;
+          next_targetd.feed_rate = config.homing_feedrate_z;
+          enqueue_moved(&next_targetd);
         
-        // Just set X. Y, Z maintains default.
-        startpoint.x = - config.home_direction_x * config.printing_vol_x * 2;		
         zero_x();
-		
-        // Just set Y. Z maintains default.
-        startpoint.y = - config.home_direction_y * config.printing_vol_y * 2;
         zero_y();
-		
-        // Now that we are on XY (0,0), set Z position.
-        startpoint.z = - config.home_direction_z * config.printing_vol_z * 2;
         zero_z();
-		
-        // Reset E!
-        zero_e();      }
+        zero_e();
+      }
 
 //!      startpoint.F = config.homing_feedrate_x;  //?
       

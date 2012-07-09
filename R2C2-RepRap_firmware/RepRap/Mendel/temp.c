@@ -45,7 +45,7 @@ uint16_t temptable[NUMTEMPS][3] = {
  { 1547,   67, 270 },
  { 1698,   78, 260 },
  { 1859,   91, 250 },
- { 2029   107, 240 },
+ { 2029,   107, 240 },
  { 2205,  127, 230 },
  { 2385,  151, 220 },
  { 2567,  180, 210 },
@@ -173,6 +173,10 @@ static uint16_t read_temp(uint8_t sensor_number)
   
   raw = adc_filtered[sensor_number];
   
+  sersendf("E: %u -- ", adc_filtered[EXTRUDER_0]);
+  sersendf("B: %u\r\n", adc_filtered[HEATED_BED_0]);
+
+
   /* Go and use the temperature table to math the temperature value... */
   if (raw < temptable[0][sensor_number]) /* Limit the smaller value... */
   {

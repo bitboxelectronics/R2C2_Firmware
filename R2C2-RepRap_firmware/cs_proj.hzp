@@ -1,0 +1,128 @@
+<!DOCTYPE CrossStudio_Project_File>
+<solution Name="cs_proj" target="8" version="2">
+  <project Name="cs_proj">
+    <configuration Name="Common" Target="LPC1758" arm_architecture="v7M" arm_core_type="Cortex-M3" arm_gcc_target="arm-unknown-eabi" arm_interwork="No" arm_linker_heap_size="128" arm_linker_process_stack_size="0" arm_linker_stack_size="128" arm_simulator_memory_simulation_filename="$(TargetsDir)/LPC1000/LPC1000SimulatorMemory.dll" arm_simulator_memory_simulation_parameter="LPC17;0x80000;0x8000;0x8000" arm_target_debug_interface_type="ADIv5" arm_target_loader_parameter="12000000" c_only_additional_options="-fms-extensions" c_preprocessor_definitions="USE_PROCESS_STACK" c_user_include_directories="$(TargetsDir)/LPC1000/include/CMSIS;$(TargetsDir)/CMSIS_3/CMSIS/Include;$(TargetsDir)/LPC1000/include" link_include_startup_code="No" linker_additional_files="$(TargetsDir)/LPC1000/lib/liblpc1000$(LibExt)$(LIB)" linker_memory_map_file="$(TargetsDir)/LPC1000/LPC1758_MemoryMap.xml" linker_output_format="bin" oscillator_frequency="12MHz" project_directory="" project_type="Executable" property_groups_file_path="$(TargetsDir)/LPC1000/propertyGroups.xml"/>
+    <configuration Name="Flash" Placement="Flash" arm_target_flash_loader_file_path="$(TargetsDir)/LPC1000/Release/Loader_rpc.elf" arm_target_flash_loader_type="LIBMEM RPC Loader" linker_patch_build_command="&quot;$(StudioDir)/bin/crossscript&quot; &quot;load(\&quot;$(TargetsDir)/LPC1000/LPC1000_LinkPatch.js\&quot;);patch(\&quot;$(TargetPath)\&quot;);&quot;" linker_section_placement_file="$(StudioDir)/targets/Cortex_M/flash_placement.xml" target_reset_script="FLASHReset()"/>
+    <configuration Name="RAM" Placement="RAM" linker_section_placement_file="$(StudioDir)/targets/Cortex_M/ram_placement.xml" target_reset_script="SRAMReset()"/>
+    <folder Name="Source Files">
+      <configuration Name="Common" filter="c;cpp;cxx;cc;h;s;asm;inc"/>
+      <file file_name="main.c"/>
+      <file file_name="startup.S"/>
+      <file file_name="LPC1758_flash.ld">
+        <configuration Name="Common" file_type="Linker Script"/>
+      </file>
+    </folder>
+    <folder Name="System Files">
+      <file file_name="$(TargetsDir)/LPC1000/LPC1700_Target.js">
+        <configuration Name="Common" file_type="Reset Script"/>
+      </file>
+    </folder>
+    <folder Name="CMSIS Files">
+      <file file_name="libraries/CMSISv1p30_LPC17xx/src/system_LPC17xx.c"/>
+    </folder>
+    <folder Name="lib_NXP">
+      <file file_name="libraries/NXP/Drivers/source/lpc17xx_adc.c"/>
+      <file file_name="libraries/NXP/Drivers/source/lpc17xx_can.c"/>
+      <file file_name="libraries/NXP/Drivers/source/lpc17xx_clkpwr.c"/>
+      <file file_name="libraries/NXP/Drivers/source/lpc17xx_dac.c"/>
+      <file file_name="libraries/NXP/Drivers/source/lpc17xx_emac.c"/>
+      <file file_name="libraries/NXP/Drivers/source/lpc17xx_exti.c"/>
+      <file file_name="libraries/NXP/Drivers/source/lpc17xx_gpdma.c"/>
+      <file file_name="libraries/NXP/Drivers/source/lpc17xx_gpio.c"/>
+      <file file_name="libraries/NXP/Drivers/source/lpc17xx_i2c.c"/>
+      <file file_name="libraries/NXP/Drivers/source/lpc17xx_i2s.c"/>
+      <file file_name="libraries/NXP/Drivers/source/lpc17xx_libcfg_default.c"/>
+      <file file_name="libraries/NXP/Drivers/source/lpc17xx_mcpwm.c"/>
+      <file file_name="libraries/NXP/Drivers/source/lpc17xx_nvic.c"/>
+      <file file_name="libraries/NXP/Drivers/source/lpc17xx_pinsel.c"/>
+      <file file_name="libraries/NXP/Drivers/source/lpc17xx_pwm.c"/>
+      <file file_name="libraries/NXP/Drivers/source/lpc17xx_qei.c"/>
+      <file file_name="libraries/NXP/Drivers/source/lpc17xx_rit.c"/>
+      <file file_name="libraries/NXP/Drivers/source/lpc17xx_rtc.c"/>
+      <file file_name="libraries/NXP/Drivers/source/lpc17xx_spi.c"/>
+      <file file_name="libraries/NXP/Drivers/source/lpc17xx_ssp.c"/>
+      <file file_name="libraries/NXP/Drivers/source/lpc17xx_systick.c"/>
+      <file file_name="libraries/NXP/Drivers/source/lpc17xx_timer.c"/>
+      <file file_name="libraries/NXP/Drivers/source/lpc17xx_uart.c"/>
+      <file file_name="libraries/NXP/Drivers/source/lpc17xx_wdt.c"/>
+    </folder>
+    <folder Name="lib_R2C2">
+      <file file_name="libraries/R2C2/adc.c"/>
+      <file file_name="libraries/R2C2/buzzer.c"/>
+      <file file_name="libraries/R2C2/ios.c"/>
+      <file file_name="libraries/R2C2/sdcard.c"/>
+      <file file_name="libraries/R2C2/serial.c"/>
+      <file file_name="libraries/R2C2/serial_fifo.c"/>
+      <file file_name="libraries/R2C2/sermsg.c"/>
+      <file file_name="libraries/R2C2/sersendf.c"/>
+      <file file_name="libraries/R2C2/soundplay.c"/>
+      <file file_name="libraries/R2C2/spi.c"/>
+      <file file_name="libraries/R2C2/timer.c"/>
+      <file file_name="libraries/R2C2/uart.c"/>
+      <file file_name="libraries/R2C2/usb.c"/>
+    </folder>
+    <folder Name="app_reprap">
+      <file file_name="RepRap/Mendel/alerter.c"/>
+      <file file_name="RepRap/Mendel/config.c"/>
+      <file file_name="RepRap/Mendel/endstops.c"/>
+      <file file_name="RepRap/Mendel/gcode_parse.c"/>
+      <file file_name="RepRap/Mendel/gcode_process.c"/>
+      <file file_name="RepRap/Mendel/geometry.c"/>
+      <file file_name="RepRap/Mendel/mendel.c"/>
+      <file file_name="RepRap/Mendel/temp.c"/>
+      <file file_name="RepRap/Mendel/usb_shell_task.c"/>
+      <file file_name="app/grbl/fixedpt.c"/>
+      <file file_name="app/grbl/planner.c"/>
+      <file file_name="app/grbl/stepper.c"/>
+      <file file_name="RepRap/Mendel/gcode_task.c"/>
+      <file file_name="RepRap/Mendel/eth_shell_task.c"/>
+    </folder>
+    <folder Name="lib_FreeRTOS">
+      <file file_name="libraries/FreeRTOS/Source/list.c"/>
+      <file file_name="libraries/FreeRTOS/Source/queue.c"/>
+      <file file_name="libraries/FreeRTOS/Source/tasks.c"/>
+      <file file_name="libraries/FreeRTOS/Source/portable/MemMang/heap_2.c"/>
+      <file file_name="libraries/FreeRTOS/Source/portable/GCC/ARM_CM3/port.c"/>
+    </folder>
+    <folder Name="lib_lpcusb">
+      <file file_name="libraries/LPCUSB/src/usbcontrol.c"/>
+      <file file_name="libraries/LPCUSB/src/usbhw_lpc.c"/>
+      <file file_name="libraries/LPCUSB/src/usbinit.c"/>
+      <file file_name="libraries/LPCUSB/src/usbstdreq.c"/>
+    </folder>
+    <folder Name="lib_FatFs">
+      <file file_name="libraries/FatFs/src/diskio.c"/>
+      <file file_name="libraries/FatFs/src/fattime.c"/>
+      <file file_name="libraries/FatFs/src/ff.c"/>
+    </folder>
+    <folder Name="lib_ethernet">
+      <file file_name="libraries/ethernet/enc28j60.c"/>
+      <file file_name="libraries/ethernet/enc28j60_ethernetif.c"/>
+    </folder>
+    <folder Name="lib_lwip">
+      <folder Name="core">
+        <file file_name="libraries/lwip/src/core/init.c"/>
+        <file file_name="libraries/lwip/src/core/mem.c"/>
+        <file file_name="libraries/lwip/src/core/memp.c"/>
+        <file file_name="libraries/lwip/src/core/netif.c"/>
+        <file file_name="libraries/lwip/src/core/pbuf.c"/>
+        <file file_name="libraries/lwip/src/core/stats.c"/>
+        <file file_name="libraries/lwip/src/core/sys.c"/>
+        <file file_name="libraries/lwip/src/core/tcp.c"/>
+        <file file_name="libraries/lwip/src/core/tcp_in.c"/>
+        <file file_name="libraries/lwip/src/core/tcp_out.c"/>
+        <file file_name="libraries/lwip/src/core/udp.c"/>
+      </folder>
+    </folder>
+  </project>
+  <configuration Name="THUMB RAM Debug" inherited_configurations="THUMB;RAM;Debug"/>
+  <configuration Name="THUMB" Platform="ARM" arm_instruction_set="THUMB" arm_library_instruction_set="THUMB" c_preprocessor_definitions="__THUMB" hidden="Yes"/>
+  <configuration Name="RAM" c_preprocessor_definitions="__RAM_BUILD" hidden="Yes"/>
+  <configuration Name="Debug" c_preprocessor_definitions="DEBUG" gcc_debugging_level="Level 2" gcc_optimization_level="None" hidden="Yes"/>
+  <configuration Name="THUMB RAM Release" inherited_configurations="THUMB;RAM;Release"/>
+  <configuration Name="Release" c_preprocessor_definitions="NDEBUG" gcc_debugging_level="Level 1" gcc_optimization_level="Level 1" hidden="Yes"/>
+  <configuration Name="THUMB Flash Debug" inherited_configurations="THUMB;Flash;Debug"/>
+  <configuration Name="Flash" c_preprocessor_definitions="__FLASH_BUILD" hidden="Yes"/>
+  <configuration Name="THUMB Flash Release" inherited_configurations="THUMB;Flash;Release"/>
+  <configuration Name="Common" c_preprocessor_definitions="_CROSSWORKS" c_user_include_directories=".;libraries/FreeRTOS/Source/include;libraries/FreeRTOS/Source/portable/GCC/ARM_CM3;libraries//CMSISv1p30_LPC17xx/inc;libraries/NXP/Drivers/include;libraries/LPCUSB/inc;libraries/FatFs/src;libraries/R2C2;libraries/ethernet;libraries/lwip/src/include;libraries/lwip/src/include/ipv4;libraries/lwip/ports/r2c2/include;app/grbl;RepRap/Mendel" gcc_entry_point="__cs3_reset_cortex_m"/>
+</solution>

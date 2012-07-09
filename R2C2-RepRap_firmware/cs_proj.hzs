@@ -1,0 +1,126 @@
+<!DOCTYPE CrossStudio_for_ARM_Session_File>
+<session>
+ <Bookmarks/>
+ <Breakpoints/>
+ <ETMWindow>
+  <ETMRegister number="0" value="800" />
+  <ETMRegister number="8" value="6f" />
+  <ETMRegister number="9" value="1000000" />
+ </ETMWindow>
+ <ExecutionCountWindow/>
+ <Memory1>
+  <MemoryWindow autoEvaluate="0" addressText="0x10008000" numColumns="8" sizeText="1024" dataSize="4" radix="16" addressSpace="" />
+ </Memory1>
+ <Memory2>
+  <MemoryWindow autoEvaluate="0" addressText="" numColumns="8" sizeText="" dataSize="1" radix="16" addressSpace="" />
+ </Memory2>
+ <Memory3>
+  <MemoryWindow autoEvaluate="0" addressText="" numColumns="8" sizeText="" dataSize="1" radix="16" addressSpace="" />
+ </Memory3>
+ <Memory4>
+  <MemoryWindow autoEvaluate="0" addressText="" numColumns="8" sizeText="" dataSize="1" radix="16" addressSpace="" />
+ </Memory4>
+ <Project>
+  <ProjectSessionItem path="cs_proj" name="unnamed" />
+  <ProjectSessionItem path="cs_proj;cs_proj" name="unnamed" />
+  <ProjectSessionItem path="cs_proj;cs_proj;app_reprap" name="unnamed" />
+  <ProjectSessionItem path="cs_proj;cs_proj;lib_ethernet" name="unnamed" />
+  <ProjectSessionItem path="cs_proj;cs_proj;lib_lwip" name="unnamed" />
+  <ProjectSessionItem path="cs_proj;cs_proj;lib_lwip;core" name="unnamed" />
+  <ProjectSessionItem path="cs_proj;cs_proj;lib_NXP" name="unnamed" />
+ </Project>
+ <Register1>
+  <RegisterWindow openNodes="SSP1;SSP1/SSP1CR0;SSP1/SSP1CR1;SSP1/SSP1SR" binaryNodes="" hiddenNodes="" unsignedNodes="" visibleGroups="CPU;SSP1" decimalNodes="" octalNodes="" asciiNodes="" />
+ </Register1>
+ <Register2>
+  <RegisterWindow openNodes="" binaryNodes="" hiddenNodes="" unsignedNodes="" visibleGroups="" decimalNodes="" octalNodes="" asciiNodes="" />
+ </Register2>
+ <Register3>
+  <RegisterWindow openNodes="" binaryNodes="" hiddenNodes="" unsignedNodes="" visibleGroups="" decimalNodes="" octalNodes="" asciiNodes="" />
+ </Register3>
+ <Register4>
+  <RegisterWindow openNodes="" binaryNodes="" hiddenNodes="" unsignedNodes="" visibleGroups="" decimalNodes="" octalNodes="" asciiNodes="" />
+ </Register4>
+ <TargetWindow programAction="" uploadFileType="" programLoadAddress="" programSize="" uploadFileName="" uploadMemoryInterface="" programFileName="" uploadStartAddress="" programFileType="" uploadSize="" programMemoryInterface="" />
+ <TraceWindow>
+  <Trace enabled="Yes" />
+ </TraceWindow>
+ <Watch1>
+  <Watches active="1" update="Never" >
+   <Watchpoint linenumber="0" radix="16" name="FIO0PINU" expression="*(unsigned short *)0x2009c016" filename="" />
+  </Watches>
+ </Watch1>
+ <Watch2>
+  <Watches active="0" update="Never" />
+ </Watch2>
+ <Watch3>
+  <Watches active="0" update="Never" />
+ </Watch3>
+ <Watch4>
+  <Watches active="0" update="Never" />
+ </Watch4>
+ <Files>
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/main.c" y="81" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/main.c" left="0" selected="0" name="unnamed" top="73" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/R2C2/sdcard.h" y="33" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/R2C2/sdcard.h" left="0" selected="0" name="unnamed" top="20" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/startup.S" y="190" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/startup.S" left="0" selected="0" name="unnamed" top="248" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/RepRap/Mendel/gcode_parse.h" y="35" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/RepRap/Mendel/gcode_parse.h" left="0" selected="0" name="unnamed" top="22" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/FreeRTOS/Source/tasks.c" y="1577" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/FreeRTOS/Source/tasks.c" left="0" selected="0" name="unnamed" top="1556" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/FreeRTOS/Source/portable/GCC/ARM_CM3/port.c" y="267" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/FreeRTOS/Source/portable/GCC/ARM_CM3/port.c" left="0" selected="0" name="unnamed" top="250" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/FreeRTOSConfig.h" y="162" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/FreeRTOSConfig.h" left="0" selected="0" name="unnamed" top="140" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="39" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/RepRap/Mendel/usb_shell_task.c" y="32" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/RepRap/Mendel/usb_shell_task.c" left="0" selected="0" name="unnamed" top="25" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/R2C2/serial_fifo.c" y="105" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/R2C2/serial_fifo.c" left="0" selected="0" name="unnamed" top="24" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="14" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/CMSISv1p30_LPC17xx/src/system_LPC17xx.c" y="26" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/CMSISv1p30_LPC17xx/src/system_LPC17xx.c" left="0" selected="0" name="unnamed" top="14" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/NXP/Drivers/source/lpc17xx_nvic.c" y="100" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/NXP/Drivers/source/lpc17xx_nvic.c" left="0" selected="0" name="unnamed" top="0" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/home/bob/.rowley_associates_limited/CrossWorks for ARM/packages/targets/CMSIS_3/CMSIS/Include/core_cm3.h" y="1247" path="/home/bob/.rowley_associates_limited/CrossWorks for ARM/packages/targets/CMSIS_3/CMSIS/Include/core_cm3.h" left="0" selected="0" name="unnamed" top="1233" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="14" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/R2C2/timer.c" y="268" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/R2C2/timer.c" left="0" selected="0" name="unnamed" top="247" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/LPCUSB/src/usbhw_lpc.c" y="72" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/LPCUSB/src/usbhw_lpc.c" left="0" selected="0" name="unnamed" top="56" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/app/grbl/planner.c" y="58" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/app/grbl/planner.c" left="0" selected="0" name="unnamed" top="38" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/RepRap/Mendel/gcode_parse.c" y="222" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/RepRap/Mendel/gcode_parse.c" left="0" selected="0" name="unnamed" top="200" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/RepRap/Mendel/gcode_process.c" y="484" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/RepRap/Mendel/gcode_process.c" left="0" selected="0" name="unnamed" top="461" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="46" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/RepRap/Mendel/mendel.c" y="197" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/RepRap/Mendel/mendel.c" left="0" selected="0" name="unnamed" top="0" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/RepRap/Mendel/gcode_task.c" y="28" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/RepRap/Mendel/gcode_task.c" left="0" selected="0" name="unnamed" top="15" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/R2C2/serial.c" y="43" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/R2C2/serial.c" left="0" selected="0" name="unnamed" top="33" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/RepRap/Mendel/gcode_task.h" y="7" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/RepRap/Mendel/gcode_task.h" left="0" selected="0" name="unnamed" top="0" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/RepRap/Mendel/config.c" y="42" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/RepRap/Mendel/config.c" left="0" selected="0" name="unnamed" top="19" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="60" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/R2C2/buzzer.c" y="50" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/R2C2/buzzer.c" left="0" selected="0" name="unnamed" top="80" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/R2C2/sdcard.c" y="122" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/R2C2/sdcard.c" left="0" selected="0" name="unnamed" top="63" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/R2C2/uart.c" y="118" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/R2C2/uart.c" left="0" selected="0" name="unnamed" top="45" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/usr/share/crossworks_for_arm_2.2/include/string.h" y="0" path="/usr/share/crossworks_for_arm_2.2/include/string.h" left="0" selected="0" name="unnamed" top="420" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/home/bob/crossworks" y="0" path="/home/bob/crossworks" left="0" selected="0" name="unnamed" top="0" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="2" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/ethernet/enc28j60.c" y="92" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/ethernet/enc28j60.c" left="0" selected="0" name="unnamed" top="70" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/ethernet/enc28j60.h" y="315" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/ethernet/enc28j60.h" left="0" selected="0" name="unnamed" top="302" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/R2C2/ios.h" y="39" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/R2C2/ios.h" left="0" selected="0" name="unnamed" top="0" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/NXP/Drivers/source/lpc17xx_ssp.c" y="301" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/NXP/Drivers/source/lpc17xx_ssp.c" left="0" selected="0" name="unnamed" top="284" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/NXP/Drivers/include/lpc17xx_ssp.h" y="0" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/NXP/Drivers/include/lpc17xx_ssp.h" left="0" selected="0" name="unnamed" top="314" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/home/bob/.rowley_associates_limited/CrossWorks for ARM/packages/targets/LPC1000/include/CMSIS/LPC17xx.h" y="446" path="/home/bob/.rowley_associates_limited/CrossWorks for ARM/packages/targets/LPC1000/include/CMSIS/LPC17xx.h" left="0" selected="0" name="unnamed" top="995" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/NXP/Drivers/source/lpc17xx_gpio.c" y="330" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/NXP/Drivers/source/lpc17xx_gpio.c" left="0" selected="0" name="unnamed" top="314" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/NXP/Drivers/include/lpc17xx_gpio.h" y="116" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/NXP/Drivers/include/lpc17xx_gpio.h" left="0" selected="0" name="unnamed" top="110" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/NXP/Drivers/include/lpc17xx_pinsel.h" y="0" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/NXP/Drivers/include/lpc17xx_pinsel.h" left="0" selected="0" name="unnamed" top="92" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="4" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/RepRap/Mendel/eth_shell_task.c" y="30" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/RepRap/Mendel/eth_shell_task.c" left="0" selected="1" name="unnamed" top="0" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/RepRap/Mendel/usb_shell_task.h" y="0" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/RepRap/Mendel/usb_shell_task.h" left="0" selected="0" name="unnamed" top="0" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/R2C2/ios.c" y="43" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/R2C2/ios.c" left="0" selected="0" name="unnamed" top="23" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/R2C2/spi.c" y="77" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/R2C2/spi.c" left="0" selected="0" name="unnamed" top="63" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/app/grbl/stepper.c" y="646" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/app/grbl/stepper.c" left="0" selected="0" name="unnamed" top="630" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/Makefile" y="187" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/Makefile" left="0" selected="0" name="unnamed" top="180" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="3" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/lwip/src/core/init.c" y="194" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/lwip/src/core/init.c" left="0" selected="0" name="unnamed" top="180" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="14" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/lwip/src/include/lwip/opt.h" y="44" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/lwip/src/include/lwip/opt.h" left="0" selected="0" name="unnamed" top="30" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/lwip/src/include/lwip/arch.h" y="42" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/lwip/src/include/lwip/arch.h" left="0" selected="0" name="unnamed" top="34" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/lwip/ports/r2c2/include/arch/cc.h" y="36" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/lwip/ports/r2c2/include/arch/cc.h" left="0" selected="0" name="unnamed" top="31" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="16" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/lwip/src/include/lwip/sys.h" y="248" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/lwip/src/include/lwip/sys.h" left="0" selected="0" name="unnamed" top="231" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="lwipopts.h" y="86" path="lwipopts.h" left="0" selected="0" name="unnamed" top="72" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="libraries/lwip/ports/r2c2/include/arch/sys_arch.h" y="37" path="libraries/lwip/ports/r2c2/include/arch/sys_arch.h" left="0" selected="0" name="unnamed" top="23" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/lwip/src/include/lwip/netif.h" y="40" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/lwip/src/include/lwip/netif.h" left="0" selected="0" name="unnamed" top="26" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/lwip/src/core/pbuf.c" y="67" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/lwip/src/core/pbuf.c" left="0" selected="0" name="unnamed" top="57" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/ethernet/enc28j60_ethernetif.c" y="47" path="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/ethernet/enc28j60_ethernetif.c" left="0" selected="0" name="unnamed" top="28" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="libraries/lwip/src/include/netif/etharp.h" y="43" path="libraries/lwip/src/include/netif/etharp.h" left="0" selected="0" name="unnamed" top="200" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="libraries/lwip/src/include/lwip/netif.h" y="0" path="libraries/lwip/src/include/lwip/netif.h" left="0" selected="0" name="unnamed" top="97" />
+ </Files>
+ <ARMCrossStudioWindow activeProject="cs_proj" autoConnectTarget="USB CrossConnect for ARM" debugSearchFileMap="/home/products/build/crossworks/arm/crossworks_v2/shared/target/libm_fast/arm/__int32_to_float32.s
+
+/home/products/build/crossworks/arm/crossworks_v2/shared/target/libm_fast/arm/__int32_to_float64.s
+
+/home/products/build/crossworks/arm/crossworks_v2/shared/target/libm_fast/arm/__uint32_to_float32.s
+
+/home/products/build/crossworks/arm/crossworks_v2/shared/target/libm_fast/arm/__uint32_to_float64.s
+" fileDialogInitialDirectory="/home/bob/git/R2C2_Firmware/R2C2-RepRap_firmware/libraries/ethernet" fileDialogDefaultFilter="*.c" autoConnectCapabilities="388991" debugSearchPath="" buildConfiguration="THUMB Flash Debug" />
+</session>

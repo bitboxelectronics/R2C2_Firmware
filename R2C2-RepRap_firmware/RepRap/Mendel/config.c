@@ -29,8 +29,8 @@
 
 #include <stdbool.h>
 #include <ctype.h>
-#include "stdlib.h"
-#include "string.h"
+#include <stdlib.h>
+#include <string.h>
 
 #include "config.h"
 #include "spi.h"
@@ -38,6 +38,10 @@
 #include "debug.h"
 #include "gcode_parse.h"
 #include "uart.h"
+
+#ifdef _CROSSWORKS
+#define stricmp strcasecmp
+#endif
 
 /* values reflecting the gearing of your machine
  * numbers are integers or double

@@ -56,6 +56,12 @@ static double previous_nominal_speed;   // Nominal speed of previous path line s
 
 static uint8_t acceleration_manager_enabled;   // Acceleration management active?
 
+#ifdef _CROSSWORKS
+long lround(double x)
+{
+    return x+0.5;
+}
+#endif
 
 // Returns the index of the next block in the ring buffer
 // NOTE: Removed modulo (%) operator, which uses an expensive divide and multiplication.

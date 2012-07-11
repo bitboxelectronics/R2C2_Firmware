@@ -697,8 +697,7 @@ clean_list :
 	$(REMOVE) $(CPPSRCARM:.cpp=.s)
 
 # Include the dependency files.
-##-include $(wildcard dep/*)
--include $(wildcard *.d)
+-include $(wildcard $(OUTDIR)/dep/*)
 
 # Listing of phony targets.
 .PHONY : all begin end sizebefore sizeafter gccversion build elf hex bin lss sym clean clean_list program createdirs

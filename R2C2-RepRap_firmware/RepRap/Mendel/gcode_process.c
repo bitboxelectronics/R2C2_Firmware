@@ -816,7 +816,7 @@ eParseResult process_gcode_command()
 
       // M112- immediate stop
       case 112:
-      disableHwTimer(0);
+      disableHwTimer(0); // disable stepper ?
 #ifndef USE_GRBL
       queue_flush();
 #endif
@@ -830,7 +830,6 @@ eParseResult process_gcode_command()
       /* M114- report XYZE to host */
       case 114:
       // wait for queue to complete ???
-      //for (;queue_empty() == 0;) {}
 
       if (next_target.option_inches)
       {
@@ -1075,28 +1074,33 @@ eParseResult process_gcode_command()
       // M542 - nozzle wipe/move to rest location
       case 542:
       // TODO: this depends on current origin being same as home position
-      /* order should be:
-        move to nozzle wipe entry
-        move to rest
-        [move to dump
-        */
-      if (config.have_rest_pos)
+      if (config.have_rest_pos || config.have_wipe_pos)
       {
         // move above bed if ncessary
         if (startpoint.z < 2)
         {
-          // SpecialMoveZ (2 * config.steps_per_mm_z, config.maximum_feedrate_x);
           next_targetd = startpoint;
           next_targetd.z = 2;
           next_targetd.feed_rate = config.maximum_feedrate_z;
           enqueue_moved(&next_targetd);
         }
         
-        // move to rest position
-        next_targetd.x = config.rest_pos_x;
-        next_targetd.y = config.rest_pos_y;
-        next_targetd.z = startpoint.z;
-        next_targetd.feed_rate = config.maximum_feedrate_x;
+        if (config.have_wipe_pos)
+        {
+          // move to start of wipe area
+          next_targetd.x = config.wipe_entry_pos_x;
+          next_targetd.y = config.wipe_entry_pos_y;
+          next_targetd.z = startpoint.z;
+          next_targetd.feed_rate = config.maximum_feedrate_x;
+        }
+        else
+        {
+          // move to rest position
+          next_targetd.x = config.rest_pos_x;
+          next_targetd.y = config.rest_pos_y;
+          next_targetd.z = startpoint.z;
+          next_targetd.feed_rate = config.maximum_feedrate_x;
+        }
         
         enqueue_moved(&next_targetd);
       }
@@ -1106,7 +1110,19 @@ eParseResult process_gcode_command()
       case 543:
         if (config.have_wipe_pos)
         {
-          //TODO
+          // move out of wipe area
+          next_targetd.x = config.wipe_exit_pos_x;
+          next_targetd.y = config.wipe_exit_pos_y;
+          next_targetd.z = startpoint.z;
+          next_targetd.feed_rate = config.maximum_feedrate_x;
+          enqueue_moved(&next_targetd);
+          
+          next_targetd.x = config.wipe_entry_pos_x;
+          next_targetd.y = config.wipe_entry_pos_y;
+          next_targetd.z = startpoint.z;
+          next_targetd.feed_rate = config.maximum_feedrate_x;
+          enqueue_moved(&next_targetd);
+          
         }
       break;
 
@@ -1119,12 +1135,6 @@ eParseResult process_gcode_command()
         // calc E distance, use approximate conversion to get distance, not critical
         // TODO: how to derive magic number
         // S is RPM*10, but happens to give about the right speed in mm/min        
-#if 0
-        next_targetd = startpoint;
-        next_targetd.e = startpoint.e + (double)next_target.P / 256;
-        next_targetd.feed_rate = next_target.S;
-        enqueue_moved(&next_targetd);
-#endif        
         SpecialMoveE ((double)next_target.P / 256.0, next_target.S);
       }
       break;
@@ -1147,6 +1157,7 @@ eParseResult process_gcode_command()
   if (!reply_sent)
   {
     serial_writestr("ok\r\n");
+    //sersendf("ok Q:%d\r\n", plan_queue_size());
   }
   
   return result;

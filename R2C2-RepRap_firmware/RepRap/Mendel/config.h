@@ -85,8 +85,10 @@ struct configuration
 
   // wipe pos
   int32_t have_wipe_pos;
-  int32_t wipe_pos_x;
-  int32_t wipe_pos_y;
+  int32_t wipe_entry_pos_x;
+  int32_t wipe_entry_pos_y;
+  int32_t wipe_exit_pos_x;
+  int32_t wipe_exit_pos_y;
   
   //
   int32_t steps_per_revolution_e;

@@ -107,9 +107,13 @@ tConfigItem config_lookup [] =
   { "rest_pos_y", &config.rest_pos_y , TYPE_INT, {.val_i=0}},
 
   // wipe pos
-  { "have_wipe_pos", &config.have_wipe_pos , TYPE_INT, {.val_i=0}},
-  { "wipe_pos_x", &config.wipe_pos_x , TYPE_INT, {.val_i=0}},
-  { "wipe_pos_y", &config.wipe_pos_y , TYPE_INT, {.val_i=0}},
+  { "have_wipe_pos",   &config.have_wipe_pos , TYPE_INT, {.val_i=0}},
+  { "wipe_entry_pos_x", &config.wipe_entry_pos_x , TYPE_INT, {.val_i=0}},
+  { "wipe_entry_pos_y", &config.wipe_entry_pos_y , TYPE_INT, {.val_i=0}},
+  { "wipe_pos_x", &config.wipe_entry_pos_x , TYPE_INT, {.val_i=0}},     // DEPRECATED
+  { "wipe_pos_y", &config.wipe_entry_pos_y , TYPE_INT, {.val_i=0}},     // DEPRECATED
+  { "wipe_exit_pos_x", &config.wipe_exit_pos_x , TYPE_INT, {.val_i=0}},
+  { "wipe_exit_pos_y", &config.wipe_exit_pos_y , TYPE_INT, {.val_i=0}},
 
   { "steps_per_revolution_e", &config.steps_per_revolution_e, TYPE_INT, {.val_i=3200}},  // 200 * 16
   

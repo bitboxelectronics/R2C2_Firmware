@@ -59,6 +59,8 @@ typedef struct {
 /* calculate the default values appropriate for your machine */
 tConfigItem config_lookup [] = 
 {
+  { "machine_model", &config.machine_model, TYPE_INT, {.val_i=0}},
+
   { "steps_per_mm_x", &config.steps_per_mm_x, TYPE_DOUBLE, {.val_d=80}},
   { "steps_per_mm_y", &config.steps_per_mm_y, TYPE_DOUBLE, {.val_d=80}},
   { "steps_per_mm_z", &config.steps_per_mm_z, TYPE_DOUBLE, {.val_d=6400}},

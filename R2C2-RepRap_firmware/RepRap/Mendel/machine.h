@@ -35,19 +35,6 @@
 	firmware build options
 */
 
-#define REPRAP_HOST_COMPATIBILITY
-
-// This overrides ACCELERATION_REPRAP and ACCELERATION_RAMPING
-#define USE_GRBL
-
-/*
-	move buffer size, in number of moves
-		note that each move takes a fair chunk of ram (69 bytes as of this writing) so don't make the buffer too big - a bigger serial readbuffer may help more than increasing this unless your gcodes are more than 70 characters long on average.
-		however, a larger movebuffer will probably help with lots of short consecutive moves, as each move takes a bunch of math (hence time) to set up
-*/
-#define	MOVEBUFFER_SIZE	8
-
-//#define STEPPER_ENABLE_PIN
 
 #define F_CPU 100000000 /* 100MHz */
 

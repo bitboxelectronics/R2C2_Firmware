@@ -9,7 +9,7 @@ steps_per_mm_z = 800
 # Max feed rate of the machine (mm/min)
 maximum_feedrate_x = 2000
 maximum_feedrate_y = 2000
-maximum_feedrate_z = 800
+maximum_feedrate_z = 2000
 
 acceleration = 200
 

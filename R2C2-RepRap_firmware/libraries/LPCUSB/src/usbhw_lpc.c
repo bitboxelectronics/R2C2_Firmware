@@ -70,7 +70,7 @@
 
 #ifdef DEBUG
 // comment out the following line if you don't want to use debug LEDs
-#define DEBUG_LED
+//#define DEBUG_LED
 #endif
 
 #ifdef DEBUG_LED

@@ -1,3 +1,5 @@
 *~
 FLASH_RUN/
 *.bak
+*.orig
+*.merge

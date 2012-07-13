@@ -79,6 +79,20 @@ static uint8_t erxfcon;
 static uint8_t enc28j60ControlCs = DEFAULT_ENC28J60_CONTROL_CS;
 
 /*****************************************************************************/
+// Function prototypes
+/*****************************************************************************/
+uint8_t enc28j60ReadOp(uint8_t op, uint8_t address);
+void enc28j60WriteOp(uint8_t op, uint8_t address, uint8_t data);
+void enc28j60ReadBuffer(uint16_t len, uint8_t* data);
+void enc28j60WriteBuffer(uint16_t len, uint8_t* data);
+void enc28j60SetBank(uint8_t address);
+uint8_t enc28j60Read(uint8_t address);
+void enc28j60Write(uint8_t address, uint8_t data);
+//void enc28j60PhyWrite(uint8_t address, uint16_t data);
+//void enc28j60clkout(uint8_t clk);
+//void enc28j60SpiInit(void);
+
+/*****************************************************************************/
 // SPI functions
 /*****************************************************************************/
 

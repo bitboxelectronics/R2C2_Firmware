@@ -28,6 +28,7 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include "adc.h"
 #include "temp.h"
 #include "machine.h"
 #include "pinout.h"

@@ -54,9 +54,6 @@ static double previous_nominal_speed;   // Nominal speed of previous path line s
 static uint8_t acceleration_manager_enabled;   // Acceleration management active?
 
 
-uint8_t plan_queue_size(void);
-
-
 // Returns the index of the next block in the ring buffer
 // NOTE: Removed modulo (%) operator, which uses an expensive divide and multiplication.
 static int8_t next_block_index(int8_t block_index) {
@@ -423,9 +420,9 @@ void plan_buffer_line (tActionRequest *pAction)
   
   // Calculate target position in absolute steps
   target[X_AXIS] = lround(x*(double)config.axis[X_AXIS].steps_per_mm);
-  target[Y_AXIS] = lround(y*(double)config.steps_per_mm_y);
-  target[Z_AXIS] = lround(z*(double)config.steps_per_mm_z);     
-  target[E_AXIS] = lround(pAction->target.e*(double)config.steps_per_mm_e);     
+  target[Y_AXIS] = lround(y*(double)config.axis[Y_AXIS].steps_per_mm);
+  target[Z_AXIS] = lround(z*(double)config.axis[Z_AXIS].steps_per_mm);     
+  target[E_AXIS] = lround(pAction->target.e*(double)config.axis[E_AXIS].steps_per_mm);     
   
   // Calculate the buffer tail after we push this block
   next_buffer_tail = next_block_index( block_buffer_tail );	
@@ -441,10 +438,10 @@ void plan_buffer_line (tActionRequest *pAction)
   
   // Compute direction bits for this block
   block->direction_bits = 0;
-  if (target[X_AXIS] < position[X_AXIS]) { block->direction_bits |= (1<<X_DIRECTION_BIT); }
-  if (target[Y_AXIS] < position[Y_AXIS]) { block->direction_bits |= (1<<Y_DIRECTION_BIT); }
-  if (target[Z_AXIS] < position[Z_AXIS]) { block->direction_bits |= (1<<Z_DIRECTION_BIT); }
-  if (target[E_AXIS] < position[E_AXIS]) { block->direction_bits |= (1<<E_DIRECTION_BIT); }
+  if (target[X_AXIS] < position[X_AXIS]) { block->direction_bits |= _BV(X_AXIS); }
+  if (target[Y_AXIS] < position[Y_AXIS]) { block->direction_bits |= _BV(Y_AXIS); }
+  if (target[Z_AXIS] < position[Z_AXIS]) { block->direction_bits |= _BV(Z_AXIS); }
+  if (target[E_AXIS] < position[E_AXIS]) { block->direction_bits |= _BV(E_AXIS); }
   
   // Number of steps for each axis
   block->steps_x = labs(target[X_AXIS]-position[X_AXIS]);
@@ -459,9 +456,9 @@ void plan_buffer_line (tActionRequest *pAction)
   
   // Compute path vector in terms of absolute step target and current positions
   delta_mm[X_AXIS] = (target[X_AXIS]-position[X_AXIS])/(double)config.axis[X_AXIS].steps_per_mm;
-  delta_mm[Y_AXIS] = (target[Y_AXIS]-position[Y_AXIS])/(double)config.steps_per_mm_y;
-  delta_mm[Z_AXIS] = (target[Z_AXIS]-position[Z_AXIS])/(double)config.steps_per_mm_z;
-  delta_mm[E_AXIS] = (target[E_AXIS]-position[E_AXIS])/(double)config.steps_per_mm_e;
+  delta_mm[Y_AXIS] = (target[Y_AXIS]-position[Y_AXIS])/(double)config.axis[Y_AXIS].steps_per_mm;
+  delta_mm[Z_AXIS] = (target[Z_AXIS]-position[Z_AXIS])/(double)config.axis[Z_AXIS].steps_per_mm;
+  delta_mm[E_AXIS] = (target[E_AXIS]-position[E_AXIS])/(double)config.axis[E_AXIS].steps_per_mm;
   block->millimeters = sqrt(square(delta_mm[X_AXIS]) + square(delta_mm[Y_AXIS]) + 
                             square(delta_mm[Z_AXIS]));
   if (block->millimeters == 0)
@@ -492,19 +489,19 @@ void plan_buffer_line (tActionRequest *pAction)
   {
     speed_factor = (double)config.axis[X_AXIS].maximum_feedrate / fabs(speed_x);
   }
-  if(fabs(speed_y) > config.maximum_feedrate_y)
+  if(fabs(speed_y) > config.axis[Y_AXIS].maximum_feedrate)
   {
-    double tmp_speed_factor = (double)config.maximum_feedrate_y / fabs(speed_y);
+    double tmp_speed_factor = (double)config.axis[Y_AXIS].maximum_feedrate / fabs(speed_y);
     if(speed_factor > tmp_speed_factor) speed_factor = tmp_speed_factor;
   }
-  if(fabs(speed_z) > config.maximum_feedrate_z)
+  if(fabs(speed_z) > config.axis[Z_AXIS].maximum_feedrate)
   {
-    double tmp_speed_factor = (double)config.maximum_feedrate_z / fabs(speed_z);
+    double tmp_speed_factor = (double)config.axis[Z_AXIS].maximum_feedrate / fabs(speed_z);
     if(speed_factor > tmp_speed_factor) speed_factor = tmp_speed_factor;
   }
-  if(fabs(speed_e) > config.maximum_feedrate_e)
+  if(fabs(speed_e) > config.axis[E_AXIS].maximum_feedrate)
   {
-    double tmp_speed_factor = (double)config.maximum_feedrate_e / fabs(speed_e);
+    double tmp_speed_factor = (double)config.axis[E_AXIS].maximum_feedrate / fabs(speed_e);
     if(speed_factor > tmp_speed_factor) speed_factor = tmp_speed_factor;
   }
 
@@ -533,10 +530,10 @@ void plan_buffer_line (tActionRequest *pAction)
 #if 0
   double axis_speed;
   axis_speed = delta_mm[Z_AXIS] * inverse_minute;
-  if (axis_speed > config.maximum_feedrate_z)
+  if (axis_speed > config.axis[Z_AXIS].maximum_feedrate)
   {
     inverse_millimeters = 1.0 / delta_mm[Z_AXIS];
-    inverse_minute = calc_inverse_minute (false, config.maximum_feedrate_z, inverse_millimeters);
+    inverse_minute = calc_inverse_minute (false, config.axis[Z_AXIS].maximum_feedrate, inverse_millimeters);
     
     block->nominal_speed = delta_mm[Z_AXIS] * inverse_minute; // (mm/min) Always > 0
     block->nominal_rate = ceil(block->step_event_count * inverse_minute); // (step/min) Always > 0
@@ -722,8 +719,9 @@ void plan_buffer_action(tActionRequest *pAction)
     plan_buffer_line (pAction);
     break;
     
-  case AT_WAIT:
-  case AT_WAIT_TEMPS:
+  case AT_WAIT_TIME: 
+    //TODO
+  case AT_WAIT_TEMPERATURES:
     plan_buffer_wait (pAction);
     break;
   }
@@ -743,9 +741,9 @@ void plan_set_current_position(tTarget *new_position)
 {
   startpoint = *new_position;
   position[X_AXIS] = lround(new_position->x*(double)config.axis[X_AXIS].steps_per_mm);
-  position[Y_AXIS] = lround(new_position->y*(double)config.steps_per_mm_y);
-  position[Z_AXIS] = lround(new_position->z*(double)config.steps_per_mm_z);    
-  position[E_AXIS] = lround(new_position->e*(double)config.steps_per_mm_e);    
+  position[Y_AXIS] = lround(new_position->y*(double)config.axis[Y_AXIS].steps_per_mm);
+  position[Z_AXIS] = lround(new_position->z*(double)config.axis[Z_AXIS].steps_per_mm);    
+  position[E_AXIS] = lround(new_position->e*(double)config.axis[E_AXIS].steps_per_mm);    
   
   previous_nominal_speed = 0.0; // Resets planner junction speeds. Assumes start from rest.
   clear_vector_double(previous_unit_vec);

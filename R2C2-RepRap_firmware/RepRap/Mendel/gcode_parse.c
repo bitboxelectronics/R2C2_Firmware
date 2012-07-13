@@ -99,7 +99,7 @@ void gcode_parse_init(void)
   steps_per_in_z = ((double) (25.4 * config.steps_per_mm_z));
   steps_per_in_e = ((double) (25.4 * config.steps_per_mm_e));
 #endif  
-  next_target.target.feed_rate = config.homing_feedrate_z;
+  next_target.target.feed_rate = config.axis[Z_AXIS].homing_feedrate;
 }
 
 

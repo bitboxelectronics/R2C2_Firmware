@@ -77,6 +77,8 @@ void adc_init(void)
 
 void io_init(void)
 {
+  int axis;
+
   /* Extruder 0 Heater pin */
   pin_mode(EXTRUDER_0_HEATER_PORT, EXTRUDER_0_HEATER_PIN, OUTPUT);
   extruder_heater_off();
@@ -86,32 +88,23 @@ void io_init(void)
   heated_bed_off();
 
   /* setup I/O pins */
-  pin_mode(STEPPERS_RESET_PORT, STEPPERS_RESET_PIN, OUTPUT);
-  digital_write(STEPPERS_RESET_PORT, STEPPERS_RESET_PIN, 1); /* Disable reset for all stepper motors */
+  pin_mode (STEPPERS_RESET_PORT, _BV(STEPPERS_RESET_PIN), OUTPUT);
+  digital_write (STEPPERS_RESET_PORT, _BV(STEPPERS_RESET_PIN), 1); /* Disable reset for all stepper motors */
 
-  pin_mode(X_STEP_PORT, X_STEP_PIN, OUTPUT);
-  pin_mode(X_DIR_PORT, X_DIR_PIN, OUTPUT);
-  pin_mode(X_ENABLE_PORT, X_ENABLE_PIN, OUTPUT);
-  x_enable();
-  pin_mode(X_MIN_PORT, X_MIN_PIN, INPUT);
-
-  pin_mode(Y_STEP_PORT, Y_STEP_PIN, OUTPUT);
-  pin_mode(Y_DIR_PORT, Y_DIR_PIN, OUTPUT);
-  pin_mode(Y_ENABLE_PORT, Y_ENABLE_PIN, OUTPUT);
-  y_enable();
-  pin_mode(Y_MIN_PORT, Y_MIN_PIN, INPUT);
-
-  pin_mode(Z_STEP_PORT, Z_STEP_PIN, OUTPUT);
-  pin_mode(Z_DIR_PORT, Z_DIR_PIN, OUTPUT);
-  pin_mode(Z_ENABLE_PORT, Z_ENABLE_PIN, OUTPUT);
-  z_enable();
-  pin_mode(Z_MIN_PORT, Z_MIN_PIN, INPUT);
-
-  pin_mode(E_STEP_PORT, E_STEP_PIN, OUTPUT);
-  pin_mode(E_DIR_PORT, E_DIR_PIN, OUTPUT);
-  pin_mode(E_ENABLE_PORT, E_ENABLE_PIN, OUTPUT);
-  e_enable();
-
+  for (axis = 0; axis < MAX_AXES; axis++)
+  {
+    if (config.axis [axis].is_configured)
+    {
+      pin_mode (config.axis [axis].pin_step.port,   _BV(config.axis [axis].pin_step.pin_number), OUTPUT);
+      pin_mode (config.axis [axis].pin_dir.port,    _BV(config.axis [axis].pin_dir.pin_number), OUTPUT);
+      pin_mode (config.axis [axis].pin_enable.port, _BV(config.axis [axis].pin_enable.pin_number), OUTPUT);
+      
+      pin_mode (config.axis [axis].pin_min_limit.port, _BV(config.axis [axis].pin_min_limit.pin_number), INPUT);
+    
+      axis_enable(axis);
+    }
+  }
+  
   pin_mode(EXTRUDER_0_FAN_PORT, EXTRUDER_0_FAN_PIN, OUTPUT);
   extruder_fan_off();
 

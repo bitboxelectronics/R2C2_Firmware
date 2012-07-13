@@ -30,15 +30,58 @@
 #ifndef IOS_H
 #define IOS_H
 
-#define INPUT 0
-#define OUTPUT 1
+#include <stdint.h>
 
-#define HIGH 1
-#define LOW 0
+#define INPUT   0
+#define OUTPUT  1
+
+#define LOW     0
+#define HIGH    1
+
+#define DISABLE     0
+#define ENABLE      1
+
+#define INACTIVE     0
+#define ACTIVE       1
+
+#define ACTIVE_HIGH 0
+#define ACTIVE_LOW  1
+
+// create a struct initialiser
+#define PIN_DEF(port,pin,polarity) {(port),(pin),(polarity),0}
+
+// convert to/from an int32
+#define ENCODE_PIN(port, pin)  ((port)<<8 | (pin))
+#define ENCODE_PIN_EX(port, pin, active_low)  ((active_low<<16) | (port)<<8 | (pin))
+
+#define DECODE_PIN_NUMBER(pin_def)    ((pin_def) & 0xFF)
+#define DECODE_PORT(pin_def)          (((pin_def) >> 8) & 0xFF)
+#define DECODE_PIN_POLARITY(pin_def)  (((pin_def) >> 16) & 0xFF)
 
 
-void digital_write(uint8_t portNum, uint32_t bitValue, uint8_t dir);
-void pin_mode(uint8_t portNum, uint32_t bitValue, uint8_t dir);
-uint32_t digital_read(uint8_t portNum, uint32_t bitValue);
+// special pin defs
+#define UNDEFINED_PIN_DEF     PIN_DEF(0xFF, 0xFF, 0)
+
+// convert a bit number (0-31) to a 32 bit mask
+#define _BV(bit) (1 << (bit))
+
+typedef struct 
+{
+  uint8_t pin_number;
+  uint8_t port;
+  uint8_t active_low;
+  uint8_t reserved;
+} tPinDef;
+
+
+
+void      pin_mode(uint8_t portNum, uint32_t bitMask, uint8_t dir);
+
+uint32_t  digital_read (uint8_t portNum, uint32_t bitMask);
+void      digital_write (uint8_t portNum, uint32_t bitMask, uint8_t state);
+
+
+uint32_t  read_pin (tPinDef pin);
+void      write_pin (tPinDef pin, uint8_t state);
 
 #endif

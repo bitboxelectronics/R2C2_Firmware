@@ -29,6 +29,8 @@
 */
 
 #include   <string.h>
+#include   <ctype.h>  // for tolower
+
 #include	"gcode_process.h"
 #include	"gcode_parse.h"
 
@@ -43,6 +45,7 @@
 #include "ff.h"
 #include "buzzer.h"
 //#include "debug.h"
+#include "ios.h"
 
 #include "planner.h"
 #include "stepper.h"
@@ -69,6 +72,16 @@ const double auto_reverse_feed_rate = 18000;
 double auto_prime_factor = 640;
 double auto_reverse_factor = 640;
 
+#if 0
+static char tolower (char c)
+{
+  if ((c >= 'A') && (c <= 'Z'))
+    return 'a' + c-'A';
+  else
+    return c;
+}
+#endif
+
 static void enqueue_moved (tTarget *pTarget)
 {
   // grbl
@@ -94,11 +107,14 @@ static void enqueue_moved (tTarget *pTarget)
   }
 }
 
-static void enqueue_wait_temp (void)
+static void enqueue_wait_for_temperatures (void)
 {
   tActionRequest request;
   
-  request.ActionType = AT_WAIT_TEMPS;
+  request.ActionType = AT_WAIT_TEMPERATURES;
+  
+  request.wait_param = _BV(WE_WAIT_TEMP_EXTRUDER_0) | _BV(WE_WAIT_TEMP_HEATED_BED);
+  
   plan_buffer_action (&request);
 }
 
@@ -154,11 +170,11 @@ static void zero_x(void)
   int dir;
   int max_travel;
 
-    if (config.home_direction_x < 0)
+  if (config.axis[X_AXIS].home_direction < 0)
     dir = -1;
   else
     dir = 1;
-  max_travel = max (300, config.printing_vol_x);
+  max_travel = max (300, config.axis[X_AXIS].printing_vol);
 
   // move to endstop
   SpecialMoveXY(startpoint.x + dir * max_travel, startpoint.y, config.axis[X_AXIS].homing_feedrate);
@@ -182,26 +198,26 @@ static void zero_y(void)
   int dir;
   int max_travel;
 
-  if (config.home_direction_y < 0)
+  if (config.axis[Y_AXIS].home_direction < 0)
     dir = -1;
   else
     dir = 1;
-  max_travel = max (300, config.printing_vol_y);
+  max_travel = max (300, config.axis[Y_AXIS].printing_vol);
     
   // move to endstop
-  SpecialMoveXY(startpoint.x, startpoint.y + dir * max_travel, config.homing_feedrate_y);
+  SpecialMoveXY(startpoint.x, startpoint.y + dir * max_travel, config.axis[Y_AXIS].homing_feedrate);
   synch_queue();
   
   // move forward a bit
-  SpecialMoveXY(startpoint.x, startpoint.y - dir * 3, config.search_feedrate_y);
+  SpecialMoveXY(startpoint.x, startpoint.y - dir * 3, config.axis[Y_AXIS].search_feedrate);
   // move back in to endstop slowly
-  SpecialMoveXY(startpoint.x, startpoint.y + dir * 6, config.search_feedrate_y);
+  SpecialMoveXY(startpoint.x, startpoint.y + dir * 6, config.axis[Y_AXIS].search_feedrate);
 
   synch_queue();
 
   // this is our home point
   tTarget new_pos = startpoint;
-  new_pos.y = config.home_pos_y;
+  new_pos.y = config.axis[Y_AXIS].home_pos;
   plan_set_current_position (&new_pos);
 }
 
@@ -210,27 +226,27 @@ static void zero_z(void)
   int dir;
   int max_travel;
 
-  if (config.home_direction_z < 0)
+  if (config.axis[Z_AXIS].home_direction < 0)
     dir = -1;
   else
     dir = 1;
-  max_travel = max (300, config.printing_vol_z);
+  max_travel = max (300, config.axis[Z_AXIS].printing_vol);
 
   // move to endstop
-  SpecialMoveZ(startpoint.z + dir * max_travel, config.homing_feedrate_z);  
+  SpecialMoveZ(startpoint.z + dir * max_travel, config.axis[Z_AXIS].homing_feedrate);  
   synch_queue();
   
   // move forward a bit
-  SpecialMoveZ(startpoint.z - dir * 1, config.search_feedrate_z);
+  SpecialMoveZ(startpoint.z - dir * 1, config.axis[Z_AXIS].search_feedrate);
   synch_queue();
 
   // move back in to endstop slowly
-  SpecialMoveZ(startpoint.z + dir * 6, config.search_feedrate_z);
+  SpecialMoveZ(startpoint.z + dir * 6, config.axis[Z_AXIS].search_feedrate);
   synch_queue();
 
   // this is our home point
   tTarget new_pos = startpoint;
-  new_pos.z = config.home_pos_z;
+  new_pos.z = config.axis[Z_AXIS].home_pos;
   plan_set_current_position (&new_pos);
 }
 
@@ -416,7 +432,7 @@ eParseResult process_gcode_command()
     switch (next_target.G)
     {
       // G0 - rapid, unsynchronised motion
-      // since it would be a major hassle to force the dda to not synchronise, just provide a fast feedrate and hope it's close enough to what host expects
+      // since it would be a major hassle to force the stepper to not synchronise, just provide a fast feedrate and hope it's close enough to what host expects
       case 0:
       backup_f = next_targetd.feed_rate;
       next_targetd.feed_rate = config.axis[X_AXIS].maximum_feedrate * 2;
@@ -502,7 +518,7 @@ eParseResult process_gcode_command()
           // Rapman only?
           next_targetd = startpoint;
           next_targetd.z += 3;
-          next_targetd.feed_rate = config.homing_feedrate_z;
+          next_targetd.feed_rate = config.axis[Z_AXIS].homing_feedrate;
           enqueue_moved(&next_targetd);
         }
                 
@@ -512,7 +528,7 @@ eParseResult process_gcode_command()
         zero_e();
       }
 
-//!      startpoint.F = config.homing_feedrate_x;  //?
+//!      startpoint.F = config.axis[X_AXIS].homing_feedrate;  //?
       
       break;
 
@@ -715,7 +731,7 @@ eParseResult process_gcode_command()
         temp_set(next_target.S, EXTRUDER_0);
       
         if (config.wait_on_temp)
-          enqueue_wait_temp();
+          enqueue_wait_for_temperatures();
       }
 
       break;
@@ -750,7 +766,7 @@ eParseResult process_gcode_command()
       if (config.enable_extruder_1)
       {
         temp_set(next_target.S, EXTRUDER_0);
-        enqueue_wait_temp();
+        enqueue_wait_for_temperatures();
       }
       break;
 
@@ -792,24 +808,50 @@ eParseResult process_gcode_command()
       
       // M115- report firmware version
       case 115:
-        sersendf("FIRMWARE_NAME:Teacup_R2C2 FIRMWARE_URL:http%%3A//github.com/bitboxelectronics/R2C2 PROTOCOL_VERSION:1.0 MACHINE_TYPE:Mendel\r\n");
+        sersendf("FIRMWARE_NAME:Teacup_R2C2 FIRMWARE_URL:http%%3A//github.com/bitboxelectronics/R2C2_Firmware PROTOCOL_VERSION:1.0 MACHINE_TYPE:Mendel\r\n");
       break;
 
-      case 119:
       // M119 - Get Endstop Status
-      #if (X_MIN_PIN > -1)
-        serial_writestr ("x_min:");
-        serial_writestr ( x_min() ? "H ":"L ");
-      #endif
-      #if (Y_MIN_PIN > -1)
-        serial_writestr ("y_min:");
-        serial_writestr ( y_min() ? "H ":"L ");
-      #endif
-      #if (Z_MIN_PIN > -1)
-        serial_writestr ("z_min:");
-        serial_writestr ( z_min() ? "H ":"L ");
-      #endif
-      serial_writestr ("\r\n");
+      case 119:
+      {
+        int axis;
+        char buf [10];
+        
+        for (axis = 0; axis < config.num_axes; axis++)
+        {
+          if (config.axis [axis].is_configured)
+          {
+            // min limit
+            if (config.axis[axis].pin_min_limit.port != 0xFF)
+            {
+              strcpy (buf, "?_min: ? ");
+              buf [0] = tolower (config.axis[axis].letter_code);
+              
+              if (read_pin (config.axis[axis].pin_min_limit))
+                buf [7] = 'H';
+              else
+                buf [7] = 'L';
+              
+              serial_writestr ( buf);
+            }
+            // max limit?
+            if (config.axis[axis].pin_max_limit.port != 0xFF)
+            {
+              strcpy (buf, "?_max: ? ");
+              buf [0] = tolower (config.axis[axis].letter_code);
+              
+              if (read_pin (config.axis[axis].pin_max_limit))
+                buf [7] = 'H';
+              else
+                buf [7] = 'L';
+              
+              serial_writestr ( buf);
+            }
+          }
+        }
+            
+        serial_writestr ("\r\n");
+      }
       break;
 
       // M130- heater P factor
@@ -817,7 +859,8 @@ eParseResult process_gcode_command()
       //if (next_target.seen_S)
         //p_factor = next_target.S;
       break;
-              // M131- heater I factor
+      
+      // M131- heater I factor
       case 131:
         //if (next_target.seen_S)
               //i_factor = next_target.S;
@@ -855,21 +898,31 @@ eParseResult process_gcode_command()
 
       // M190- power on
       case 190:
-      power_on();
-      x_enable();
-      y_enable();
-      z_enable();
-      e_enable();
-      steptimeout = 0;
+      {
+        int axis;
+
+        power_on();
+        
+        for (axis = 0; axis < config.num_axes; axis++)
+        {
+          if (config.axis [axis].is_configured)
+            axis_enable (axis);
+        }
+        steptimeout = 0;
+      }
       break;
 
       // M191- power off
       case 191:
-      x_disable();
-      y_disable();
-      z_disable();
-      e_disable();
-      power_off();
+      {
+        int axis;
+        for (axis = 0; axis < config.num_axes; axis++)
+        {
+          if (config.axis [axis].is_configured)
+            axis_disable (axis);
+        }
+        power_off();
+      }
       break;
 
       // M200 - set steps per mm
@@ -879,9 +932,9 @@ eParseResult process_gcode_command()
         reply_sent = true;
         sersendf ("ok X%g Y%g Z%g E%g\r\n", 
           config.axis[X_AXIS].steps_per_mm,
-          config.steps_per_mm_y,
-          config.steps_per_mm_z,
-          config.steps_per_mm_e
+          config.axis[Y_AXIS].steps_per_mm,
+          config.axis[Z_AXIS].steps_per_mm,
+          config.axis[E_AXIS].steps_per_mm
           );
       }
       else
@@ -889,11 +942,11 @@ eParseResult process_gcode_command()
         if (next_target.seen_X)
           config.axis[X_AXIS].steps_per_mm = next_target.target.x;
         if (next_target.seen_Y)
-          config.steps_per_mm_y = next_target.target.y;
+          config.axis[Y_AXIS].steps_per_mm = next_target.target.y;
         if (next_target.seen_Z)
-          config.steps_per_mm_z = next_target.target.z;
+          config.axis[Z_AXIS].steps_per_mm = next_target.target.z;
         if (next_target.seen_E)
-          config.steps_per_mm_e = next_target.target.e;
+          config.axis[E_AXIS].steps_per_mm = next_target.target.e;
           
         gcode_parse_init();  
       }
@@ -906,9 +959,9 @@ eParseResult process_gcode_command()
         reply_sent = true;
         sersendf ("ok X%d Y%d Z%d E%d\r\n", 
           config.axis[X_AXIS].maximum_feedrate,
-          config.maximum_feedrate_y,
-          config.maximum_feedrate_z,
-          config.maximum_feedrate_e
+          config.axis[Y_AXIS].maximum_feedrate,
+          config.axis[Z_AXIS].maximum_feedrate,
+          config.axis[E_AXIS].maximum_feedrate
           );
       }
       else
@@ -916,11 +969,11 @@ eParseResult process_gcode_command()
         if (next_target.seen_X)
           config.axis[X_AXIS].maximum_feedrate = next_target.target.x;
         if (next_target.seen_Y)
-          config.maximum_feedrate_y = next_target.target.y;
+          config.axis[Y_AXIS].maximum_feedrate = next_target.target.y;
         if (next_target.seen_Z)
-          config.maximum_feedrate_z = next_target.target.z;
+          config.axis[Z_AXIS].maximum_feedrate = next_target.target.z;
         if (next_target.seen_E)
-          config.maximum_feedrate_e = next_target.target.e;
+          config.axis[E_AXIS].maximum_feedrate = next_target.target.e;
       }
       break;
 
@@ -928,6 +981,7 @@ eParseResult process_gcode_command()
       case 206:
       if ((next_target.seen_X | next_target.seen_Y | next_target.seen_Z | next_target.seen_E) == 0)
       {
+        // TODO: per axis accel
         reply_sent = true;
         sersendf ("ok X%g\r\n", 
           config.acceleration
@@ -935,8 +989,18 @@ eParseResult process_gcode_command()
       }
       else
       {
+        // not sure this is the right way to used axis words
         if (next_target.seen_X)
-          config.acceleration = next_target.target.x;
+          config.axis[X_AXIS].acceleration = next_target.target.x;
+          
+        if (next_target.seen_Y)
+          config.axis[Y_AXIS].acceleration = next_target.target.y;
+          
+        if (next_target.seen_Z)
+          config.axis[Z_AXIS].acceleration = next_target.target.z;
+          
+        if (next_target.seen_E)
+          config.axis[E_AXIS].acceleration = next_target.target.e;
       }
       break;
       
@@ -1026,7 +1090,7 @@ eParseResult process_gcode_command()
         {
           next_targetd = startpoint;
           next_targetd.z = 2;
-          next_targetd.feed_rate = config.maximum_feedrate_z;
+          next_targetd.feed_rate = config.axis[Z_AXIS].maximum_feedrate;
           enqueue_moved(&next_targetd);
         }
         
@@ -1059,13 +1123,13 @@ eParseResult process_gcode_command()
           next_targetd.x = config.wipe_exit_pos_x;
           next_targetd.y = config.wipe_exit_pos_y;
           next_targetd.z = startpoint.z;
-          next_targetd.feed_rate = config.maximum_feedrate_x;
+          next_targetd.feed_rate = config.axis[X_AXIS].maximum_feedrate;
           enqueue_moved(&next_targetd);
           
           next_targetd.x = config.wipe_entry_pos_x;
           next_targetd.y = config.wipe_entry_pos_y;
           next_targetd.z = startpoint.z;
-          next_targetd.feed_rate = config.maximum_feedrate_x;
+          next_targetd.feed_rate = config.axis[X_AXIS].maximum_feedrate;
           enqueue_moved(&next_targetd);
           
         }

@@ -29,27 +29,45 @@
 
 #include "lpc_types.h"
 #include "lpc17xx_gpio.h"
+
 #include "ios.h"
+
 
 /* Initialize all the IO pins */
 /* Example of usage: pin_mode(PORT_0, X_STEP_PIN, OUTPUT); */
-void pin_mode(uint8_t portNum, uint32_t bitValue, uint8_t dir)
+void pin_mode(uint8_t portNum, uint32_t bitMask, uint8_t dir)
 {
-    FIO_SetDir(portNum, bitValue, dir);
+    FIO_SetDir(portNum, bitMask, dir);
 }
 
 /* Example of usage: digital_write(PORT_0, X_STEP_PIN, HIGH); */
-void digital_write(uint8_t portNum, uint32_t bitValue, uint8_t state)
+void digital_write(uint8_t portNum, uint32_t bitMask, uint8_t state)
 {
     if (state)
-        FIO_SetValue(portNum, bitValue);
+        FIO_SetValue(portNum, bitMask);
 
     else
-        FIO_ClearValue(portNum, bitValue);
+        FIO_ClearValue(portNum, bitMask);
 }
 
 /* Example of usage: value = digital_read(PORT_0, PIN); */
-uint32_t digital_read(uint8_t portNum, uint32_t bitValue)
+uint32_t digital_read(uint8_t portNum, uint32_t bitMask)
 {
-  return ((FIO_ReadValue(portNum) & bitValue)?1:0);
+  return ((FIO_ReadValue(portNum) & bitMask) ? 1 : 0);
 }
+
+
+uint32_t  read_pin (tPinDef pin)
+{
+  return ((FIO_ReadValue(pin.port) & _BV(pin.pin_number)) ? 1 : 0 ) ^ pin.active_low;
+}
+
+void  write_pin (tPinDef pin, uint8_t state)
+{
+  if (state ^ pin.active_low)
+    FIO_SetValue (pin.port, _BV(pin.pin_number));
+  else
+    FIO_ClearValue (pin.port, _BV(pin.pin_number));
+}
+
+

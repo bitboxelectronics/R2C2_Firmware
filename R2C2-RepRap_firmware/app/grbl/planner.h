@@ -27,9 +27,17 @@
 typedef enum {
   AT_MOVE,
   AT_MOVE_ENDSTOP,
-  AT_WAIT,
-  AT_WAIT_TEMPS
+  AT_WAIT_TIME,
+  AT_WAIT_TEMPERATURES
   } eActionType;
+
+typedef enum {
+  WE_WAIT_TIME,
+  WE_WAIT_TEMP_EXTRUDER_0,
+  WE_WAIT_TEMP_EXTRUDER_1,
+  WE_WAIT_TEMP_HEATED_BED,
+  WE_WAIT_USER_INPUT      // wait for "cycle start" / "ok" button
+  } eWaitEvents;
         
 typedef  struct {
   double  x;
@@ -53,17 +61,17 @@ typedef struct {
   uint32_t nominal_rate;              // The nominal step rate for this block in step_events/minute
   
   // Fields used by the motion planner to manage acceleration
-  double nominal_speed;               // The nominal speed for this block in mm/min  
-  double entry_speed;                 // Entry speed at previous-current junction in mm/min
-  double max_entry_speed;             // Maximum allowable junction entry speed in mm/min
-  double millimeters;                 // The total travel of this block in mm
-  uint8_t recalculate_flag;           // Planner flag to recalculate trapezoids on entry junction
-  uint8_t nominal_length_flag;        // Planner flag for nominal speed always reached
+  double  nominal_speed;               // The nominal speed for this block in mm/min  
+  double  entry_speed;                 // Entry speed at previous-current junction in mm/min
+  double  max_entry_speed;             // Maximum allowable junction entry speed in mm/min
+  double  millimeters;                 // The total travel of this block in mm
+  uint8_t recalculate_flag;            // Planner flag to recalculate trapezoids on entry junction
+  uint8_t nominal_length_flag;         // Planner flag for nominal speed always reached
 
   // Settings for the trapezoid generator
   uint32_t initial_rate;              // The jerk-adjusted step rate at start of block  
   uint32_t final_rate;                // The minimal rate at exit
-  int32_t rate_delta;                 // The steps/minute to add or subtract when changing speed (must be positive)
+  int32_t  rate_delta;                // The steps/minute to add or subtract when changing speed (must be positive)
   uint32_t accelerate_until;          // The index of the step event on which to stop acceleration
   uint32_t decelerate_after;          // The index of the step event on which to start decelerating
   
@@ -77,7 +85,11 @@ typedef struct {
   
   tTarget     target;  
   
-  uint16_t    wait_param; // time or target temp
+  // switch ActionType
+  // WAIT_TIME: time in seconds
+  // WAIT_TEMPERATURE: bit mask of WE_xxx flags
+  uint16_t    wait_param; 
+  
 } tActionRequest;
 
 

@@ -25,10 +25,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#if 0
-//#include <util/delay.h>
-//#include <avr/interrupt.h>
-#else
+
 #include "lpc17xx_timer.h"
 #include "lpc17xx_gpio.h"
 #include "lpc17xx_dac.h"
@@ -38,21 +35,18 @@
 #include "pinout.h"
 #include "ios.h"
 #include "temp.h"
-#endif
-
 #include "stepper.h"
 #include "config.h"
-//#include "settings.h"
-//#include "nuts_bolts.h"
+#include "machine.h"
 #include "planner.h"
-//#include "limits.h"
-
 #include "endstops.h"
 
+#if 0
 // Some useful constants
 #define STEP_MASK       ((1<<X_STEP_BIT)|(1<<Y_STEP_BIT)|(1<<Z_STEP_BIT)) // All step bits
 #define DIRECTION_MASK  ((1<<X_DIRECTION_BIT)|(1<<Y_DIRECTION_BIT)|(1<<Z_DIRECTION_BIT)) // All direction bits
 #define STEPPING_MASK   (STEP_MASK | DIRECTION_MASK) // All stepping-related bits (step/direction)
+#endif
 
 #define TICKS_PER_MICROSECOND (F_CPU/1000000)
 #define CYCLES_PER_ACCELERATION_TICK ((TICKS_PER_MICROSECOND*1000000)/ACCELERATION_TICKS_PER_SECOND)
@@ -81,9 +75,8 @@ static block_t *current_block;  // A pointer to the block currently being traced
 
 // Variables used by The Stepper Driver Interrupt
 //static uint8_t out_bits;        // The next stepping-bits to be output
-static uint32_t direction_bits; // all axes (different ports)    
-static uint32_t step_bits_e;    // for extruder     
-static uint32_t step_bits_xyz;  // for XYZ steppers (same port)
+static uint32_t direction_bits; // all axes (may be different ports)    
+static uint32_t step_bits;      // all axes (may be different ports)    
 
 static int32_t counter_x,       // Counter variables for the bresenham line tracer
                counter_y, 
@@ -126,16 +119,18 @@ static void set_step_events_per_minute(uint32_t steps_per_minute);
 //
 static inline void inc_led_count (uint8_t *pCount, uint8_t led_mask)
 {
-#ifdef STEP_LED_FLASH_VARIABLE
-  (*pCount) ++;
-  if (*pCount == 128)
+  if (config.step_led_flash_method == STEP_LED_FLASH_VARIABLE)
   {
-    led_on = led_on ^ led_mask;
-    *pCount = 0;
+    (*pCount) ++;
+    if (*pCount == 128)
+    {
+      led_on = led_on ^ led_mask;
+      *pCount = 0;
+    }
   }
-#endif
 }
 
+#if 0
 static inline void  gpio_WriteValue (uint8_t portNum, uint32_t bitMask, uint8_t value)
 {
   if (value)
@@ -143,142 +138,92 @@ static inline void  gpio_WriteValue (uint8_t portNum, uint32_t bitMask, uint8_t 
   else
     GPIO_ClearValue (portNum, bitMask);
 }
+#endif
 
 static inline void  set_direction_pins (void) 
 {
-  // x_direction( (direction_bits & (1<<X_DIRECTION_BIT))?0:1);
-
-  if (direction_bits & X_DIR_PIN)
-    gpio_WriteValue (X_DIR_PORT, X_DIR_PIN, config.axis[X_AXIS].dir_invert);
-  else
-    gpio_WriteValue (X_DIR_PORT, X_DIR_PIN, !config.axis[X_AXIS].dir_invert);
+  int dir;
   
-  // y_direction( (direction_bits & (1<<Y_DIRECTION_BIT))?0:1);
-  if (direction_bits & Y_DIR_PIN)
-    GPIO_ClearValue (Y_DIR_PORT, Y_DIR_PIN);
-  else
-    GPIO_SetValue (Y_DIR_PORT, Y_DIR_PIN);
-      
-  // z_direction( (direction_bits & (1<<Z_DIRECTION_BIT))?0:1);
-  if (direction_bits & Z_DIR_PIN)
-    GPIO_ClearValue (Z_DIR_PORT, Z_DIR_PIN);
-  else
-    GPIO_SetValue (Z_DIR_PORT, Z_DIR_PIN);
+  dir = direction_bits & _BV(X_AXIS) ? 1 : 0;
+  write_pin (config.axis[X_AXIS].pin_dir, 1 ^ config.axis[X_AXIS].dir_invert);
+  
+  dir = direction_bits & _BV(Y_AXIS) ? 1 : 0;
+  write_pin (config.axis[Y_AXIS].pin_dir, 1 ^ config.axis[Y_AXIS].dir_invert);
 
-  // e_direction( (direction_bits & (1<<E_DIRECTION_BIT))?0:1);
-  if (direction_bits & E_DIR_PIN)
-    GPIO_ClearValue (E_DIR_PORT, E_DIR_PIN);
-  else
-    GPIO_SetValue (E_DIR_PORT, E_DIR_PIN);
-    
-    
+  dir = direction_bits & _BV(Z_AXIS) ? 1 : 0;
+  write_pin (config.axis[Z_AXIS].pin_dir, 1 ^ config.axis[Z_AXIS].dir_invert);
+
+  dir = direction_bits & _BV(E_AXIS) ? 1 : 0;
+  write_pin (config.axis[E_AXIS].pin_dir, 1 ^ config.axis[E_AXIS].dir_invert);    
 }
 
-// step selected pins (output high)
+// step selected pins (output set to 'active' state)
 static inline void  set_step_pins (void) 
 {
-  // XYZ Steppers on same port
-#ifdef STEP_LED_FLASH_VARIABLE
-  if (step_bits_xyz & (1<<X_STEP_BIT))
-  {
-    inc_led_count (&led_count[X_AXIS], (1<<X_AXIS));
-  }
-  if (step_bits_xyz & (1<<Y_STEP_BIT))
-  {
-    inc_led_count (&led_count[Y_AXIS], (1<<Y_AXIS));
-  }  
-  if (step_bits_xyz & (1<<Z_STEP_BIT))
-  {
-    inc_led_count (&led_count[Z_AXIS], (1<<Z_AXIS));
-  }
-#endif
+  int axis;
   
-  GPIO_SetValue (X_STEP_PORT, step_bits_xyz);
-    
-  // extruder stepper    
-  if (step_bits_e)
+  if (config.step_led_flash_method == STEP_LED_FLASH_VARIABLE)
   {
-#ifdef STEP_LED_FLASH_VARIABLE
-    if (step_bits_e & (1<<E_STEP_BIT))
+    for (axis=0; axis < NUM_AXES; axis++)
     {
-      inc_led_count (&led_count[E_AXIS], (1<<E_AXIS));
+      if (step_bits & _BV(axis))
+      {
+        inc_led_count (&led_count[axis], _BV(axis));
+        write_pin (config.axis[axis].pin_step, ACTIVE);
+      }
     }
-#endif  
+  }
+  else
+  {
+    for (axis=0; axis < NUM_AXES; axis++)
+    {
+      if (step_bits & _BV(axis))
+      {
+        write_pin (config.axis[axis].pin_step, ACTIVE);
+      }
+    }
   
-    GPIO_SetValue (E_STEP_PORT, step_bits_e);
   }
   
 }
 
-// unstep all stepper pins (output low)
+// unstep all stepper pins (output inactive)
 static inline void  clear_all_step_pins (void) 
 {
-  // Note: XYZ on same port 
-  GPIO_ClearValue (X_STEP_PORT, X_STEP_PIN | Y_STEP_PIN | Z_STEP_PIN);
+  int axis;
   
-  GPIO_ClearValue (E_STEP_PORT, E_STEP_PIN);
+  for (axis=0; axis < NUM_AXES; axis++)
+  {
+    write_pin (config.axis[axis].pin_step, INACTIVE);
+  }
 }
 
 // unstep selected pins
 static inline void  clear_step_pins (void) 
 {
-  // XYZ Steppers on same port
-  GPIO_ClearValue (X_STEP_PORT, step_bits_xyz);
-    
-  // extruder stepper    
-  if (step_bits_e)
+  int axis;
+  
+  for (axis=0; axis < NUM_AXES; axis++)
   {
-    GPIO_ClearValue (E_STEP_PORT, step_bits_e);
+    if (step_bits & _BV(axis))
+      write_pin (config.axis [axis].pin_step, INACTIVE);
   }
 }
 
 // unstep pins according to led_on bit mask
 static inline void  clear_step_pins_by_state (void) 
 {
-  uint32_t step_pins = 0;
-  
-  // can turn off stepper pins but must NOT turn on 
+  int axis;
+
+  // can turn stepper pins OFF but must NOT turn on 
   // stepper pins because it would cause an unwanted step
   
-  if ((led_on & (1<<X_AXIS)) == 0)
+  for (axis=0; axis < NUM_AXES; axis++)
   {
-    step_pins |= X_STEP_PIN;
+    if ( (led_on & _BV(axis)) == 0)
+      write_pin (config.axis [axis].pin_step, INACTIVE);
   }
-  if ((led_on & (1<<Y_AXIS)) == 0)
-  {
-    step_pins |= Y_STEP_PIN;
-  }
-  if ((led_on & (1<<Z_AXIS)) == 0)
-  {
-    step_pins |= Z_STEP_PIN;
-  }
-  
-  // XYZ Steppers on same port
-  GPIO_ClearValue (X_STEP_PORT, step_pins);
 
-  if ((led_on & (1<<E_AXIS)) == 0)
-  {
-    GPIO_ClearValue (E_STEP_PORT, E_STEP_PIN);
-  }
-}
-
-void startBlink(void)
-{
-  leds_enabled = 1;
-#ifdef STEP_LED_FLASH_FIXED  
-  StartSlowTimer (&blinkTimer, led_on_time, blinkTimerCallback);
-  led_on = 0x0F;
-#else
-  led_on = 0x00;
-#endif
-}
-
-void stopBlink (void)
-{
-  leds_enabled = 0;
-  led_on = 0x00;
-  StopSlowTimer (&blinkTimer);
-  unstep();
 }
 
 void blinkTimerCallback (tTimer *pTimer)
@@ -297,6 +242,29 @@ void blinkTimerCallback (tTimer *pTimer)
     led_on = 0x00;
   }
 }
+
+void startBlink(void)
+{
+  leds_enabled = 1;
+  
+  if (config.step_led_flash_method != STEP_LED_FLASH_FIXED)
+  {
+    StartSlowTimer (&blinkTimer, led_on_time, blinkTimerCallback);
+    led_on = 0x0F;
+  }
+  else
+    led_on = 0x00;
+
+}
+
+void stopBlink (void)
+{
+  leds_enabled = 0;
+  led_on = 0x00;
+  StopSlowTimer (&blinkTimer);
+  clear_all_step_pins();
+}
+
 
 //
 // =========================
@@ -372,15 +340,14 @@ void st_interrupt (void)
   
   if(busy){ return; } // The busy-flag is used to avoid reentering this interrupt
   
-  // Set the direction pins a cuple of nanoseconds before we step the steppers
+  // Set the direction pins a couple of nanoseconds before we step the steppers
   //STEPPING_PORT = (STEPPING_PORT & ~DIRECTION_MASK) | (out_bits & DIRECTION_MASK);
 //  set_direction_pins (out_bits);
   
   // Then pulse the stepping pins
   //STEPPING_PORT = (STEPPING_PORT & ~STEP_MASK) | out_bits;
-#ifdef STEP_LED_NONE
-  set_step_pins ();
-#endif  
+  if (config.step_led_flash_method == STEP_LED_NONE)
+    set_step_pins ();
   
   // Reset step pulse reset timer so that The Stepper Port Reset Interrupt can reset the signal after
   // exactly settings.pulse_microseconds microseconds.
@@ -406,7 +373,7 @@ void st_interrupt (void)
       
       direction_bits = current_block->direction_bits;
       set_direction_pins ();
-      step_bits_xyz = step_bits_e = 0;
+      step_bits = 0;
     } else {
       st_go_idle();
     }    
@@ -418,50 +385,48 @@ void st_interrupt (void)
     if (current_block->action_type == AT_MOVE)
     {
       // Execute step displacement profile by bresenham line algorithm
-      step_bits_xyz = step_bits_e = 0;
+      step_bits = 0;
       counter_x += current_block->steps_x;
       if (counter_x > 0) {
-        step_bits_xyz |= (1<<X_STEP_BIT);
+        step_bits |= _BV(X_AXIS);
         counter_x -= current_block->step_event_count;
       }
       counter_y += current_block->steps_y;
       if (counter_y > 0) {
-        step_bits_xyz |= (1<<Y_STEP_BIT);
+        step_bits |= _BV(Y_AXIS);
         counter_y -= current_block->step_event_count;
       }
       counter_z += current_block->steps_z;
       if (counter_z > 0) {
-        step_bits_xyz |= (1<<Z_STEP_BIT);
+        step_bits |= _BV(Z_AXIS);
         counter_z -= current_block->step_event_count;
       }
       
       counter_e += current_block->steps_e;
       if (counter_e > 0) {
-        step_bits_e |= (1<<E_STEP_BIT);
+        step_bits |= _BV(E_AXIS);
         counter_e -= current_block->step_event_count;
       }
 
-#ifndef STEP_LED_NONE
-      clear_step_pins ();
-#endif
+      if (config.step_led_flash_method != STEP_LED_NONE)
+        clear_step_pins ();
 
       step_events_completed++; // Iterate step events
 
       if (current_block->check_endstops)
       {
-        if ( (current_block->steps_x && hit_home_stop_x (direction_bits & (1<<X_DIRECTION_BIT)) ) ||
-             (current_block->steps_y && hit_home_stop_y (direction_bits & (1<<Y_DIRECTION_BIT)) ) ||
-             (current_block->steps_z && hit_home_stop_z (direction_bits & (1<<Z_DIRECTION_BIT)) )
+        if ( (current_block->steps_x && hit_home_stop (X_AXIS, direction_bits & _BV(X_AXIS)) ) ||
+             (current_block->steps_y && hit_home_stop (Y_AXIS, direction_bits & _BV(Y_AXIS)) ) ||
+             (current_block->steps_z && hit_home_stop (Z_AXIS, direction_bits & _BV(Z_AXIS)) )
            )
         {
           step_events_completed = current_block->step_event_count;
-          step_bits_xyz = step_bits_e = 0;
+          step_bits = 0;
         }
       }
       
-#ifndef STEP_LED_NONE
-      set_step_pins ();
-#endif
+      if (config.step_led_flash_method != STEP_LED_NONE)
+        set_step_pins ();
 
       // While in block steps, check for de/ac-celeration events and execute them accordingly.
       if (step_events_completed < current_block->step_event_count) {
@@ -524,9 +489,9 @@ void st_interrupt (void)
         plan_discard_current_block();
       }
     }
-    else if (current_block->action_type == AT_WAIT_TEMPS) 
+    else if (current_block->action_type == AT_WAIT_TEMPERATURES) 
     {
-      step_bits_xyz = step_bits_e = 0;
+      step_bits = 0;
       if (temp_achieved(EXTRUDER_0))
       {
         current_block = NULL;
@@ -538,21 +503,23 @@ void st_interrupt (void)
   else 
   {
     // Still no block? Set the stepper pins to low before sleeping.
-    step_bits_xyz = step_bits_e = 0;
+    step_bits = 0;
   }          
   
-#ifdef STEP_LED_NONE
-  clear_all_step_pins ();
-#else
-  if (current_block == NULL)
-  {
-    leds_enabled = 0;
-    led_on = 0x00;
-    clear_all_step_pins();
-  }
+  if (config.step_led_flash_method == STEP_LED_NONE)
+    clear_all_step_pins ();
   else
-    clear_step_pins_by_state ();
-#endif  
+  {
+    if (current_block == NULL)
+    {
+      leds_enabled = 0;
+      led_on = 0x00;
+      clear_all_step_pins();
+    }
+    else
+      clear_step_pins_by_state ();
+  }
+  
 //  out_bits ^= settings.invert_mask;  // Apply stepper invert mask    
   busy=false;
 }

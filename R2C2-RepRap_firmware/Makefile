@@ -140,6 +140,7 @@ APPSRC = \
 	$(APPDIR)/temp.c \
 	$(APPDIR)/config.c \
 	$(APPDIR)/endstops.c \
+	$(APPDIR)/pin_control.c \
 	$(APPDIR)/geometry.c \
 	app/grbl/planner.c \
 	app/grbl/stepper.c

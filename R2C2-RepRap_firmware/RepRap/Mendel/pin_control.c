@@ -1,5 +1,4 @@
-/* Copyright (C) 2009-2010 Michael Moon aka Triffid_Hunter   */
-/* Copyright (c) 2011 Jorge Pinto - casainho@gmail.com       */
+/* Copyright (c) 2012 Bob Cousins bobcousins42@googlemail.com       */
 /* All rights reserved.
 
    Redistribution and use in source and binary forms, with or without
@@ -28,19 +27,44 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef	_MACHINE_H
-#define	_MACHINE_H
+#include "pinout.h"
+#include "ios.h"
 
-/*
-	firmware build options
-*/
+#include "config.h"
+
+void axis_enable    (unsigned axis)
+{
+  write_pin (config.axis [axis].pin_enable, ENABLE); 
+}
+
+void axis_disable   (unsigned axis)
+{
+  write_pin (config.axis [axis].pin_enable, DISABLE); 
+}
+
+void axis_step      (unsigned axis)
+{
+  write_pin (config.axis [axis].pin_step, ACTIVE); 
+}
+
+void axis_unstep    (unsigned axis)
+{
+  write_pin (config.axis [axis].pin_step, INACTIVE); 
+}
+
+void axis_set_direction (unsigned axis, unsigned dir)
+{
+  write_pin (config.axis [axis].pin_dir, dir);  // may be inverted by pin definition
+}
+
+bool axis_min (unsigned axis)
+{
+  // NB The pin definition will handle active low/high
+  if (read_pin (config.axis [axis].pin_min_limit))
+    return true;
+  else
+    return false;  
+}
+  
 
 
-#define F_CPU 100000000 /* 100MHz */
-
-
-
-//#define USE_BOOT_BUTTON
-
-
-#endif	/* _MACHINE_H */  

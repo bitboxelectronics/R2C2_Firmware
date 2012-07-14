@@ -174,6 +174,9 @@ INCLUDES = $(APPLIBDIR)/CMSISv1p30_LPC17xx/inc \
 	 $(APPLIBDIR)/FatFs/src \
 	 $(APPLIBDIR)/R2C2/ \
 	 $(APPLIBDIR)/ethernet/ \
+	 $(APPLIBDIR)/lwip/src/include/ \
+	 $(APPLIBDIR)/lwip/src/include/ipv4/ \
+	 $(APPLIBDIR)/lwip/ports/r2c2/include/ \
 	 $(FREERTOS_SOURCE_DIR)/include \
 	 $(FREERTOS_PORT_DIR)/ \
 	 app/grbl/ \

@@ -32,11 +32,11 @@
 #include "lpc17xx_pinsel.h"
 
 #include "timer.h"
-#include "pinout.h"
+//#include "pinout.h"
 #include "ios.h"
 #include "temp.h"
 #include "stepper.h"
-#include "config.h"
+#include "app_config.h"
 #include "machine.h"
 #include "planner.h"
 #include "endstops.h"
@@ -144,17 +144,17 @@ static inline void  set_direction_pins (void)
 {
   int dir;
   
-  dir = direction_bits & _BV(X_AXIS) ? 1 : 0;
-  write_pin (config.axis[X_AXIS].pin_dir, 1 ^ config.axis[X_AXIS].dir_invert);
+  dir = (direction_bits & _BV(X_AXIS)) ? 0 : 1;
+  write_pin (config.axis[X_AXIS].pin_dir, dir ^ config.axis[X_AXIS].dir_invert);
   
-  dir = direction_bits & _BV(Y_AXIS) ? 1 : 0;
-  write_pin (config.axis[Y_AXIS].pin_dir, 1 ^ config.axis[Y_AXIS].dir_invert);
+  dir = (direction_bits & _BV(Y_AXIS)) ? 0 : 1;
+  write_pin (config.axis[Y_AXIS].pin_dir, dir ^ config.axis[Y_AXIS].dir_invert);
 
-  dir = direction_bits & _BV(Z_AXIS) ? 1 : 0;
-  write_pin (config.axis[Z_AXIS].pin_dir, 1 ^ config.axis[Z_AXIS].dir_invert);
+  dir = (direction_bits & _BV(Z_AXIS)) ? 0 : 1;
+  write_pin (config.axis[Z_AXIS].pin_dir, dir ^ config.axis[Z_AXIS].dir_invert);
 
-  dir = direction_bits & _BV(E_AXIS) ? 1 : 0;
-  write_pin (config.axis[E_AXIS].pin_dir, 1 ^ config.axis[E_AXIS].dir_invert);    
+  dir = (direction_bits & _BV(E_AXIS)) ? 0 : 1;
+  write_pin (config.axis[E_AXIS].pin_dir, dir ^ config.axis[E_AXIS].dir_invert);    
 }
 
 // step selected pins (output set to 'active' state)

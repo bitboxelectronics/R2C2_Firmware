@@ -1,12 +1,12 @@
 #include <stdbool.h>
 
-#include "config.h"
+#include "app_config.h"
 #include "pinout.h"
 
 
 static bool test_min_stop (tPinDef limit_pin)
 {
-  if (read_pin (limit_pin) ^ limit_pin.active_low)
+  if (read_pin (limit_pin))
     return true;
   else
     return false;

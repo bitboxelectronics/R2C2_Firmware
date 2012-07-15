@@ -38,7 +38,7 @@
 #include	"gcode_parse.h"
 #include	"gcode_process.h"
 #include        "machine.h"
-#include        "config.h"
+#include        "app_config.h"
 
 GCODE_COMMAND next_target;
 

@@ -27,9 +27,8 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "pinout.h"
+#include "pin_control.h"
 #include "ios.h"
-
 #include "config.h"
 
 void axis_enable    (unsigned axis)
@@ -66,5 +65,14 @@ bool axis_min (unsigned axis)
     return false;  
 }
   
+void power_on()
+{
+  //TODO
+}
+
+void power_off()
+{
+  //TODO
+}
 
 

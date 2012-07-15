@@ -31,17 +31,18 @@
 #include   <string.h>
 #include   <ctype.h>  // for tolower
 
-#include	"gcode_process.h"
-#include	"gcode_parse.h"
+#include "gcode_process.h"
+#include "gcode_parse.h"
 
-#include	"serial.h"
-#include	"sermsg.h"
-#include	"sersendf.h"
+#include "serial.h"
+#include "sermsg.h"
+#include "sersendf.h"
 
-#include	"temp.h"
+#include "temp.h"
 #include "timer.h"
-#include "pinout.h"
-#include "config.h"
+//#include "pinout.h"
+#include "pin_control.h"
+#include "app_config.h"
 #include "ff.h"
 #include "buzzer.h"
 //#include "debug.h"

@@ -31,6 +31,8 @@
 #ifndef SPI_H_
 #define SPI_H_
 
+#include "stdint.h"
+
 enum speed_setting { INTERFACE_SLOW, INTERFACE_FAST };
 
 void spi_init(void);

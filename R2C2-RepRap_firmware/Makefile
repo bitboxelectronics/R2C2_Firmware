@@ -139,6 +139,7 @@ APPSRC = \
 	$(APPDIR)/mendel.c \
 	$(APPDIR)/temp.c \
 	$(APPDIR)/config.c \
+	$(APPDIR)/app_config.c \
 	$(APPDIR)/endstops.c \
 	$(APPDIR)/pin_control.c \
 	$(APPDIR)/geometry.c \

@@ -2,7 +2,7 @@
 
 # For 3D printer set up
 
-// Axis 0
+# Axis 0
 x.pin_step = 1,20
 x.pin_dir = 1,23
 x.pin_enable = 1,24,1

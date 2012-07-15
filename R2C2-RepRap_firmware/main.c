@@ -60,6 +60,7 @@ int main(void)
   SCB->VTOR = (USER_FLASH_START & 0x1FFFFF80);
 
   // Initialize USB<->Serial
+  //TODO: may need config to be loaded first
   serial_init();
   
   SysTickTimer_Init(); // Initialize the timer for millis()

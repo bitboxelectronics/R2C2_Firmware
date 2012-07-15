@@ -34,130 +34,28 @@
 #include "stdbool.h"
 
 #include "ios.h"
+#include "ff.h"
 
-// TODO: sort out use of max number vs actual number configured
-#define NUM_AXES 4
+#define TYPE_INT      0
+#define TYPE_DOUBLE   1
+#define TYPE_PIN_DEF  2
 
-// axis map for 3D printer with 1 extruder for compatibility with existing code
-#define X_AXIS 0
-#define Y_AXIS 1
-#define Z_AXIS 2
-#define E_AXIS 3
-
-
-// 6 axes should be enough for anyone?
-#define MAX_AXES 6
-
-/*
-  // pin config
-  input
-  output
-  pullup/down/etc
-  special function: pwm etc
-*/
-
-// axis configs: 
-// X Y Z E
-// X Y Z A
-// X Y A B
-
-// values for machine model
-#define MM_REPRAP_MENDEL  0
-#define MM_RAPMAN         1
-
-typedef struct
-{
-  bool    is_configured;
-  char    letter_code;      // X,Y,Z,A,B,C
-  
-  double  steps_per_mm;
-  int32_t maximum_feedrate;
-  double  acceleration;
-  
-  int32_t home_direction;   // -1 or +1, 0 if no homing
-  int32_t homing_feedrate;
-  int32_t search_feedrate;
-  int32_t home_pos;
-  
-  int32_t printing_vol;   // axis max travel
-
-  int32_t dir_invert;     // reverse direction of movement, same effect as setting active low/high on direction pin
-  
-  // IO pin configuration
-
-  // step, dir, enable, reset
-  // polarity: active low/high
-  // pulse len low,high
-  tPinDef pin_step;
-  tPinDef pin_dir;
-  tPinDef pin_enable;
-  tPinDef pin_reset;
-
-  bool    have_min_limit;
-  bool    have_max_limit;
-  
-  tPinDef pin_min_limit;
-  tPinDef pin_max_limit;
-  
-} tAxisSettings;
+typedef struct {
+  char      *name;
+  void      *pValue;
+  uint8_t   type;
+  union {
+    int32_t   val_i;
+    double    val_d;
+    tPinDef   val_pin_def;
+    };
+} tConfigItem;
 
 
-struct configuration
-{
-  int32_t machine_model;
-  
-  int32_t num_axes;
-  tAxisSettings axis[MAX_AXES];
+void set_defaults (tConfigItem lookup[], int num_tokens);
 
-  double  acceleration;   // global default
-  double  junction_deviation;
+FRESULT read_config_file (char *filename, tConfigItem lookup[], int num_tokens);
 
-  int32_t auto_power_off_time; // seconds
-  
-  int32_t control_panel;      // = 0 none, 1 = Makerbot
-  
-  int32_t tcp_ip_enabled;
-  int32_t network_interface;
-
-  // rate when homing (fast)
-  // direction to move when homing (depends on endstop locations)
-  // position at home
-  // printable volume size
-  
-  int32_t debug_flags;
-  
-  int32_t step_led_flash_method; // how we control the Step pin to flash the stepper LED
-  
-  // The following are specific to printers
-
-  // dump pos
-  int32_t have_dump_pos;
-  int32_t dump_pos_x;
-  int32_t dump_pos_y;
-  
-  // rest pos
-  int32_t have_rest_pos;
-  int32_t rest_pos_x;
-  int32_t rest_pos_y;
-
-  // wipe pos
-  int32_t have_wipe_pos;
-  int32_t wipe_entry_pos_x;
-  int32_t wipe_entry_pos_y;
-  int32_t wipe_exit_pos_x;
-  int32_t wipe_exit_pos_y;
-  
-  //
-  int32_t steps_per_revolution_e;
-  
-  // options
-  int32_t wait_on_temp;
-  int32_t enable_extruder_1;
-} tApplicationConfiguration;
-
-extern struct configuration config;
-
-void read_config (void);
-void print_config (void);
+void print_config_table (tConfigItem lookup[], int num_token);
 
 #endif /* CONFIG_H */

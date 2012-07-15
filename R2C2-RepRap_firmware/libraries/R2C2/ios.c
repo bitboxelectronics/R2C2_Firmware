@@ -56,6 +56,15 @@ uint32_t digital_read(uint8_t portNum, uint32_t bitMask)
   return ((FIO_ReadValue(portNum) & bitMask) ? 1 : 0);
 }
 
+// 
+// Using tPinDef
+//
+
+void      set_pin_mode (tPinDef pin, uint8_t dir)
+{
+  if (pin.port != UNDEFINED_PORT)
+    FIO_SetDir(pin.port, _BV(pin.pin_number), dir);
+}
 
 uint32_t  read_pin (tPinDef pin)
 {

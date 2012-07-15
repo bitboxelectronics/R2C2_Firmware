@@ -31,9 +31,12 @@
 #include "adc.h"
 #include "temp.h"
 #include "machine.h"
-#include "pinout.h"
+//#include "pinout.h"
+#include "pin_control.h"
 #include "sersendf.h"
 #include "stepper.h"
+#include "app_config.h"
+
 
 /* Table for NTC EPCOS B57560G104F and R1 = 330R for Extruder0
  * Table for NTC EPCOS B57560G104F and R1 = 12K for HeatedBed0 */
@@ -177,11 +180,11 @@ static uint16_t read_temp(uint8_t sensor_number)
 
   if (sensor_number == EXTRUDER_0)
   {
-    raw = analog_read(EXTRUDER_0_SENSOR_ADC_CHANNEL);
+    raw = analog_read(config.extruder_ctc[0].sensor_adc_channel);
   }
   else if (sensor_number == HEATED_BED_0)
   {
-    raw = analog_read(HEATED_BED_0_SENSOR_ADC_CHANNEL);
+    raw = analog_read(config.heated_bed_ctc.sensor_adc_channel);
   }
   
   // filter the ADC values with simple IIR

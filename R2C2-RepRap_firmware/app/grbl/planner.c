@@ -35,7 +35,7 @@
 //#include "settings.h"
 //#include "config.h"
 
-#include "RepRap/Mendel/config.h"
+#include "RepRap/Mendel/app_config.h"
 
 // The number of linear motions that can be in the plan at any give time
 
@@ -53,6 +53,12 @@ static double previous_nominal_speed;   // Nominal speed of previous path line s
 
 static uint8_t acceleration_manager_enabled;   // Acceleration management active?
 
+#ifdef _CROSSWORKS
+long lround (double x)
+{
+  return x+0.5;
+}
+#endif
 
 // Returns the index of the next block in the ring buffer
 // NOTE: Removed modulo (%) operator, which uses an expensive divide and multiplication.

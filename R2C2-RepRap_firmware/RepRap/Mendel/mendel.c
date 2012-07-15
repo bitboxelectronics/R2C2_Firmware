@@ -39,9 +39,10 @@
 #include "machine.h"
 #include "gcode_parse.h"
 #include "gcode_process.h"
-#include "pinout.h"
+//#include "pinout.h"
+#include "pin_control.h"
 #include "debug.h"
-#include "config.h"
+#include "app_config.h"
 #include "temp.h"
 
 #include "planner.h"
@@ -56,57 +57,61 @@ tLineBuffer sd_line_buf;
 /* Initialize ADC for reading sensors */
 void adc_init(void)
 {
+  ADC_Init(LPC_ADC, 200000); /* ADC conversion rate = 200Khz */
+}
+
+void ctc_init (tCtcSettings *ctc_config)
+{
   PINSEL_CFG_Type PinCfg;
 
-  PinCfg.Funcnum = PINSEL_FUNC_2; /* ADC function */
-  PinCfg.OpenDrain = PINSEL_PINMODE_NORMAL;
-  PinCfg.Pinmode = PINSEL_PINMODE_TRISTATE;
-  PinCfg.Portnum = EXTRUDER_0_SENSOR_ADC_PORT;
-  PinCfg.Pinnum = EXTRUDER_0_SENSOR_ADC_PIN;
-  PINSEL_ConfigPin(&PinCfg);
+  // heater output pin
+  set_pin_mode (ctc_config->pin_heater, OUTPUT);
+  write_pin (ctc_config->pin_heater, DISABLE);
+
+  // fan output pin
+  set_pin_mode(ctc_config->pin_cooler, OUTPUT);
+  write_pin (ctc_config->pin_cooler, DISABLE);
+
 
   PinCfg.Funcnum = PINSEL_FUNC_2; /* ADC function */
   PinCfg.OpenDrain = PINSEL_PINMODE_NORMAL;
   PinCfg.Pinmode = PINSEL_PINMODE_TRISTATE;
-  PinCfg.Portnum = HEATED_BED_0_ADC_PORT;
-  PinCfg.Pinnum = HEATED_BED_0_ADC_PIN;
+  PinCfg.Portnum = ctc_config->pin_temp_sensor.port;
+  PinCfg.Pinnum = ctc_config->pin_temp_sensor.pin_number;
   PINSEL_ConfigPin(&PinCfg);
 
-  ADC_Init(LPC_ADC, 200000); /* ADC conversion rate = 200Khz */
 }
 
 void io_init(void)
 {
   int axis;
 
-  /* Extruder 0 Heater pin */
-  pin_mode(EXTRUDER_0_HEATER_PORT, EXTRUDER_0_HEATER_PIN, OUTPUT);
-  extruder_heater_off();
+  /* Extruder 0 */
+  ctc_init (&config.extruder_ctc[0]);
 
-  /* Heated Bed 0 Heater pin */
-  pin_mode(HEATED_BED_0_HEATER_PORT, HEATED_BED_0_HEATER_PIN, OUTPUT);
-  heated_bed_off();
+  //TODO: extruder 1
 
-  /* setup I/O pins */
-  pin_mode (STEPPERS_RESET_PORT, _BV(STEPPERS_RESET_PIN), OUTPUT);
-  digital_write (STEPPERS_RESET_PORT, _BV(STEPPERS_RESET_PIN), 1); /* Disable reset for all stepper motors */
+  /* Heated Bed */
+  ctc_init (&config.heated_bed_ctc);
+
+  /* setup stepper axes */
+  set_pin_mode (config.pin_all_steppers_reset, OUTPUT);
+  write_pin (config.pin_all_steppers_reset, DISABLE); /* Disable reset for all stepper motors */
 
   for (axis = 0; axis < MAX_AXES; axis++)
   {
     if (config.axis [axis].is_configured)
     {
-      pin_mode (config.axis [axis].pin_step.port,   _BV(config.axis [axis].pin_step.pin_number), OUTPUT);
-      pin_mode (config.axis [axis].pin_dir.port,    _BV(config.axis [axis].pin_dir.pin_number), OUTPUT);
-      pin_mode (config.axis [axis].pin_enable.port, _BV(config.axis [axis].pin_enable.pin_number), OUTPUT);
+      set_pin_mode (config.axis [axis].pin_step, OUTPUT);
+      set_pin_mode (config.axis [axis].pin_dir, OUTPUT);
+      set_pin_mode (config.axis [axis].pin_enable, OUTPUT);
       
-      pin_mode (config.axis [axis].pin_min_limit.port, _BV(config.axis [axis].pin_min_limit.pin_number), INPUT);
+      set_pin_mode (config.axis [axis].pin_min_limit, INPUT);
     
       axis_enable(axis);
     }
   }
   
-  pin_mode(EXTRUDER_0_FAN_PORT, EXTRUDER_0_FAN_PIN, OUTPUT);
-  extruder_fan_off();
 
   adc_init();
 }
@@ -132,16 +137,17 @@ void init(void)
   // set up inputs and outputs
   io_init();
 
-  /* Initialize Gcode parse variables */
+  /* Initialize Gcode parser */
   gcode_parse_init();
 
   // set up default feedrate
-//TODO  current_position.F = startpoint.F = next_target.target.F =       config.search_feedrate_z;
+  //TODO  current_position.F = startpoint.F = next_target.target.F =       config.search_feedrate_z;
 
   AddSlowTimer (&temperatureTimer);
   StartSlowTimer (&temperatureTimer, 10, temperatureTimerCallback);
   temperatureTimer.AutoReload = 1;
 
+  // TODO: CI
   // say hi to host
   serial_writestr("Start\r\nOK\r\n");
 }
@@ -153,12 +159,14 @@ int app_main (void)
 
   buzzer_init();
   buzzer_play(1500, 100); /* low beep */
-	buzzer_wait();
+  buzzer_wait();
   buzzer_play(2500, 200); /* high beep */
 
-  init();
-
+  // NB Anything before read_config call must not rely on anything in config!
+  // read_config must not use any peripherals apart from SPI?
   read_config();
+
+  init();
 
   // grbl init
   plan_init();      

@@ -31,8 +31,6 @@
 #ifndef _PINOUT_H
 #define _PINOUT_H
 
-#include "stdbool.h"
-
 #include "ios.h"
 
 /*
@@ -71,127 +69,24 @@
 
 
 //
-#define STEPPERS_RESET_PORT     0         /* P0.22 */
-#define STEPPERS_RESET_PIN      22        /* P0.22 */
-#define STEPPERS_RESET_PIN_POLARITY ACTIVE_LOW
+#define STEPPERS_RESET_PIN    PIN_DEF (0,22,ACTIVE_LOW)         /* P0.22 */
 
+// CTC #1 / Extruder 0
+#define EXTRUDER_0_HEATER_PIN           PIN_DEF (2,4,ACTIVE_HIGH)        /* P2.4 */
 
-#define EXTRUDER_0_HEATER_PORT          2        /* P2.4 */
-#define EXTRUDER_0_HEATER_PIN           (1 << 4) /* P2.4 */
-#define EXTRUDER_0_SENSOR_ADC_PORT      0        /* P0.2 */
-#define EXTRUDER_0_SENSOR_ADC_PIN       2        /* P0.2 */
+#define EXTRUDER_0_SENSOR_ADC_PIN       PIN_DEF (0,2,ACTIVE_HIGH)        /* P0.2 */
 #define EXTRUDER_0_SENSOR_ADC_CHANNEL   7        /* P0.2 */
 
-#define EXTRUDER_0_FAN_PORT             2         /* P2.3 */
-#define EXTRUDER_0_FAN_PIN              (1<<3)
+#define EXTRUDER_0_FAN_PIN              PIN_DEF (2,3,ACTIVE_HIGH)         /* P2.3 */
 
-#define HEATED_BED_0_HEATER_PORT        2        /* P2.5 */
-#define HEATED_BED_0_HEATER_PIN         (1 << 5) /* P2.5 */
-#define HEATED_BED_0_ADC_PORT           0        /* P0.3 */
-#define HEATED_BED_0_ADC_PIN            3        /* P0.3 */
+// CTC #2 / Heated Bed
+#define HEATED_BED_0_HEATER_PIN         PIN_DEF (2,5,ACTIVE_HIGH)        /* P2.5 */
+
+#define HEATED_BED_0_ADC_PIN            PIN_DEF (0,3,ACTIVE_HIGH)        /* P0.3 */
 #define HEATED_BED_0_SENSOR_ADC_CHANNEL 6        /* P0.3 */
 
+// might be needed before config file is read?
 #define BUZZER_PORT     2         /* P2.2 PWM1[3] */
 #define BUZZER_PIN      (1 << 22) /* P2.2 PWM1[3] */
-
-// ==========================================================================
-// IO functions
-// TODO move to separate module
-// ==========================================================================
-
-
-void axis_enable    (unsigned axis);
-void axis_disable   (unsigned axis);
-void axis_step      (unsigned axis);
-void axis_unstep    (unsigned axis);
-void axis_set_direction (unsigned axis, unsigned dir);
-bool axis_min (unsigned axis);
-
-// Setting step outputs happens in time critial interrupts
-// these macros can be defined to faster/direct versions if necesary
-
-#define x_step_fast()   axis_step(X_AXIS)
-#define x_unstep_fast() axis_unstep(X_AXIS)
-
-#define y_step_fast()   axis_step(Y_AXIS)
-#define y_unstep_fast() axis_unstep(Y_AXIS)
-
-#define z_step_fast()   axis_step(Z_AXIS)
-#define z_unstep_fast() axis_unstep(Z_AXIS)
-
-#define e_step_fast()   axis_step(E_AXIS)
-#define e_unstep_fast() axis_unstep(E_AXIS)
-
-#if 0
-/*
-        X Stepper
-*/
-#define x_enable()        digital_write(X_ENABLE_PORT, X_ENABLE_MASK, 0)
-#define x_disable()       digital_write(X_ENABLE_PORT, X_ENABLE_MASK, 1)
-#define x_step()          digital_write(X_STEP_PORT, X_STEP_MASK, 1)
-#define x_unstep()        digital_write(X_STEP_PORT, X_STEP_MASK, 0)
-#define x_direction(dir)  digital_write(X_DIR_PORT, X_DIR_MASK, dir)
-
-#define x_min()           ((digital_read(X_MIN_PORT, X_MIN_MASK))?0:1)
-
-/*
-        Y Stepper
-*/
-#define y_enable() digital_write(Y_ENABLE_PORT, Y_ENABLE_MASK, 0)
-#define y_disable() digital_write(Y_ENABLE_PORT, Y_ENABLE_MASK, 1)
-#define y_step() digital_write(Y_STEP_PORT, Y_STEP_MASK, 1)
-#define y_unstep() digital_write(Y_STEP_PORT, Y_STEP_MASK, 0)
-#define y_direction(dir) digital_write(Y_DIR_PORT, Y_DIR_MASK, dir)
-#define y_min() ((digital_read(Y_MIN_PORT, Y_MIN_MASK))?0:1)
-
-/*
-        Z Stepper
-*/
-#define z_enable() digital_write(Z_ENABLE_PORT, Z_ENABLE_MASK, 0)
-#define z_disable() digital_write(Z_ENABLE_PORT, Z_ENABLE_MASK, 1)
-#define z_step() digital_write(Z_STEP_PORT, Z_STEP_MASK, 1)
-#define z_unstep() digital_write(Z_STEP_PORT, Z_STEP_MASK, 0)
-#define z_direction(dir) digital_write(Z_DIR_PORT, Z_DIR_MASK, dir)
-#define z_min() ((digital_read(Z_MIN_PORT, Z_MIN_MASK))?0:1)
-
-/*
-        Extruder
-*/
-#define e_enable() digital_write(E_ENABLE_PORT, E_ENABLE_MASK, 0)
-#define e_disable() digital_write(E_ENABLE_PORT, E_ENABLE_MASK, 1)
-#define e_step() digital_write(E_STEP_PORT, E_STEP_MASK, 1)
-#define e_unstep() digital_write(E_STEP_PORT, E_STEP_MASK, 0)
-#define e_direction(dir) digital_write(E_DIR_PORT, E_DIR_MASK, dir)
-#endif
-
-// each CTC has heater output (FET) and thermistor input
-
-/*
-   CTC 1: extruder
-*/
-
-// extruder heater
-#define extruder_heater_on()  digital_write(EXTRUDER_0_HEATER_PORT, EXTRUDER_0_HEATER_PIN, HIGH);
-#define extruder_heater_off() digital_write(EXTRUDER_0_HEATER_PORT, EXTRUDER_0_HEATER_PIN, LOW);
-
-// temp sensor?
-
-/*
-  CTC 2 : Heated Bed
-*/
-#define heated_bed_on()   digital_write(HEATED_BED_0_HEATER_PORT, HEATED_BED_0_HEATER_PIN, HIGH);
-#define heated_bed_off()  digital_write(HEATED_BED_0_HEATER_PORT, HEATED_BED_0_HEATER_PIN, LOW);
-
-// aux power header (J24)
-#define extruder_fan_on()     digital_write(EXTRUDER_0_FAN_PORT, EXTRUDER_0_FAN_PIN, HIGH);
-#define extruder_fan_off()    digital_write(EXTRUDER_0_FAN_PORT, EXTRUDER_0_FAN_PIN, LOW);
-
-
-
-// other functions
-#define power_on()      if (0) {}
-#define power_off()     if (0) {}
-
-
 
 #endif  /* _PINOUT_H */

@@ -147,6 +147,7 @@ static tConfigItem config_lookup [] =
   { "num_extruders", &config.num_extruders, TYPE_INT, {.val_i=1}},
 
   { "enable_extruder_1", &config.enable_extruder_1, TYPE_INT, {.val_i=1}},
+  { "beep_on_events", &config.beep_on_events, TYPE_INT, {.val_i=0x0000000F}},
 };
 
 

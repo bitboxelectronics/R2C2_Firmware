@@ -1,6 +1,6 @@
 #include "alerter.h"
 
-#include "config.h"
+#include "app_config.h"
 
 #include "buzzer.h"
 

@@ -1,0 +1,9 @@
+# Config file for standard R2C2 board
+
+# For 3D printer set up
+
+# Axis 0
+x.pin_step = 1,20
+x.pin_dir = 1,23
+x.pin_enable = 1,24,1
+x.pin_min_limit = 2,6,1

@@ -1,4 +1,4 @@
-/* Copyright (c) 2011 Jorge Pinto - casainho@gmail.com       */
+/* Copyright (c) 2012 Bob Cousins bobcousins42@googlemail.com       */
 /* All rights reserved.
 
    Redistribution and use in source and binary forms, with or without
@@ -27,35 +27,52 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef CONFIG_H
-#define CONFIG_H
-
-#include "stdint.h"
-#include "stdbool.h"
-
+#include "pin_control.h"
 #include "ios.h"
-#include "ff.h"
+#include "config.h"
 
-#define TYPE_INT      0
-#define TYPE_DOUBLE   1
-#define TYPE_PIN_DEF  2
+void axis_enable    (unsigned axis)
+{
+  write_pin (config.axis [axis].pin_enable, ENABLE); 
+}
 
-typedef struct {
-  char      *name;
-  void      *pValue;
-  uint8_t   type;
-  union {
-    int32_t   val_i;
-    double    val_d;
-    tPinDef   val_pin_def;
-    };
-} tConfigItem;
+void axis_disable   (unsigned axis)
+{
+  write_pin (config.axis [axis].pin_enable, DISABLE); 
+}
+
+void axis_step      (unsigned axis)
+{
+  write_pin (config.axis [axis].pin_step, ACTIVE); 
+}
+
+void axis_unstep    (unsigned axis)
+{
+  write_pin (config.axis [axis].pin_step, INACTIVE); 
+}
+
+void axis_set_direction (unsigned axis, unsigned dir)
+{
+  write_pin (config.axis [axis].pin_dir, dir);  // may be inverted by pin definition
+}
+
+bool axis_min (unsigned axis)
+{
+  // NB The pin definition will handle active low/high
+  if (read_pin (config.axis [axis].pin_min_limit))
+    return true;
+  else
+    return false;  
+}
+  
+void power_on()
+{
+  //TODO
+}
+
+void power_off()
+{
+  //TODO
+}
 
 
-void set_defaults (tConfigItem lookup[], int num_tokens);
-
-FRESULT read_config_file (char *filename, tConfigItem lookup[], int num_tokens);
-
-void print_config_table (tConfigItem lookup[], int num_token);
-
-#endif /* CONFIG_H */

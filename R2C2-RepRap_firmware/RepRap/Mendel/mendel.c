@@ -42,9 +42,10 @@
 #include "r2c2.h"
 #include "machine.h"
 #include "gcode_parse.h"
-#include "pinout.h"
+//#include "pinout.h"
+#include "pin_control.h"
 #include "debug.h"
-#include "config.h"
+#include "app_config.h"
 #include "temp.h"
 #include "planner.h"
 #include "stepper.h"
@@ -59,64 +60,61 @@ tTimer temperatureTimer;
 /* Initialize ADC for reading sensors */
 void adc_init(void)
 {
+  ADC_Init(LPC_ADC, 200000); /* ADC conversion rate = 200Khz */
+}
+
+void ctc_init (tCtcSettings *ctc_config)
+{
   PINSEL_CFG_Type PinCfg;
 
-  PinCfg.Funcnum = PINSEL_FUNC_2; /* ADC function */
-  PinCfg.OpenDrain = PINSEL_PINMODE_NORMAL;
-  PinCfg.Pinmode = PINSEL_PINMODE_TRISTATE;
-  PinCfg.Portnum = EXTRUDER_0_SENSOR_ADC_PORT;
-  PinCfg.Pinnum = EXTRUDER_0_SENSOR_ADC_PIN;
-  PINSEL_ConfigPin(&PinCfg);
+  // heater output pin
+  set_pin_mode (ctc_config->pin_heater, OUTPUT);
+  write_pin (ctc_config->pin_heater, DISABLE);
+
+  // fan output pin
+  set_pin_mode(ctc_config->pin_cooler, OUTPUT);
+  write_pin (ctc_config->pin_cooler, DISABLE);
+
 
   PinCfg.Funcnum = PINSEL_FUNC_2; /* ADC function */
   PinCfg.OpenDrain = PINSEL_PINMODE_NORMAL;
   PinCfg.Pinmode = PINSEL_PINMODE_TRISTATE;
-  PinCfg.Portnum = HEATED_BED_0_ADC_PORT;
-  PinCfg.Pinnum = HEATED_BED_0_ADC_PIN;
+  PinCfg.Portnum = ctc_config->pin_temp_sensor.port;
+  PinCfg.Pinnum = ctc_config->pin_temp_sensor.pin_number;
   PINSEL_ConfigPin(&PinCfg);
 
-  ADC_Init(LPC_ADC, 200000); /* ADC conversion rate = 200Khz */
 }
 
 void io_init(void)
 {
-  /* Extruder 0 Heater pin */
-  pin_mode(EXTRUDER_0_HEATER_PORT, EXTRUDER_0_HEATER_PIN, OUTPUT);
-  extruder_heater_off();
+  int axis;
 
-  /* Heated Bed 0 Heater pin */
-  pin_mode(HEATED_BED_0_HEATER_PORT, HEATED_BED_0_HEATER_PIN, OUTPUT);
-  heated_bed_off();
+  /* Extruder 0 */
+  ctc_init (&config.extruder_ctc[0]);
 
-  /* setup I/O pins */
-  pin_mode(STEPPERS_RESET_PORT, STEPPERS_RESET_PIN, OUTPUT);
-  digital_write(STEPPERS_RESET_PORT, STEPPERS_RESET_PIN, 1); /* Disable reset for all stepper motors */
+  //TODO: extruder 1
 
-  pin_mode(X_STEP_PORT, X_STEP_PIN, OUTPUT);
-  pin_mode(X_DIR_PORT, X_DIR_PIN, OUTPUT);
-  pin_mode(X_ENABLE_PORT, X_ENABLE_PIN, OUTPUT);
-  x_enable();
-  pin_mode(X_MIN_PORT, X_MIN_PIN, INPUT);
+  /* Heated Bed */
+  ctc_init (&config.heated_bed_ctc);
 
-  pin_mode(Y_STEP_PORT, Y_STEP_PIN, OUTPUT);
-  pin_mode(Y_DIR_PORT, Y_DIR_PIN, OUTPUT);
-  pin_mode(Y_ENABLE_PORT, Y_ENABLE_PIN, OUTPUT);
-  y_enable();
-  pin_mode(Y_MIN_PORT, Y_MIN_PIN, INPUT);
+  /* setup stepper axes */
+  set_pin_mode (config.pin_all_steppers_reset, OUTPUT);
+  write_pin (config.pin_all_steppers_reset, DISABLE); /* Disable reset for all stepper motors */
 
-  pin_mode(Z_STEP_PORT, Z_STEP_PIN, OUTPUT);
-  pin_mode(Z_DIR_PORT, Z_DIR_PIN, OUTPUT);
-  pin_mode(Z_ENABLE_PORT, Z_ENABLE_PIN, OUTPUT);
-  z_enable();
-  pin_mode(Z_MIN_PORT, Z_MIN_PIN, INPUT);
-
-  pin_mode(E_STEP_PORT, E_STEP_PIN, OUTPUT);
-  pin_mode(E_DIR_PORT, E_DIR_PIN, OUTPUT);
-  pin_mode(E_ENABLE_PORT, E_ENABLE_PIN, OUTPUT);
-  e_enable();
-
-  pin_mode(EXTRUDER_0_FAN_PORT, EXTRUDER_0_FAN_PIN, OUTPUT);
-  extruder_fan_off();
+  for (axis = 0; axis < MAX_AXES; axis++)
+  {
+    if (config.axis [axis].is_configured)
+    {
+      set_pin_mode (config.axis [axis].pin_step, OUTPUT);
+      set_pin_mode (config.axis [axis].pin_dir, OUTPUT);
+      set_pin_mode (config.axis [axis].pin_enable, OUTPUT);
+      
+      set_pin_mode (config.axis [axis].pin_min_limit, INPUT);
+    
+      axis_enable(axis);
+    }
+  }
+  
 
   adc_init();
 }
@@ -154,10 +152,12 @@ void PrinterTask( void *pvParameters )
 {
   long timer1 = 0;
 
+  // NB Anything before read_config call must not rely on anything in config!
+  // read_config must not use any peripherals apart from SPI?
   read_config();
 
   buzzer_play(1500, 100); /* low beep */
-	buzzer_wait();
+  buzzer_wait();
   buzzer_play(2500, 200); /* high beep */
 
   // loop

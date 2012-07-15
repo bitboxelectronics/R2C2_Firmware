@@ -1,44 +1,34 @@
 #include <stdbool.h>
 
-#include "config.h"
+#include "app_config.h"
 #include "pinout.h"
 
-bool hit_home_stop_x (unsigned dir)
+
+static bool test_min_stop (tPinDef limit_pin)
 {
-  if (config.home_direction_x < 0)
+  if (read_pin (limit_pin))
+    return true;
+  else
+    return false;
+}
+
+// dir : 0 = towards positive, 1 = towards negative
+bool hit_home_stop (unsigned axis, unsigned dir)
+{
+  if (config.axis[axis].home_direction < 0)
   {
-    return x_min() && (dir != 0);
+    // if home direction is negative then 
+    // return true if current motion is in negative direction AND min limit reached
+    return test_min_stop(config.axis[axis].pin_min_limit) && (dir != 0);
   }
   else
   {
-    return x_min() && (dir == 0);
+    // if home direction is positive then 
+    // return true if current motion is in positive direction AND limit reached
+    return test_min_stop(config.axis[axis].pin_min_limit) && (dir == 0);
   }
 }
 
-
-bool hit_home_stop_y (unsigned dir)
-{
-  if (config.home_direction_y < 0)
-  {
-    return y_min() && (dir != 0);
-  }
-  else
-  {
-    return y_min() && (dir == 0);
-  }
-}
-
-bool hit_home_stop_z (unsigned dir)
-{
-  if (config.home_direction_z < 0)
-  {
-    return z_min() && (dir != 0);
-  }
-  else
-  {
-    return z_min() && (dir == 0);
-  }
-}
 
 
 

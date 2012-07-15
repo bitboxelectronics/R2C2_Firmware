@@ -35,107 +35,32 @@
 #include "config.h"
 #include "spi.h"
 #include "ff.h"
-#include "debug.h"
-#include "gcode_parse.h"
-#include "uart.h"
+
+// TODO: remove dependencies on these ?
+#include "debug.h"    // may not be initialised yet
+#include "uart.h"     // may not be initialised yet
+
 
 #ifdef _CROSSWORKS
 #define stricmp strcasecmp
 #endif
 
-/* values reflecting the gearing of your machine
- * numbers are integers or double
- */
-struct configuration config;
+#define MAX_LINE_LEN 80
 
-#define TYPE_INT    0
-#define TYPE_DOUBLE 1
-typedef struct {
-  char      *name;
-  void      *pValue;
+typedef struct
+{
   uint8_t   type;
   union {
     int32_t   val_i;
     double    val_d;
+    tPinDef   val_pin_def;
     };
-} tConfigItem;
+} tParamVal;
 
-/* calculate the default values appropriate for your machine */
-tConfigItem config_lookup [] = 
-{
-  { "machine_model", &config.machine_model, TYPE_INT, {.val_i=0}},
-
-  { "steps_per_mm_x", &config.steps_per_mm_x, TYPE_DOUBLE, {.val_d=80}},
-  { "steps_per_mm_y", &config.steps_per_mm_y, TYPE_DOUBLE, {.val_d=80}},
-  { "steps_per_mm_z", &config.steps_per_mm_z, TYPE_DOUBLE, {.val_d=6400}},
-  { "steps_per_mm_e", &config.steps_per_mm_e, TYPE_DOUBLE, {.val_d=36}},    /* Wades extruder, NEMA 17 geared extruder (1/39 * 6.5mm) */
-
-  /* used for G0 rapid moves and as a cap for all other feedrates */
-  { "maximum_feedrate_x", &config.maximum_feedrate_x, TYPE_INT, {.val_i=3000}}, /* 50mm / second */
-  { "maximum_feedrate_y", &config.maximum_feedrate_y, TYPE_INT, {.val_i=3000}},
-  { "maximum_feedrate_z", &config.maximum_feedrate_z, TYPE_INT, {.val_i=60}},   /* 1mm / second */
-  { "maximum_feedrate_e", &config.maximum_feedrate_e, TYPE_INT, {.val_i=3000}}, /* 50mm / second */
-
-  { "acceleration",       &config.acceleration, TYPE_DOUBLE, {.val_d=100.0}},         /* 100mm / second^2 */
-  { "junction_deviation", &config.junction_deviation, TYPE_DOUBLE, {.val_d=0.05}},  
-
-  /* used when searching endstops and similar */
-  { "search_feedrate_x", &config.search_feedrate_x, TYPE_INT, {.val_i=120}},
-  { "search_feedrate_y", &config.search_feedrate_y, TYPE_INT, {.val_i=120}},
-  { "search_feedrate_z", &config.search_feedrate_z, TYPE_INT, {.val_i=60}},
-  { "search_feedrate_e", &config.search_feedrate_e, TYPE_INT, {.val_i=1600}},
-  
-  { "homing_feedrate_x", &config.homing_feedrate_x, TYPE_INT, {.val_i=3000}},
-  { "homing_feedrate_y", &config.homing_feedrate_y, TYPE_INT, {.val_i=3000}},
-  { "homing_feedrate_z", &config.homing_feedrate_z, TYPE_INT, {.val_i=60}},
-  
-  // home pos is left front
-  { "home_direction_x", &config.home_direction_x, TYPE_INT, {.val_i=-1}}, 
-  { "home_direction_y", &config.home_direction_y, TYPE_INT, {.val_i=-1}},
-  { "home_direction_z", &config.home_direction_z, TYPE_INT, {.val_i=-1}},
-  
-  { "home_pos_x", &config.home_pos_x, TYPE_INT, {.val_i=0}},
-  { "home_pos_y", &config.home_pos_y, TYPE_INT, {.val_i=0}},
-  { "home_pos_z", &config.home_pos_z, TYPE_INT, {.val_i=0}},
-
-  { "printing_vol_x", &config.printing_vol_x , TYPE_INT, {.val_i=0}},
-  { "printing_vol_y", &config.printing_vol_y , TYPE_INT, {.val_i=0}},
-  { "printing_vol_z", &config.printing_vol_z , TYPE_INT, {.val_i=0}},
-  
-  // dump pos
-  { "have_dump_pos", &config.have_dump_pos , TYPE_INT, {.val_i=0}},
-  { "dump_pos_x", &config.dump_pos_x , TYPE_INT, {.val_i=0}},
-  { "dump_pos_y", &config.dump_pos_x , TYPE_INT, {.val_i=0}},
-  
-  // rest pos
-  { "have_rest_pos", &config.have_rest_pos , TYPE_INT, {.val_i=0}},
-  { "rest_pos_x", &config.rest_pos_x , TYPE_INT, {.val_i=0}},
-  { "rest_pos_y", &config.rest_pos_y , TYPE_INT, {.val_i=0}},
-
-  // wipe pos
-  { "have_wipe_pos",   &config.have_wipe_pos , TYPE_INT, {.val_i=0}},
-  { "wipe_entry_pos_x", &config.wipe_entry_pos_x , TYPE_INT, {.val_i=0}},
-  { "wipe_entry_pos_y", &config.wipe_entry_pos_y , TYPE_INT, {.val_i=0}},
-  { "wipe_pos_x", &config.wipe_entry_pos_x , TYPE_INT, {.val_i=0}},     // DEPRECATED
-  { "wipe_pos_y", &config.wipe_entry_pos_y , TYPE_INT, {.val_i=0}},     // DEPRECATED
-  { "wipe_exit_pos_x", &config.wipe_exit_pos_x , TYPE_INT, {.val_i=0}},
-  { "wipe_exit_pos_y", &config.wipe_exit_pos_y , TYPE_INT, {.val_i=0}},
-
-  { "steps_per_revolution_e", &config.steps_per_revolution_e, TYPE_INT, {.val_i=3200}},  // 200 * 16
-  
-  { "wait_on_temp", &config.wait_on_temp, TYPE_INT, {.val_i=0}},
-    
-  { "enable_extruder_1", &config.enable_extruder_1, TYPE_INT, {.val_i=1}},
-  
-  { "beep_on_events", &config.beep_on_events, TYPE_INT, {.val_i=0x0000000F}},
-};
-
-#define NUM_TOKENS (sizeof(config_lookup)/sizeof(tConfigItem))
-
-
+#if 0
 uint16_t read_u16 (FIL *file, char *line)
 {
-  f_gets(line, 80, file); /* read one line */
+  f_gets(line, MAX_LINE_LEN, file); /* read one line */
   char *p_pos = strchr(line, '='); /* find the '=' position */
   
   if (p_pos != NULL)
@@ -143,9 +68,10 @@ uint16_t read_u16 (FIL *file, char *line)
   else
     return 0;
 }
+#endif
 
 // return true if c matches any character in s
-bool char_match (char c, char *s)
+static bool char_match (char c, char *s)
 {
   while (*s)
   {
@@ -158,7 +84,7 @@ bool char_match (char c, char *s)
 
 // a version of strtok(), recognises identifiers, integers, and single-char symbols
 // NB: very unsafe; not re-entrant. Use with caution!
-char *get_token (char *pLine)
+static char *get_token (char *pLine)
 {
   static char *pNext;
   static char saved;
@@ -192,8 +118,8 @@ char *get_token (char *pLine)
 
     if (isalpha (*pNext))
     {
-      // identifier is alpha (alpha|digit|"_")*
-      while (*pNext && ( isalpha(*pNext) || isdigit(*pNext) || (*pNext == '_' ) ) )
+      // identifier is alpha (alpha|digit|"_"|".")*
+      while (*pNext && ( isalpha(*pNext) || isdigit(*pNext) || (*pNext == '_' ) || (*pNext == '.' )) )
       {
         pNext ++;
       }
@@ -227,7 +153,7 @@ char *get_token (char *pLine)
   }
 }
 
-double atod (char *s)
+static double atod (char *s)
 {
   double result = 0.0;
   int num_places = 0;
@@ -257,75 +183,112 @@ double atod (char *s)
   return result;
 }
 
-void print_config (void)
+static bool parse_parameter_value (uint8_t type, tParamVal *param_val)
 {
-  unsigned j;
-  
-  for (j=0; (j < NUM_TOKENS); j++)
+  char *pToken;
+
+  pToken = get_token (NULL);
+
+  if (pToken)
   {
-    switch (config_lookup[j].type)
+    // should really derive type from token, not other way round
+    param_val->type = type;
+    switch (type)
     {
       case TYPE_INT:
       {
-        int32_t *pVal = config_lookup[j].pValue;
-        sersendf ("%s = %d\r\n", config_lookup[j].name, *pVal);
+        param_val->val_i = atoi (pToken);
         break;
       }
       case TYPE_DOUBLE:
       {
-        double *pVal = config_lookup[j].pValue;
-        sersendf ("%s = %g\r\n", config_lookup[j].name, *pVal);
+        param_val->val_d = atod (pToken);
+        break;
+      }
+      case TYPE_PIN_DEF:
+      {
+        // parse a list of up 4 to byte values
+        // this is a bit hacky!
+        int num=0;
+        uint8_t val;
+        uint8_t *pByte = (uint8_t *)&param_val->val_pin_def;
+
+        param_val->val_pin_def.port = UNDEFINED_PORT;
+        param_val->val_pin_def.pin_number = UNDEFINED_PIN_NUMBER;
+        param_val->val_pin_def.active_low = 0;
+        param_val->val_pin_def.reserved = 0;
+
+        while (pToken && (num < 4) && isdigit (*pToken))
+        {
+          val = atoi (pToken);
+          *pByte = val;
+
+          num++;
+          pByte++;
+
+          pToken = get_token (NULL);
+          if (pToken && (*pToken == ','))
+            pToken = get_token (NULL);
+          else
+            // unexpected token
+            pToken = NULL;
+        }
+        
+      }
+    }
+
+    return true;
+  }
+  else
+    return false;
+}
+
+void print_config_table (tConfigItem lookup[], int num_tokens)
+{
+  unsigned j;
+  
+  for (j=0; (j < num_tokens); j++)
+  {
+    switch (lookup[j].type)
+    {
+      case TYPE_INT:
+      {
+        int32_t *pVal = lookup[j].pValue;
+        sersendf ("%s = %d\r\n", lookup[j].name, *pVal);
+        break;
+      }
+      case TYPE_DOUBLE:
+      {
+        double *pVal = lookup[j].pValue;
+        sersendf ("%s = %g\r\n", lookup[j].name, *pVal);
+        break;
+      }
+      case TYPE_PIN_DEF:
+      {
+        tPinDef *pVal = (tPinDef *)lookup[j].pValue;
+        sersendf ("%s = %d,%d,%d,%d\r\n", lookup[j].name, pVal->port, pVal->pin_number, pVal->active_low, pVal->reserved );
         break;
       }
     }
   }
 }
 
-void read_config (void)
+FRESULT read_config_file (char *filename, tConfigItem lookup[], int num_tokens)
 {
-  char line[80];
-  char *pToken;
-  char *pLine;
-  unsigned j;
-
-  // first set defaults
-  for (j=0; j < NUM_TOKENS; j++)
-  {
-    switch (config_lookup[j].type)
-    {
-      case TYPE_INT:
-      {
-        int32_t *pVal = config_lookup[j].pValue;
-        *pVal = config_lookup[j].val_i;
-        break;
-      }
-      case TYPE_DOUBLE:
-      {
-        double *pVal = config_lookup[j].pValue;
-        *pVal = config_lookup[j].val_d;
-        break;
-      }
-    }
-  }
-    
-  /* initialize SPI for SDCard */
-  spi_init();
-
-  /* access to "config.txt" file on SDCard */
-
-  FATFS fs;       /* Work area (file system object) for logical drive */
   FIL file;       /* file object */
-  FRESULT res;    /* FatFs function common result code */
-
-  /* Register a work area for logical drive 0 */
-  res = f_mount(0, &fs);
-  if(res)
-    debug("Err mount fs\n");
+  FRESULT res;
+  char line [MAX_LINE_LEN];
+  char *pLine;
+  char *pToken;
+  unsigned j;
+  tParamVal param_val;
   
-  /* Open config.txt file */
-  res = f_open(&file, "config.txt", FA_OPEN_EXISTING | FA_READ);
+  /* Open the config file */
+  res = f_open(&file, filename, FA_OPEN_EXISTING | FA_READ);
   if (res)
-    debug("File config.txt not found\n");
+  {
+    debug("Config: file not found\n");
+  }
   else
   {
     bool    found;
@@ -337,40 +300,40 @@ void read_config (void)
       if (pToken && *pToken != '#')
       {
         found = false;      
-        for (j=0; (j < NUM_TOKENS) && !found; j++)
+        for (j=0; (j < num_tokens) && !found; j++)
         {
-          if (stricmp (pToken, config_lookup[j].name) == 0)
+          if (stricmp (pToken, lookup[j].name) == 0)
           {
             found = true;
             pToken = get_token (NULL);
             if (pToken && (*pToken == '='))
             {
-              // get value
-              pToken = get_token (NULL);
-            
-              if (pToken)
+              if (parse_parameter_value (lookup[j].type, &param_val))
               {
-                switch (config_lookup[j].type)
+                switch (lookup[j].type)
                 {
                   case TYPE_INT:
                   {
-                    int32_t *pVal = config_lookup[j].pValue;
-                    *pVal = atoi (pToken);
+                    int32_t *pVal = lookup[j].pValue;
+                    *pVal = param_val.val_i;
                     break;
                   }
                   case TYPE_DOUBLE:
                   {
-                    double *pVal = config_lookup[j].pValue;
-                    *pVal = atod(pToken);
+                    double *pVal = lookup[j].pValue;
+                    *pVal = param_val.val_d;
+                    break;
+                  }
+                  case TYPE_PIN_DEF:
+                  {
+                    tPinDef *pVal = lookup[j].pValue;
+                    *pVal = param_val.val_pin_def;
                     break;
                   }
                 }
-                // debug  
-                //sersendf ("Found: %s = %d\r\n", config_lookup[j].name, *config_lookup[j].pValue);
               }
               else
-                sersendf ("Missing value for %s\r\n", config_lookup[j].name);
-              
+                sersendf ("Missing value for %s\r\n", lookup[j].name);
             }
             else
               sersendf ("Expected '='%s\r\n", line);              
@@ -384,39 +347,45 @@ void read_config (void)
       pLine = f_gets(line, sizeof(line), &file); /* read next line */
     }
 
-    /* Close config.txt file */
+    /* Close config file */
     res = f_close(&file);
     if (res)
-      debug("Error closing config.txt\n");
+      debug("Config: error closing file\n");
   }
-
-  //
-  //read_gcode_file ("autoexec.g");
   
-  res = f_open(&file, "autoexec.g", FA_OPEN_EXISTING | FA_READ);
-  if (res == FR_OK)
-  {
-    tLineBuffer line_buf;
-    
-    pLine = f_gets(line_buf.data, sizeof(line_buf.data), &file); /* read one line */
-    while (pLine)
-    {
-      line_buf.len = strlen(pLine);
-      gcode_parse_line (&line_buf);
-      pLine = f_gets(line_buf.data, sizeof(line_buf.data), &file); /* read next line */
-    }
-
-    /* Close file */
-    res = f_close(&file);
-    if (res)
-      debug("Error closing autoexec.g\n");
-  }  
-  
-  // 
-  
-  /* Initialize using values read from "config.txt" file */
-  gcode_parse_init();
-
+  return res;
 }
+
+
+void set_defaults (tConfigItem lookup[], int num_tokens)
+{
+  unsigned j;
+
+  for (j=0; j < num_tokens; j++)
+  {
+    switch (lookup[j].type)
+    {
+      case TYPE_INT:
+      {
+        int32_t *pVal = lookup[j].pValue;
+        *pVal = lookup[j].val_i;
+        break;
+      }
+      case TYPE_DOUBLE:
+      {
+        double *pVal = lookup[j].pValue;
+        *pVal = lookup[j].val_d;
+        break;
+      }
+      case TYPE_PIN_DEF:
+      {
+        tPinDef *pVal = lookup[j].pValue;
+        *pVal = lookup[j].val_pin_def;
+        break;
+      }
+    }
+  }
+}
+
 
 

@@ -2,3 +2,6 @@
 FLASH_RUN/
 *.bak
 THUMB\ Flash\ Debug/
+*.orig
+*.merge
+

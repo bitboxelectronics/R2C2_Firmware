@@ -99,6 +99,14 @@ int main(void)
   DBG ("init\n");
 #endif 
 
+#if 0
+  // Initialize USB<->Serial
+  //TODO: may need config to be loaded first
+  serial_init();
+  
+  SysTickTimer_Init(); // Initialize the timer for millis()
+#endif
+
   app_main ();
 
   /* should never get here */

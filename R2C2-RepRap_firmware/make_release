@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# simple script to copy firmware 
+# this perhaps should be a make target...
+
+# before running this script must do the following:
+# - be in master branch
+# - put a tag on the branch using tag_version
+# - do "make clean; make"
+# - do a basic functionality test, i.e. at least one test print
+#   should use a combination of host software, printer and filament that is 
+#   known to work correctly with last release
+
+# the release binary will be tagged with "rc", remove or change to "stable"
+#  when pre-release testing is complete
+
+# use "-rc" for a release build candidate
+# use "-exp" for experimental builds
+
+# get current branch name
+branch=`git branch | grep "^\*" | awk '{print $2}'`
+
+echo "You are on: "$branch
+
+if [ "$1" == "" ] ; then
+  echo "Usage: make_release x.y.z"
+else
+  echo "copying bin file to ../releases/R2C2_RepRap_firmware_v$1-rc.bin" 
+  cp FLASH_RUN/project.bin ../releases/R2C2_RepRap_firmware_v$1-rc.bin
+fi
+
+

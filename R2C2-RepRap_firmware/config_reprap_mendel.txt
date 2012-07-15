@@ -37,8 +37,8 @@ home_pos_z = 0
 
 # set to 1 if there is a dump position, for priming extruder
 have_dump_pos = 0
-rest_pos_x = 0
-rest_pos_y = 0
+dump_pos_x = 0
+dump_pos_y = 0
 
 # set to 1 if there is a rest position, e.g. at end print, temperature wait
 have_rest_pos = 1
@@ -47,8 +47,8 @@ rest_pos_y = 120
 
 # set to 1 if there is a wipe position
 have_wipe_pos = 0
-wipe_pos_x = 0
-wipe_pos_y = 0
+wipe_entry_pos_x = 0
+wipe_entry_pos_y = 0
 
 # size of print area 
 printing_vol_x = 120

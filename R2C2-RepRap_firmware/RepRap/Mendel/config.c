@@ -63,6 +63,8 @@ typedef struct {
 /* calculate the default values appropriate for your machine */
 tConfigItem config_lookup [] = 
 {
+  { "machine_model", &config.machine_model, TYPE_INT, {.val_i=0}},
+
   { "steps_per_mm_x", &config.steps_per_mm_x, TYPE_DOUBLE, {.val_d=80}},
   { "steps_per_mm_y", &config.steps_per_mm_y, TYPE_DOUBLE, {.val_d=80}},
   { "steps_per_mm_z", &config.steps_per_mm_z, TYPE_DOUBLE, {.val_d=6400}},
@@ -111,9 +113,13 @@ tConfigItem config_lookup [] =
   { "rest_pos_y", &config.rest_pos_y , TYPE_INT, {.val_i=0}},
 
   // wipe pos
-  { "have_wipe_pos", &config.have_wipe_pos , TYPE_INT, {.val_i=0}},
-  { "wipe_pos_x", &config.wipe_pos_x , TYPE_INT, {.val_i=0}},
-  { "wipe_pos_y", &config.wipe_pos_y , TYPE_INT, {.val_i=0}},
+  { "have_wipe_pos",   &config.have_wipe_pos , TYPE_INT, {.val_i=0}},
+  { "wipe_entry_pos_x", &config.wipe_entry_pos_x , TYPE_INT, {.val_i=0}},
+  { "wipe_entry_pos_y", &config.wipe_entry_pos_y , TYPE_INT, {.val_i=0}},
+  { "wipe_pos_x", &config.wipe_entry_pos_x , TYPE_INT, {.val_i=0}},     // DEPRECATED
+  { "wipe_pos_y", &config.wipe_entry_pos_y , TYPE_INT, {.val_i=0}},     // DEPRECATED
+  { "wipe_exit_pos_x", &config.wipe_exit_pos_x , TYPE_INT, {.val_i=0}},
+  { "wipe_exit_pos_y", &config.wipe_exit_pos_y , TYPE_INT, {.val_i=0}},
 
   { "steps_per_revolution_e", &config.steps_per_revolution_e, TYPE_INT, {.val_i=3200}},  // 200 * 16
   

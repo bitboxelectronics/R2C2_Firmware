@@ -120,5 +120,7 @@ uint8_t plan_queue_full (void);
 
 uint8_t plan_queue_empty(void);
 
+uint8_t plan_queue_size(void);
+
 
 #endif

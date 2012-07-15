@@ -1,0 +1,9 @@
+#!/bin/bash
+
+if [ "$1" == "" ] ; then
+  echo "Usage: tag_version x.y.z"
+else
+  echo "Tagging version " $1 "..."
+  git tag Firmware_v$1
+  git push origin Firmware_v$1
+fi

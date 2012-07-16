@@ -25,7 +25,6 @@ void USBShellTask( void *pvParameters )
     eParseResult parse_result;
 
     // TASK INIT
-    USBSerial_Init();
 
     GcodeInputMsg.pLineBuf = &LineBuf;
 

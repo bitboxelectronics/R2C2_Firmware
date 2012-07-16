@@ -89,4 +89,8 @@
 #define BUZZER_PORT     2         /* P2.2 PWM1[3] */
 #define BUZZER_PIN      (1 << 22) /* P2.2 PWM1[3] */
 
+// the push switch to enter the bootloader (may be used by uart3: DBG_RXD)
+#define BOOT_SW_PORT        4
+#define BOOT_SW_PIN_NUMBER  29
+
 #endif  /* _PINOUT_H */

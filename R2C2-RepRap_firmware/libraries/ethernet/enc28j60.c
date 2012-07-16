@@ -56,7 +56,7 @@ static uint8_t erxfcon;
 
 #define digitalWrite(a,b) digital_write (DECODE_PORT_BITMASK(a), b)
 #define pinMode(a,b) pin_mode(DECODE_PORT_BITMASK(a), b)
-#define _BV(b) (1<<(b))
+//#define _BV(b) (1<<(b))
 
 //todo
 #define cli() 

@@ -127,7 +127,7 @@ void temperatureTimerCallback (tTimer *pTimer)
 
 void check_boot_request (void)
 {
-  if (digital_read (4, (1<<29)) == 0)
+  if (digital_read (BOOT_SW_PORT, _BV(BOOT_SW_PIN_NUMBER)) == 0)
   {
     WDT_Init (WDT_CLKSRC_PCLK, WDT_MODE_RESET);
     WDT_Start (10);
@@ -138,6 +138,13 @@ void check_boot_request (void)
 static void PrinterInit (void)
 {
   buzzer_init();
+
+  USBSerial_Init();
+
+  // NB Anything before read_config call must not rely on anything in config!
+  // read_config must not use any peripherals apart from SPI?
+  // read_config uses USB for error/debug messages
+  read_config();
 
   // set up inputs and outputs
   io_init();
@@ -152,9 +159,15 @@ void PrinterTask( void *pvParameters )
 {
   long timer1 = 0;
 
-  // NB Anything before read_config call must not rely on anything in config!
-  // read_config must not use any peripherals apart from SPI?
-  read_config();
+  PrinterInit();
+
+  // -- init complete, can now start other tasks --
+
+  xTaskCreate( GcodeTask,    (signed char *)"Gcode", 512, ( void * ) NULL, tskIDLE_PRIORITY, NULL );
+  xTaskCreate( USBShellTask, (signed char *)"USBSh", 128, ( void * ) NULL, tskIDLE_PRIORITY, NULL );
+  xTaskCreate( EthShellTask, (signed char *)"EthSh", 128, ( void * ) NULL, tskIDLE_PRIORITY, NULL );
+
+  // -- all startup done, signal readiness
 
   buzzer_play(1500, 100); /* low beep */
   buzzer_wait();
@@ -188,16 +201,39 @@ void PrinterTask( void *pvParameters )
   }
 }
 
+/*
+  required start sequence:
+  //TODO: where to read autoexec.g, set config defaults
+
+  1.  create PrinterTask
+
+  2.  start scheduler 
+       [ system tick is now running]
+
+  3.  init buzzer [no config, no debug IO, requires timer]
+
+  4.  init USB CDC-serial [ no config]
+
+  5.  read_config files from SD [requires timer, debug IO]
+
+  6.  can now initialize peripherals: steppers, CTC, ADC
+
+  7.  start temperature monitoring [requires timer, adc]
+
+  8.  start the other tasks [requires above stuff]
+
+  9.  system is now be ready to accept general GCode commands
+*/
 
 void app_main (void)
 {
-  PrinterInit();
 
-  /* Create the tasks */
-  xTaskCreate( PrinterTask,  (signed char *)"Print", 512, ( void * ) NULL, tskIDLE_PRIORITY, NULL );
-  xTaskCreate( GcodeTask,    (signed char *)"Gcode", 512, ( void * ) NULL, tskIDLE_PRIORITY, NULL );
-  xTaskCreate( USBShellTask, (signed char *)"USBSh", 128, ( void * ) NULL, tskIDLE_PRIORITY, NULL );
-  xTaskCreate( EthShellTask, (signed char *)"EthSh", 128, ( void * ) NULL, tskIDLE_PRIORITY, NULL );
+  /* Create the main system task. 
+  *  NB: our system timer tick is called from FreeRTOS timer tick, which only runs after scheduler has started.
+  *  Therefore, we start only PrinterTask to do initialisation which requires timer, namely the FatFs/SD code.
+  */
+  //TODO: Check stack usage
+  xTaskCreate( PrinterTask,  (signed char *)"Print", 768, ( void * ) NULL, tskIDLE_PRIORITY, NULL );
 
   /* Start the scheduler. */
   vTaskStartScheduler();

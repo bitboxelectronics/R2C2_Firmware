@@ -71,11 +71,12 @@
       <file file_name="RepRap/Mendel/mendel.c"/>
       <file file_name="RepRap/Mendel/temp.c"/>
       <file file_name="RepRap/Mendel/usb_shell_task.c"/>
-      <file file_name="app/grbl/fixedpt.c"/>
       <file file_name="app/grbl/planner.c"/>
       <file file_name="app/grbl/stepper.c"/>
       <file file_name="RepRap/Mendel/gcode_task.c"/>
       <file file_name="RepRap/Mendel/eth_shell_task.c"/>
+      <file file_name="RepRap/Mendel/app_config.c"/>
+      <file file_name="RepRap/Mendel/pin_control.c"/>
     </folder>
     <folder Name="lib_FreeRTOS">
       <file file_name="libraries/FreeRTOS/Source/list.c"/>

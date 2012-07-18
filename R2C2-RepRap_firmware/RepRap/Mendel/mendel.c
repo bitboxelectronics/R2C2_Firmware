@@ -49,6 +49,7 @@
 #include "temp.h"
 #include "planner.h"
 #include "stepper.h"
+#include "usb.h"
 
 #include "eth_shell_task.h"
 #include "usb_shell_task.h"

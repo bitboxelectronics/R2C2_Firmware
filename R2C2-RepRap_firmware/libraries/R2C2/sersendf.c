@@ -30,7 +30,7 @@
 
 #include        "sersendf.h"
 #include        <stdarg.h>
-#include        "serial.h"
+#include        "usb_serial.h"
 #include        "sermsg.h"
 
 char   str_ox[] = "0x";

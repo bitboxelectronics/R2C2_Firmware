@@ -9,7 +9,7 @@
 #include "gcode_task.h"
 #include "serial_fifo.h"
 #include "uart.h"
-#include "usb.h"
+#include "usb_serial.h"
 
 #include "usb_shell_task.h"
 

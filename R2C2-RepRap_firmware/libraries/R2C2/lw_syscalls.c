@@ -36,7 +36,7 @@
 #endif
 
 #include "uart.h"
-#include "serial.h" //TODO: usb ***
+#include "usb_serial.h" //TODO: usb ***
 
 #include "lw_syscalls.h"
 #include "lw_io.h"

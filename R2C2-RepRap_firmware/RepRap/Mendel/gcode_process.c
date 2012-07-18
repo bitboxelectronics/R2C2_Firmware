@@ -34,7 +34,7 @@
 #include "gcode_process.h"
 #include "gcode_parse.h"
 
-#include "serial.h"
+#include "usb_serial.h"
 #include "sermsg.h"
 #include "sersendf.h"
 

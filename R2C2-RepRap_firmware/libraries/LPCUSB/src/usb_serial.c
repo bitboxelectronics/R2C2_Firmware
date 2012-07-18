@@ -27,9 +27,9 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "serial.h"
+#include "usb_serial.h"
 #include "serial_fifo.h"
-#include "usb.h"
+#include "usb_cdc_driver.h"
 
 void serial_init()
 {

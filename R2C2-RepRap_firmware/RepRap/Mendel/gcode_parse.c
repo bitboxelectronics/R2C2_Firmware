@@ -32,7 +32,7 @@
 #include	<string.h>
 #include <stdbool.h>
 
-#include	"serial.h"
+#include	"usb_serial.h"
 #include	"sermsg.h"
 
 #include	"gcode_parse.h"

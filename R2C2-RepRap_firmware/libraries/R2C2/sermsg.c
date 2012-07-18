@@ -29,7 +29,7 @@
 */
 
 #include	"sermsg.h"
-#include	"serial.h"
+#include	"usb_serial.h"
 
 void serwrite_hex4(uint8_t v) {
 	v &= 0xF;

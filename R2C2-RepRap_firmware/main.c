@@ -31,12 +31,15 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
+#include "lw_io.h"
+
 /* Application includes */
 #include "r2c2.h"
 #include "uart.h"
 
 
-#define DBG uart_writestr
+//TODO:
+#define DBG   uart3_writestr
 
 #define USER_FLASH_START 0x10000 /* For USB bootloader */
 //#define USER_FLASH_START 0x0 /* No USB bootloader */
@@ -53,24 +56,24 @@ void startup_delay(void)
 /* Called from every tick interrupt */
 void vApplicationTickHook( void )
 {
-    static unsigned long ulTicksSinceLastDisplay = 0;
+  static unsigned long ulTicksSinceLastDisplay = 0;
 
-	ulTicksSinceLastDisplay++;
+  ulTicksSinceLastDisplay++;
 
-    r2c2_SysTick();
+  r2c2_SysTick();
 }
 
 /**********************************************************************/
 void vApplicationStackOverflowHook( xTaskHandle *pxTask, signed char *pcTaskName )
 {
-	/* This function will get called if a task overflows its stack. */
+  /* This function will get called if a task overflows its stack. */
 
-	( void ) pxTask;
-	( void ) pcTaskName;
+  ( void ) pxTask;
+  ( void ) pcTaskName;
 
-    DBG ("stkov\n");
+  DBG ("stkov\n");
 
-	for( ;; );
+  for( ;; );
 }
 
 /**********************************************************************
@@ -106,6 +109,13 @@ int main(void)
   
   SysTickTimer_Init(); // Initialize the timer for millis()
 #endif
+
+#if 0 
+  //test debug output  
+  uart_init(3);
+  lw_fputs ("hello\n", dbgout);
+#endif
+
 
   app_main ();
 

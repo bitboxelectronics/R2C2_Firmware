@@ -33,17 +33,19 @@
 #include <stdarg.h>
 #include <stddef.h>
 
+// some conflicts with stdio.h: stdin, stdout, stderr
+
 #define SEEK_SET 0
 #define SEEK_CUR 1
 #define SEEK_END 2
 
-#define FILENAME_MAX 256
-#define FOPEN_MAX   32
-#define TMP_MAX     256
-#define L_tmpnam    256
+#define LW_FILENAME_MAX 256
+#define LW_FOPEN_MAX   32
+#define LW_TMP_MAX     256
+#define LW_L_tmpnam    256
 
 // configuration
-#define MAX_FILES 10
+#define MAX_FILES LW_FOPEN_MAX
 
 //typedef void FILE;
 typedef struct 
@@ -51,7 +53,7 @@ typedef struct
   int handle;
   int dev_major;
   int dev_minor;
-} FILE;
+} LW_FILE;
 
 typedef long fpos_t;
 
@@ -59,15 +61,17 @@ typedef long fpos_t;
 int lw_putchar (int c);
 int lw_puts (const char *s);
 
-int lw_putc (int c, FILE *f);
-int lw_fputc(int c, FILE *f);
-int lw_fputs(const char *s, FILE *f);
+int lw_putc (int c, LW_FILE *f);
+int lw_fputc(int c, LW_FILE *f);
+int lw_fputs(const char *s, LW_FILE *f);
 
-extern FILE *stdin;
-extern FILE *stdout;
-extern FILE *stderr;
+// ---------------------------
 
-extern FILE *dbgout;
+extern LW_FILE *stdin;
+extern LW_FILE *stdout;
+extern LW_FILE *stderr;
+
+extern LW_FILE *dbgout;
 
 /***
 #ifdef NOT_YET

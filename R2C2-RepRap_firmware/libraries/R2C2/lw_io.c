@@ -36,7 +36,7 @@
 
 // Global FILE table
 
-FILE file_table [MAX_FILES] = 
+LW_FILE file_table [MAX_FILES] = 
 {
     {.handle=0, .dev_major = DEV_STDIN,  .dev_minor = 0},
     {.handle=1, .dev_major = DEV_STDOUT, .dev_minor = 0},
@@ -46,27 +46,27 @@ FILE file_table [MAX_FILES] =
 
 
 // predefined file handles
-FILE *stdin  = &file_table[0];
-FILE *stdout = &file_table[1];
-FILE *stderr = &file_table[2];
+LW_FILE *stdin  = &file_table[0];
+LW_FILE *stdout = &file_table[1];
+LW_FILE *stderr = &file_table[2];
 
-FILE *dbgout = &file_table[3];
+LW_FILE *dbgout = &file_table[3];
 
 // ----------------------------------------------------------------
 // functions taking FILE parameter
 // ----------------------------------------------------------------
 
-int lw_fputs(const char *s, FILE *f)
+int lw_fputs(const char *s, LW_FILE *f)
 {
   return _write (f->handle, s, strlen (s));
 }
 
-int lw_fputc(int c, FILE *f)
+int lw_fputc(int c, LW_FILE *f)
 {
   return _write (f->handle, (char *)&c, 1);
 }
 
-int lw_putc(int c, FILE *f)
+int lw_putc(int c, LW_FILE *f)
 {
   lw_fputc (c, f);
 }
@@ -109,36 +109,36 @@ int sscanf(const char *__s, const char *__format, ...);
 int vscanf(const char *__format, __va_list __arg);
 int vsscanf(const char *__s, const char *__format, __va_list __arg);
 
-void clearerr(FILE *);
-int fclose(FILE *);
-int feof(FILE *);
-int ferror(FILE *);
-int fflush(FILE *);
-int fgetc(FILE *);
-int fgetpos(FILE *, fpos_t *);
-char *fgets(char *, int, FILE *);
-FILE *fopen(const char *, const char *);
-int fprintf(FILE *, const char *, ...);
-size_t fread(void *, size_t, size_t, FILE *);
-FILE *freopen(const char *, const char *, FILE *);
-int fscanf(FILE *, const char *, ...);
-int fseek(FILE *, long, int);
-int fsetpos(FILE *, const fpos_t *); 
-long ftell(FILE *);
-size_t fwrite(const void *, size_t, size_t, FILE *);
-int getc(FILE *);
+void clearerr(LW_FILE *);
+int fclose(LW_FILE *);
+int feof(LW_FILE *);
+int ferror(LW_FILE *);
+int fflush(LW_FILE *);
+int fgetc(LW_FILE *);
+int fgetpos(LW_FILE *, fpos_t *);
+char *fgets(char *, int, LW_FILE *);
+LW_FILE *fopen(const char *, const char *);
+int fprintf(LW_FILE *, const char *, ...);
+size_t fread(void *, size_t, size_t, LW_FILE *);
+LW_FILE *freopen(const char *, const char *, LW_FILE *);
+int fscanf(LW_FILE *, const char *, ...);
+int fseek(LW_FILE *, long, int);
+int fsetpos(LW_FILE *, const fpos_t *); 
+long ftell(LW_FILE *);
+size_t fwrite(const void *, size_t, size_t, LW_FILE *);
+int getc(LW_FILE *);
 
 void perror(const char *);
 
 int remove(const char *);
 int rename(const char *, const char *);
-void rewind(FILE *);
-void setbuf(FILE *, char *);
-int setvbuf(FILE *, char *, int, size_t);
-FILE *tmpfile(void);
+void rewind(LW_FILE *);
+void setbuf(LW_FILE *, char *);
+int setvbuf(LW_FILE *, char *, int, size_t);
+LW_FILE *tmpLW_FILE(void);
 char * tmpnam(char *);
-int ungetc(int, FILE *);
-int vfprintf(FILE *, const char *, __va_list);
-int vfscanf(FILE *, const char *, __va_list);
+int ungetc(int, LW_FILE *);
+int vfprintf(LW_FILE *, const char *, __va_list);
+int vfscanf(LW_FILE *, const char *, __va_list);
 
 // ----------------------------------------------------------------

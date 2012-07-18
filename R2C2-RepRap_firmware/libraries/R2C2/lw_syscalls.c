@@ -41,7 +41,7 @@
 #include "lw_syscalls.h"
 #include "lw_io.h"
 
-extern FILE file_table [];
+extern LW_FILE file_table [];
 
 #ifdef _CROSSWORKS
   #define STDIN_FILENO  0
@@ -69,8 +69,7 @@ static tDeviceDesc Devices[5] = {
   {"uart1",  uart1_init, uart1_send, uart1_receive, uart1_data_available}, 
   {"uart2",  uart2_init, uart2_send, uart2_receive, uart2_data_available}, 
   {"uart3",  uart3_init, uart3_send, uart3_receive, uart3_data_available}, 
-//  {"usbcdc", usb_serial_init, usb_serial_writechar, usb_serial_popchar, usb_serial_rxchars} // USB serial
-  {"usbcdc", serial_init, serial_writechar, serial_popchar, serial_rxchars} // USB serial
+  {"usbcdc", usb_serial_init, usb_serial_writechar, usb_serial_popchar, usb_serial_rxchars} // USB serial
 };
 
 static void dev_write_block (tDeviceDesc *pDevice, char *ptr, int len)

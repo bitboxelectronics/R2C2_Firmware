@@ -45,7 +45,7 @@ int serial_rxchars()
   return fifo_avail(&rxfifo);
 }
 
-uint8_t serial_popchar()
+char serial_popchar()
 {
   uint8_t c = 0;
 

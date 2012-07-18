@@ -36,14 +36,17 @@
 // initialise serial subsystem
 void serial_init(void);
 
-// return number of characters in the receive buffer, and number of spaces in the send buffer
-int serial_rxchars(void);
-uint8_t serial_txchars(void);
-
-// read one character
-uint8_t serial_popchar(void);
 // send one character
 void serial_writechar(char data);
+
+// read one character
+char serial_popchar(void);
+
+// return number of characters in the receive buffer, and number of spaces in the send buffer
+int serial_rxchars(void);
+
+//
+uint8_t serial_txchars(void);
 
 // read/write many characters
 // uint8_t serial_recvblock(uint8_t *block, int blocksize);

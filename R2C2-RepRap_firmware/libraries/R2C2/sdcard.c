@@ -36,7 +36,7 @@
 #include "lpc17xx_clkpwr.h"
 #include "diskio.h"
 #include "spi.h"
-#include "sersendf.h"
+#include "debug.h"
 
 #define xmit_spi(dat)  spi_rw(dat)
 
@@ -285,7 +285,7 @@ DSTATUS MMC_disk_initialize(void)
 		spi_set_speed(INTERFACE_FAST);
 	} else {			/* Initialization failed */
 		power_off();
-		sersendf("\nmemory card init failed\n");
+		debug("\nmemory card init failed\n");
 	}
 
 	return Stat;

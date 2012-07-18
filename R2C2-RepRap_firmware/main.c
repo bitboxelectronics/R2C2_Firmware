@@ -110,7 +110,7 @@ int main(void)
   SysTickTimer_Init(); // Initialize the timer for millis()
 #endif
 
-#if 0 
+#if 0
   //test debug output  
   uart_init(3);
   lw_fputs ("hello\n", dbgout);

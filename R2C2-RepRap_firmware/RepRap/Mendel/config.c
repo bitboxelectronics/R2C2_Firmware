@@ -38,7 +38,7 @@
 
 // TODO: remove dependencies on these ?
 #include "debug.h"    // may not be initialised yet
-#include "uart.h"     // may not be initialised yet
+//#include "uart.h"     // may not be initialised yet
 
 
 #ifdef _CROSSWORKS
@@ -243,6 +243,7 @@ static bool parse_parameter_value (uint8_t type, tParamVal *param_val)
     return false;
 }
 
+// The output of this goes to Gcode interface
 void print_config_table (tConfigItem lookup[], int num_tokens)
 {
   unsigned j;
@@ -254,19 +255,19 @@ void print_config_table (tConfigItem lookup[], int num_tokens)
       case TYPE_INT:
       {
         int32_t *pVal = lookup[j].pValue;
-        sersendf ("%s = %d\r\n", lookup[j].name, *pVal);
+        lw_printf ("%s = %d\r\n", lookup[j].name, *pVal);
         break;
       }
       case TYPE_DOUBLE:
       {
         double *pVal = lookup[j].pValue;
-        sersendf ("%s = %g\r\n", lookup[j].name, *pVal);
+        lw_printf ("%s = %g\r\n", lookup[j].name, *pVal);
         break;
       }
       case TYPE_PIN_DEF:
       {
         tPinDef *pVal = (tPinDef *)lookup[j].pValue;
-        sersendf ("%s = %d,%d,%d,%d\r\n", lookup[j].name, pVal->port, pVal->pin_number, pVal->active_low, pVal->reserved );
+        lw_printf ("%s = %d,%d,%d,%d\r\n", lookup[j].name, pVal->port, pVal->pin_number, pVal->active_low, pVal->reserved );
         break;
       }
     }
@@ -287,7 +288,7 @@ FRESULT read_config_file (char *filename, tConfigItem lookup[], int num_tokens)
   res = f_open(&file, filename, FA_OPEN_EXISTING | FA_READ);
   if (res)
   {
-    debug("Config: file not found\n");
+    lw_printf("Config: file not found\n");
   }
   else
   {
@@ -333,15 +334,15 @@ FRESULT read_config_file (char *filename, tConfigItem lookup[], int num_tokens)
                 }
               }
               else
-                sersendf ("Missing value for %s\r\n", lookup[j].name);
+                lw_printf ("Missing value for %s\r\n", lookup[j].name);
             }
             else
-              sersendf ("Expected '='%s\r\n", line);              
+              lw_printf ("Expected '='%s\r\n", line);              
           }
         }
         
         if (!found)
-          sersendf ("Unknown config: %s\r\n", pToken);
+          lw_printf ("Unknown config: %s\r\n", pToken);
       }
       
       pLine = f_gets(line, sizeof(line), &file); /* read next line */
@@ -350,7 +351,7 @@ FRESULT read_config_file (char *filename, tConfigItem lookup[], int num_tokens)
     /* Close config file */
     res = f_close(&file);
     if (res)
-      debug("Config: error closing file\n");
+      lw_printf("Config: error closing file\n");
   }
   
   return res;

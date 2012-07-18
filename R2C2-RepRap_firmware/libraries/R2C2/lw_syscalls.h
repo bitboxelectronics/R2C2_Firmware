@@ -38,12 +38,14 @@
 #define DEV_UART3       3
 #define DEV_USB_SERIAL  4
 
-
+// >>>>>>>>>>>>>> Standard handles are redirected here <<<<<<<<<<<<<<<
 #define DEV_STDIN     DEV_USB_SERIAL
 #define DEV_STDOUT    DEV_USB_SERIAL
 #define DEV_STDERR    DEV_USB_SERIAL
 
-#define DEV_DBGOUT    DEV_UART3
+#define DEV_DBGOUT    DEV_USB_SERIAL
+//#define DEV_DBGOUT    DEV_UART3
+// ===================================================================
 
 int _write(int file, char *ptr, int len) ;
 

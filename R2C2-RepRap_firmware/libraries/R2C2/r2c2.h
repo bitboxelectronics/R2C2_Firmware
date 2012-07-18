@@ -41,7 +41,6 @@
 #include "ios.h"
 #include "sdcard.h"
 #include "sermsg.h"
-#include "sersendf.h"
 #include "spi.h"
 #include "timer.h"
 

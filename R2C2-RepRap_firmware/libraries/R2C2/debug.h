@@ -30,12 +30,10 @@
 #ifndef	_DEBUG_H
 #define	_DEBUG_H
 
-#include "sersendf.h"
-#include "uart.h"
+#include "lw_io.h"
 
-// select one of sersendf (USB) or UART function for debug 
-#define debug sersendf
+//TODO:
+#define debug lw_printf
 
-//#define debug uart_writestr
 
 #endif	/* _DEBUG_H */

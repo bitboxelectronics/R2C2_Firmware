@@ -36,7 +36,6 @@
 
 #include "lw_io.h"
 #include "sermsg.h"
-#include "sersendf.h"
 
 #include "temp.h"
 #include "timer.h"
@@ -296,7 +295,7 @@ FRESULT sd_list_dir_sub (char *path)
 #endif
             if (fno.fattrib & AM_DIR) 
             {
-                sersendf("%s/%s/\r\n", path, fn);
+                lw_printf("%s/%s/\r\n", path, fn);
                 
                 strcat (path, "/");
                 strcat (path, fn);
@@ -306,7 +305,7 @@ FRESULT sd_list_dir_sub (char *path)
                 path[i] = 0;
             } else 
             {
-                sersendf("%s/%s\r\n", path, fn);
+                lw_printf("%s/%s\r\n", path, fn);
             }
         }
     }
@@ -336,7 +335,7 @@ unsigned sd_open(FIL *pFile, char *path, uint8_t flags)
   else
   {
     //debug
-    sersendf ("sd_open:%d", res);
+    lw_printf ("sd_open:%d", res);
     return 0;
   }
 }
@@ -424,8 +423,8 @@ eParseResult process_gcode_command()
       next_targetd.feed_rate = next_target.target.feed_rate;
   }
 
-//  sersendf(" X:%ld Y:%ld Z:%ld E:%ld F:%ld\r\n", (int32_t)next_target.target.X, (int32_t)next_target.target.Y, (int32_t)next_target.target.Z, (int32_t)next_target.target.E, (uint32_t)next_target.target.F);
-//  sersendf(" X:%g Y:%g Z:%g E:%g F:%g\r\n", next_targetd.x, next_targetd.y, next_targetd.z, next_targetd.e, next_targetd.feed_rate);
+//  lw_printf(" X:%ld Y:%ld Z:%ld E:%ld F:%ld\r\n", (int32_t)next_target.target.X, (int32_t)next_target.target.Y, (int32_t)next_target.target.Z, (int32_t)next_target.target.E, (uint32_t)next_target.target.F);
+//  lw_printf(" X:%g Y:%g Z:%g E:%g F:%g\r\n", next_targetd.x, next_targetd.y, next_targetd.z, next_targetd.e, next_targetd.feed_rate);
     
   // E ALWAYS absolute 
   // host should periodically reset E with "G92 E0", otherwise we overflow our registers after only a few layers
@@ -634,13 +633,13 @@ eParseResult process_gcode_command()
         if (sd_open(&file, next_target.filename, FA_READ)) 
         {
           filesize = sd_filesize(&file);
-          sersendf("File opened: %s Size: %d\r\n", next_target.filename, filesize);
+          lw_printf("File opened: %s Size: %d\r\n", next_target.filename, filesize);
           sd_pos = 0;
-          sersendf("File selected\r\n");
+          lw_printf("File selected\r\n");
         }
         else
         {
-          sersendf("file.open failed\r\n");
+          lw_printf("file.open failed\r\n");
         }
       }
       break;
@@ -670,7 +669,7 @@ eParseResult process_gcode_command()
       case 27: //M27 - Get SD status
       if(sd_active)
       {
-        sersendf("SD printing byte %d/%d\r\n", sd_pos, filesize);
+        lw_printf("SD printing byte %d/%d\r\n", sd_pos, filesize);
       }
       else
       {
@@ -688,12 +687,12 @@ eParseResult process_gcode_command()
 
         if (!sd_open(&file, next_target.filename, FA_CREATE_ALWAYS | FA_WRITE))
         {
-          sersendf("open failed, File: %s.\r\n", next_target.filename);
+          lw_printf("open failed, File: %s.\r\n", next_target.filename);
         }
         else
         {
           sd_writing_file = true;
-          sersendf("Writing to file: %s\r\n", next_target.filename);
+          lw_printf("Writing to file: %s\r\n", next_target.filename);
         }
       }
       break;
@@ -804,14 +803,14 @@ eParseResult process_gcode_command()
       }
       else
       {
-        sersendf("ok C: X:%g Y:%g Z:%g E:%g\r\n", startpoint.x, startpoint.y, startpoint.z, startpoint.e);
+        lw_printf("ok C: X:%g Y:%g Z:%g E:%g\r\n", startpoint.x, startpoint.y, startpoint.z, startpoint.e);
       }
       reply_sent = true;
       break;
       
       // M115- report firmware version
       case 115:
-        sersendf("FIRMWARE_NAME:Teacup_R2C2 FIRMWARE_URL:http%%3A//github.com/bitboxelectronics/R2C2_Firmware PROTOCOL_VERSION:1.0 MACHINE_TYPE:Mendel\r\n");
+        lw_printf("FIRMWARE_NAME:Teacup_R2C2 FIRMWARE_URL:http%%3A//github.com/bitboxelectronics/R2C2_Firmware PROTOCOL_VERSION:1.0 MACHINE_TYPE:Mendel\r\n");
       break;
 
       // M119 - Get Endstop Status
@@ -933,7 +932,7 @@ eParseResult process_gcode_command()
       if ((next_target.seen_X | next_target.seen_Y | next_target.seen_Z | next_target.seen_E) == 0)
       {
         reply_sent = true;
-        sersendf ("ok X%g Y%g Z%g E%g\r\n", 
+        lw_printf ("ok X%g Y%g Z%g E%g\r\n", 
           config.axis[X_AXIS].steps_per_mm,
           config.axis[Y_AXIS].steps_per_mm,
           config.axis[Z_AXIS].steps_per_mm,
@@ -960,7 +959,7 @@ eParseResult process_gcode_command()
       if ((next_target.seen_X | next_target.seen_Y | next_target.seen_Z | next_target.seen_E) == 0)
       {
         reply_sent = true;
-        sersendf ("ok X%d Y%d Z%d E%d\r\n", 
+        lw_printf ("ok X%d Y%d Z%d E%d\r\n", 
           config.axis[X_AXIS].maximum_feedrate,
           config.axis[Y_AXIS].maximum_feedrate,
           config.axis[Z_AXIS].maximum_feedrate,
@@ -986,7 +985,7 @@ eParseResult process_gcode_command()
       {
         // TODO: per axis accel
         reply_sent = true;
-        sersendf ("ok X%g\r\n", 
+        lw_printf ("ok X%g\r\n", 
           config.acceleration
           );
       }
@@ -1084,7 +1083,7 @@ eParseResult process_gcode_command()
       else if (next_target.seen_S)
       {
         reply_sent = true;
-        sersendf ("ok [%d] = %d\r\n", next_target.S, temp_get_table_entry (EXTRUDER_0, next_target.S));
+        lw_printf ("ok [%d] = %d\r\n", next_target.S, temp_get_table_entry (EXTRUDER_0, next_target.S));
       }
       else
         lw_puts ("E: bad param\r\n");
@@ -1099,7 +1098,7 @@ eParseResult process_gcode_command()
       else if (next_target.seen_S)
       {
         reply_sent = true;
-        sersendf ("ok [%d] = %d\r\n", next_target.S, temp_get_table_entry (HEATED_BED_0, next_target.S));
+        lw_printf ("ok [%d] = %d\r\n", next_target.S, temp_get_table_entry (HEATED_BED_0, next_target.S));
       }
       else
         lw_puts ("E: bad param\r\n");
@@ -1191,7 +1190,7 @@ eParseResult process_gcode_command()
   if (!reply_sent)
   {
     lw_puts("ok\r\n");
-    //sersendf("ok Q:%d\r\n", plan_queue_size());
+    //lw_printf("ok Q:%d\r\n", plan_queue_size());
   }
   
   return result;

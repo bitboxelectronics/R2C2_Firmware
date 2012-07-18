@@ -50,6 +50,7 @@
 #include "planner.h"
 #include "stepper.h"
 #include "usb_serial.h"
+#include "uart.h"
 
 #include "eth_shell_task.h"
 #include "usb_shell_task.h"
@@ -138,9 +139,13 @@ void check_boot_request (void)
 
 static void PrinterInit (void)
 {
+  // initialise some drivers useful for debugging
+
   buzzer_init();
 
+  // initialize USB serial and/or a UART driver to capture messages from read_config
   usb_serial_init();
+  uart_init(3);
 
   // NB Anything before read_config call must not rely on anything in config!
   // read_config must not use any peripherals apart from SPI?

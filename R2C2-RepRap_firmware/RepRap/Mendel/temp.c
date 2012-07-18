@@ -33,7 +33,7 @@
 #include "machine.h"
 //#include "pinout.h"
 #include "pin_control.h"
-#include "sersendf.h"
+#include "lw_io.h"
 #include "stepper.h"
 #include "app_config.h"
 
@@ -134,7 +134,7 @@ uint8_t	temp_achieved(uint8_t sensor_number)
 
 void temp_print()
 {
-  sersendf("ok T:%u.0 B:%u.0\r\n", current_temp[EXTRUDER_0], current_temp[HEATED_BED_0]); /* for RepRap software */
+  lw_printf ("ok T:%u.0 B:%u.0\r\n", current_temp[EXTRUDER_0], current_temp[HEATED_BED_0]); /* for RepRap software */
 }
 
 void temp_tick(void)

@@ -60,10 +60,14 @@ typedef long fpos_t;
 // 
 int lw_putchar (int c);
 int lw_puts (const char *s);
+int lw_printf (const char *format, ...);
 
 int lw_putc (int c, LW_FILE *f);
 int lw_fputc(int c, LW_FILE *f);
 int lw_fputs(const char *s, LW_FILE *f);
+
+//
+int lw_dbg_printf (const char *format, ...);
 
 // ---------------------------
 

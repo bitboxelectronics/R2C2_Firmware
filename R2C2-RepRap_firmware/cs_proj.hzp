@@ -1,7 +1,7 @@
 <!DOCTYPE CrossStudio_Project_File>
 <solution Name="cs_proj" target="8" version="2">
   <project Name="cs_proj">
-    <configuration Name="Common" Target="LPC1758" arm_architecture="v7M" arm_core_type="Cortex-M3" arm_gcc_target="arm-unknown-eabi" arm_interwork="No" arm_linker_heap_size="128" arm_linker_process_stack_size="0" arm_linker_stack_size="128" arm_simulator_memory_simulation_filename="$(TargetsDir)/LPC1000/LPC1000SimulatorMemory.dll" arm_simulator_memory_simulation_parameter="LPC17;0x80000;0x8000;0x8000" arm_target_debug_interface_type="ADIv5" arm_target_loader_parameter="12000000" c_only_additional_options="-fms-extensions" c_preprocessor_definitions="USE_PROCESS_STACK" c_user_include_directories="." link_include_startup_code="No" linker_additional_files="$(TargetsDir)/LPC1000/lib/liblpc1000$(LibExt)$(LIB)" linker_memory_map_file="$(TargetsDir)/LPC1000/LPC1758_MemoryMap.xml" linker_output_format="bin" oscillator_frequency="12MHz" project_directory="" project_type="Executable" property_groups_file_path="$(TargetsDir)/LPC1000/propertyGroups.xml"/>
+    <configuration Name="Common" Target="LPC1758" arm_architecture="v7M" arm_core_type="Cortex-M3" arm_gcc_target="arm-unknown-eabi" arm_interwork="No" arm_linker_heap_size="128" arm_linker_process_stack_size="0" arm_linker_stack_size="128" arm_simulator_memory_simulation_filename="$(TargetsDir)/LPC1000/LPC1000SimulatorMemory.dll" arm_simulator_memory_simulation_parameter="LPC17;0x80000;0x8000;0x8000" arm_target_debug_interface_type="ADIv5" arm_target_loader_parameter="12000000" arm_use_gcc_libraries="No" c_only_additional_options="-fms-extensions" c_preprocessor_definitions="USE_PROCESS_STACK" c_system_include_directories="C:\\Programs\\CodeSourcery\\arm-none-eabi\\include;C:\\Programs\\CodeSourcery\\lib\\gcc\\arm-none-eabi\\4.5.2\\include" c_user_include_directories="." link_include_standard_libraries="No" link_include_startup_code="No" linker_DebugIO_enabled="No" linker_additional_files="$(TargetsDir)/LPC1000/lib/liblpc1000$(LibExt)$(LIB);C:\\Programs\\CodeSourcery\\lib\\gcc\\arm-none-eabi\\4.5.2\\thumb2\\libgcc.a;C:\\Programs\\CodeSourcery\\arm-none-eabi\\lib\\thumb2\\libm.a;C:\\Programs\\CodeSourcery\\arm-none-eabi\\lib\\thumb2\\libc.a" linker_memory_map_file="$(TargetsDir)/LPC1000/LPC1758_MemoryMap.xml" linker_output_format="bin" oscillator_frequency="12MHz" project_directory="" project_type="Executable" property_groups_file_path="$(TargetsDir)/LPC1000/propertyGroups.xml"/>
     <configuration Name="Flash" Placement="Flash" arm_target_flash_loader_file_path="$(TargetsDir)/LPC1000/Release/Loader_rpc.elf" arm_target_flash_loader_type="LIBMEM RPC Loader" linker_patch_build_command="&quot;$(StudioDir)/bin/crossscript&quot; &quot;load(\&quot;$(TargetsDir)/LPC1000/LPC1000_LinkPatch.js\&quot;);patch(\&quot;$(TargetPath)\&quot;);&quot;" linker_section_placement_file="$(StudioDir)/targets/Cortex_M/flash_placement.xml" target_reset_script="FLASHReset()"/>
     <configuration Name="RAM" Placement="RAM" linker_section_placement_file="$(StudioDir)/targets/Cortex_M/ram_placement.xml" target_reset_script="SRAMReset()"/>
     <folder Name="Source Files">
@@ -10,6 +10,9 @@
       <file file_name="startup.S"/>
       <file file_name="LPC1758_flash.ld">
         <configuration Name="Common" file_type="Linker Script"/>
+      </file>
+      <file file_name="syscalls.c">
+        <configuration Name="THUMB Flash Debug" build_exclude_from_build="Yes"/>
       </file>
     </folder>
     <folder Name="System Files">
@@ -51,15 +54,18 @@
       <file file_name="libraries/R2C2/buzzer.c"/>
       <file file_name="libraries/R2C2/ios.c"/>
       <file file_name="libraries/R2C2/sdcard.c"/>
-      <file file_name="libraries/R2C2/serial.c"/>
-      <file file_name="libraries/R2C2/serial_fifo.c"/>
       <file file_name="libraries/R2C2/sermsg.c"/>
       <file file_name="libraries/R2C2/sersendf.c"/>
       <file file_name="libraries/R2C2/soundplay.c"/>
       <file file_name="libraries/R2C2/spi.c"/>
       <file file_name="libraries/R2C2/timer.c"/>
       <file file_name="libraries/R2C2/uart.c"/>
-      <file file_name="libraries/R2C2/usb.c"/>
+      <file file_name="libraries/R2C2/lw_io.c">
+        <configuration Name="THUMB Flash Debug" build_exclude_from_build="No"/>
+      </file>
+      <file file_name="libraries/R2C2/lw_syscalls.c">
+        <configuration Name="THUMB Flash Debug" build_exclude_from_build="No"/>
+      </file>
     </folder>
     <folder Name="app_reprap">
       <file file_name="RepRap/Mendel/alerter.c"/>
@@ -90,6 +96,9 @@
       <file file_name="libraries/LPCUSB/src/usbhw_lpc.c"/>
       <file file_name="libraries/LPCUSB/src/usbinit.c"/>
       <file file_name="libraries/LPCUSB/src/usbstdreq.c"/>
+      <file file_name="libraries/LPCUSB/src/serial_fifo.c"/>
+      <file file_name="libraries/LPCUSB/src/usb_cdc_driver.c"/>
+      <file file_name="libraries/LPCUSB/src/usb_serial.c"/>
     </folder>
     <folder Name="lib_FatFs">
       <file file_name="libraries/FatFs/src/diskio.c"/>

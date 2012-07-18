@@ -29,7 +29,7 @@ void USBShellTask( void *pvParameters )
     GcodeInputMsg.pLineBuf = &LineBuf;
 
     // say hi to host
-    serial_writestr("Start\r\nOK\r\n");
+    usb_serial_writestr("Start\r\nOK\r\n");
 
     // TASK BODY
 
@@ -37,9 +37,9 @@ void USBShellTask( void *pvParameters )
     for( ;; )
     {
         // process characters from the serial port
-        while (!LineBuf.seen_lf && (serial_rxchars() != 0) )
+        while (!LineBuf.seen_lf && (usb_serial_rxchars() != 0) )
         {
-          c = serial_popchar();
+          c = usb_serial_popchar();
       
           if (LineBuf.len < MAX_LINE)
             LineBuf.data [LineBuf.len++] = c;

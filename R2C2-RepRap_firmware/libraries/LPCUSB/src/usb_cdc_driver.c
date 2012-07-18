@@ -26,7 +26,7 @@
         THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <stdio.h>
+//#include <stdio.h>
 #include <string.h>         // memcpy
 
 #include "LPC17xx.h"

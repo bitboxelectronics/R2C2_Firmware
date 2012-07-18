@@ -30,7 +30,7 @@
 
 #include        "sersendf.h"
 #include        <stdarg.h>
-#include        "usb_serial.h"
+#include        "lw_io.h"
 #include        "sermsg.h"
 
 char   str_ox[] = "0x";
@@ -70,7 +70,7 @@ void sersendf(char *format, ...) {
 
                                 case 'p':
                                 case 'x':
-                                        serial_writestr(str_ox);
+                                        lw_puts(str_ox);
                                         if (j == 4)
                                                 serwrite_hex32(va_arg(args, unsigned int));
                                         else
@@ -78,17 +78,17 @@ void sersendf(char *format, ...) {
                                         j = 0;
                                         break;
                                 case 'c':
-                                        serial_writechar(va_arg(args, unsigned int));
+                                        lw_putchar(va_arg(args, unsigned int));
                                         j = 0;
                                         break;
                                 case 's':
-                                        serial_writestr(va_arg(args, char *));
+                                        lw_puts(va_arg(args, char *));
                                         j = 0;
                                         break;
 										
 								/* escape % char */
 								case '%':
-										serial_writechar('%');
+										lw_putchar('%');
 										j = 0;
 										break;
                                 default:
@@ -101,7 +101,7 @@ void sersendf(char *format, ...) {
                                 j = 2;
                         }
                         else {
-                                serial_writechar(c);
+                                lw_putchar(c);
                         }
                 }
         }

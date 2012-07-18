@@ -79,7 +79,7 @@ void GcodeTask( void *pvParameters )
           else
           {
             sd_printing = false;
-            serial_writestr ("Done printing file\r\n");
+            lw_puts ("Done printing file\r\n");
           }
         }
 

@@ -29,14 +29,14 @@
 */
 
 #include	"sermsg.h"
-#include	"usb_serial.h"
+#include	"lw_io.h"
 
 void serwrite_hex4(uint8_t v) {
 	v &= 0xF;
 	if (v < 10)
-		serial_writechar('0' + v);
+		lw_putchar('0' + v);
 	else
-		serial_writechar('A' - 10 + v);
+		lw_putchar('A' - 10 + v);
 }
 
 void serwrite_hex8(uint8_t v) {
@@ -58,74 +58,74 @@ void serwrite_uint32(uint32_t v) {
 	uint8_t t = 0;
 	if (v >= 1000000000) {
 		for (t = 0; v >= 1000000000; v -= 1000000000, t++);
-		serial_writechar(t + '0');
+		lw_putchar(t + '0');
 	}
 
 	if (v >= 100000000) {
 		for (t = 0; v >= 100000000; v -= 100000000, t++);
-		serial_writechar(t + '0');
+		lw_putchar(t + '0');
 	}
 	else if (t != 0)
-		serial_writechar('0');
+		lw_putchar('0');
 
 	if (v >= 10000000) {
 		for (t = 0; v >= 10000000; v -= 10000000, t++);
-		serial_writechar(t + '0');
+		lw_putchar(t + '0');
 	}
 	else if (t != 0)
-		serial_writechar('0');
+		lw_putchar('0');
 
 	if (v >= 1000000) {
 		for (t = 0; v >= 1000000; v -= 1000000, t++);
-		serial_writechar(t + '0');
+		lw_putchar(t + '0');
 	}
 	else if (t != 0)
-		serial_writechar('0');
+		lw_putchar('0');
 
 	if (v >= 100000) {
 		for (t = 0; v >= 100000; v -= 100000, t++);
-		serial_writechar(t + '0');
+		lw_putchar(t + '0');
 	}
 	else if (t != 0)
-		serial_writechar('0');
+		lw_putchar('0');
 
 	if (v >= 10000) {
 		for (t = 0; v >= 10000; v -= 10000, t++);
-		serial_writechar(t + '0');
+		lw_putchar(t + '0');
 	}
 	else if (t != 0)
-		serial_writechar('0');
+		lw_putchar('0');
 
 	if (v >= 1000) {
 		for (t = 0; v >= 1000; v -= 1000, t++);
-		serial_writechar(t + '0');
+		lw_putchar(t + '0');
 	}
 	else if (t != 0)
-		serial_writechar('0');
+		lw_putchar('0');
 
 	if (v >= 100) {
 		t = v / 100;
-		serial_writechar(t + '0');
+		lw_putchar(t + '0');
 		v -= (t * 100);
 	}
 	else if (t != 0)
-		serial_writechar('0');
+		lw_putchar('0');
 
 	if (v >= 10) {
 	        /* 99 > v > 10 */
 		t = v / 10;
-		serial_writechar(t + '0');
+		lw_putchar(t + '0');
 		v -= (t * 10);
 	}
 	else if (t != 0)
-		serial_writechar('0');
+		lw_putchar('0');
 
-	serial_writechar(v + '0');
+	lw_putchar(v + '0');
 }
 
 void serwrite_int32(int32_t v) {
 	if (v < 0) {
-		serial_writechar('-');
+		lw_putchar('-');
 		v = -v;
 	}
 
@@ -136,7 +136,7 @@ void serwrite_double(double v)
 {
   if (v < 0)
   {
-    serial_writechar ('-');
+    lw_putchar ('-');
     v = -v;
   }
   
@@ -144,16 +144,16 @@ void serwrite_double(double v)
   serwrite_uint32((uint32_t) v);
 
   /* print the '.' */
-  serial_writechar('.');
+  lw_putchar('.');
 
   /* print last part after '.' */
   v = v - (int32_t)v;
 
   v = v * 1000.0;
   if (v < 100.0)
-  	serial_writechar('0');
+  	lw_putchar('0');
   if (v < 10.0)
-  	serial_writechar('0');
+  	lw_putchar('0');
   serwrite_uint32((uint32_t) v);  	
   
 }

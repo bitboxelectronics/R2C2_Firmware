@@ -34,7 +34,7 @@
 #include "gcode_process.h"
 #include "gcode_parse.h"
 
-#include "usb_serial.h"
+#include "lw_io.h"
 #include "sermsg.h"
 #include "sersendf.h"
 
@@ -593,9 +593,9 @@ eParseResult process_gcode_command()
 
       // unknown gcode: spit an error
       default:
-              serial_writestr("E: Bad G-code ");
+              lw_puts("E: Bad G-code ");
               serwrite_uint8(next_target.G);
-              serial_writestr("\r\n");
+              lw_puts("\r\n");
     }
   }
   else if (next_target.seen_M)
@@ -605,10 +605,10 @@ eParseResult process_gcode_command()
 
       // SD File functions
       case 20: // M20 - list SD Card files
-      serial_writestr("Begin file list\r\n");
+      lw_puts("Begin file list\r\n");
       // list files in root folder
       sd_list_dir();
-      serial_writestr("End file list\r\n");
+      lw_puts("End file list\r\n");
       break;
 
       case 21: // M21 - init SD card
@@ -674,7 +674,7 @@ eParseResult process_gcode_command()
       }
       else
       {
-    	  serial_writestr("Not SD printing\r\n");
+    	  lw_puts("Not SD printing\r\n");
       }
       break;
     
@@ -835,7 +835,7 @@ eParseResult process_gcode_command()
               else
                 buf [7] = 'L';
               
-              serial_writestr ( buf);
+              lw_puts ( buf);
             }
             // max limit?
             if (config.axis[axis].pin_max_limit.port != 0xFF)
@@ -848,12 +848,12 @@ eParseResult process_gcode_command()
               else
                 buf [7] = 'L';
               
-              serial_writestr ( buf);
+              lw_puts ( buf);
             }
           }
         }
             
-        serial_writestr ("\r\n");
+        lw_puts ("\r\n");
       }
       break;
 
@@ -1087,7 +1087,7 @@ eParseResult process_gcode_command()
         sersendf ("ok [%d] = %d\r\n", next_target.S, temp_get_table_entry (EXTRUDER_0, next_target.S));
       }
       else
-        serial_writestr ("E: bad param\r\n");
+        lw_puts ("E: bad param\r\n");
       break;
 
       // M501 - set/get adc value for temperature
@@ -1102,7 +1102,7 @@ eParseResult process_gcode_command()
         sersendf ("ok [%d] = %d\r\n", next_target.S, temp_get_table_entry (HEATED_BED_0, next_target.S));
       }
       else
-        serial_writestr ("E: bad param\r\n");
+        lw_puts ("E: bad param\r\n");
       break;
 
       // M542 - nozzle wipe/move to rest location
@@ -1182,15 +1182,15 @@ eParseResult process_gcode_command()
       
       // unknown mcode: spit an error
       default:
-        serial_writestr("E: Bad M-code ");
+        lw_puts("E: Bad M-code ");
         serwrite_uint8(next_target.M);
-        serial_writestr("\r\n");
+        lw_puts("\r\n");
     }
   }
 
   if (!reply_sent)
   {
-    serial_writestr("ok\r\n");
+    lw_puts("ok\r\n");
     //sersendf("ok Q:%d\r\n", plan_queue_size());
   }
   

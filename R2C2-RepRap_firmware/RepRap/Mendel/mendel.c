@@ -49,7 +49,7 @@
 #include "temp.h"
 #include "planner.h"
 #include "stepper.h"
-#include "usb_cdc_driver.h"
+#include "usb_serial.h"
 
 #include "eth_shell_task.h"
 #include "usb_shell_task.h"
@@ -140,7 +140,7 @@ static void PrinterInit (void)
 {
   buzzer_init();
 
-  USBSerial_Init();
+  usb_serial_init();
 
   // NB Anything before read_config call must not rely on anything in config!
   // read_config must not use any peripherals apart from SPI?

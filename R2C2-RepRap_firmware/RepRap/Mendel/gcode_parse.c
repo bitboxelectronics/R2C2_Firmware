@@ -32,7 +32,7 @@
 #include	<string.h>
 #include <stdbool.h>
 
-#include	"usb_serial.h"
+#include	"lw_io.h"
 #include	"sermsg.h"
 
 #include	"gcode_parse.h"
@@ -197,12 +197,12 @@ eParseResult gcode_parse_line (tLineBuffer *pLine)
                   // M29 - stop writing
                   sd_writing_file = false;
                   sd_close (&file);
-                  serial_writestr("Done saving file\r\n");
+                  lw_puts("Done saving file\r\n");
                 }
                 else
                 {
                   // else - do not write SD M-codes to file
-                  serial_writestr("ok\r\n");
+                  lw_puts("ok\r\n");
                 }
               }
               else
@@ -212,9 +212,9 @@ eParseResult gcode_parse_line (tLineBuffer *pLine)
                   pLine->data [pLine->len-1] = 10;
                   
                 if (sd_write_to_file(pLine->data, pLine->len))
-                  serial_writestr("ok\r\n");
+                  lw_puts("ok\r\n");
                 else
-                  serial_writestr("error writing to file\r\n");
+                  lw_puts("error writing to file\r\n");
               }
             }
             else
@@ -228,16 +228,16 @@ eParseResult gcode_parse_line (tLineBuffer *pLine)
 			      }
 			}
 			else {
-				serial_writestr("Expected checksum ");
+				lw_puts("Expected checksum ");
 				serwrite_uint8(next_target.checksum_calculated);
-				serial_writestr("\r\n");
+				lw_puts("\r\n");
 				request_resend();
 			}
 		}
 		else {
-			serial_writestr("Expected line number ");
+			lw_puts("Expected line number ");
 			serwrite_uint32(next_target.N_expected);
-			serial_writestr("\r\n");
+			lw_puts("\r\n");
 			request_resend();
 		}
 
@@ -484,7 +484,7 @@ void gcode_parse_char(uint8_t c)
 ****************************************************************************/
 
 void request_resend(void) {
-	serial_writestr("rs ");
+	lw_puts("rs ");
 	serwrite_uint8(next_target.N);
-	serial_writestr("\r\n");
+	lw_puts("\r\n");
 }

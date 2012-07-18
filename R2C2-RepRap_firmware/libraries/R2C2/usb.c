@@ -203,7 +203,7 @@ static void BulkOut(U8 bEP, U8 bEPStatus)
 {
   int i, iLen;
 
-  if (_fifo_free(&rxfifo) < MAX_PACKET_SIZE)
+  if (fifo_free_isr(&rxfifo) < MAX_PACKET_SIZE)
   {
     // may not fit into fifo
     return;
@@ -214,7 +214,7 @@ static void BulkOut(U8 bEP, U8 bEPStatus)
   for (i = 0; i < iLen; i++)
   {
     // put into FIFO
-    if (!_fifo_put(&rxfifo, abBulkBuf[i]))
+    if (!fifo_put_isr(&rxfifo, abBulkBuf[i]))
     {
       // overflow... :(
       ASSERT(FALSE);
@@ -234,7 +234,7 @@ static void BulkIn(U8 bEP, U8 bEPStatus)
 {
   int i, iLen;
 
-  if (_fifo_avail(&txfifo) == 0)
+  if (fifo_avail_isr(&txfifo) == 0)
   {
     // no more data, disable further NAK interrupts until next USB frame
     USBHwNakIntEnable(0);
@@ -244,7 +244,7 @@ static void BulkIn(U8 bEP, U8 bEPStatus)
   // get bytes from transmit FIFO into intermediate buffer
   for (i = 0; i < MAX_PACKET_SIZE; i++)
   {
-    if (!_fifo_get(&txfifo, &abBulkBuf[i]))
+    if (!fifo_get_isr(&txfifo, &abBulkBuf[i]))
     {
       break;
     }
@@ -295,7 +295,7 @@ static BOOL HandleClassRequest(TSetupPacket *pSetup, int *piLen, U8 **ppbData)
 
 static void USBFrameHandler(U16 wFrame)
 {
-  if (_fifo_avail(&txfifo) > 0)
+  if (fifo_avail_isr(&txfifo) > 0)
   {
     // data available, enable NAK interrupt on bulk in
     USBHwNakIntEnable(INACK_BI);

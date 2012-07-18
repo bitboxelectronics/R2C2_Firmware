@@ -31,24 +31,7 @@
 #include "serial_fifo.h"
 #include "LPC17xx.h"
 
-void fifo_init(fifo_t *fifo, unsigned char *buf)
-{
-	fifo->head = 0;
-	fifo->tail = 0;
-	fifo->buf = buf;
-}
-
-// Atomic version
-unsigned char fifo_put(fifo_t *fifo, unsigned char c)
-{
-  unsigned char t;
-  NVIC_DisableIRQ(USB_IRQn);
-  t = _fifo_put(fifo, c);
-  NVIC_EnableIRQ(USB_IRQn);
-  return t;
-}
-
-unsigned char _fifo_put(fifo_t *fifo, unsigned char c)
+unsigned char fifo_put_isr(fifo_t *fifo, unsigned char c)
 {
 	int next;
 	
@@ -65,17 +48,7 @@ unsigned char _fifo_put(fifo_t *fifo, unsigned char c)
 	return TRUE;
 }
 
-// Atomic version
-unsigned char fifo_get(fifo_t *fifo, unsigned char *pc)
-{
-  unsigned char t;
-  NVIC_DisableIRQ(USB_IRQn);
-  t = _fifo_get(fifo, pc);
-  NVIC_EnableIRQ(USB_IRQn);
-  return t;
-}
-
-unsigned char _fifo_get(fifo_t *fifo, unsigned char *pc)
+unsigned char fifo_get_isr(fifo_t *fifo, unsigned char *pc)
 {
 	int next;
 	
@@ -92,19 +65,55 @@ unsigned char _fifo_get(fifo_t *fifo, unsigned char *pc)
 	return TRUE;
 }
 
+int fifo_avail_isr(fifo_t *fifo)
+{
+	return (SERIAL_FIFO_SIZE + fifo->head - fifo->tail) % SERIAL_FIFO_SIZE;
+}
+
+int fifo_free_isr(fifo_t *fifo)
+{
+	return (SERIAL_FIFO_SIZE - 1 - fifo_avail(fifo));
+}
+
+
+
+void fifo_init(fifo_t *fifo, unsigned char *buf)
+{
+	fifo->head = 0;
+	fifo->tail = 0;
+	fifo->buf = buf;
+}
+
+// Atomic version
+unsigned char fifo_put(fifo_t *fifo, unsigned char c)
+{
+  unsigned char t;
+  NVIC_DisableIRQ(USB_IRQn);
+  t = fifo_put_isr(fifo, c);
+  NVIC_EnableIRQ(USB_IRQn);
+  return t;
+}
+
+
+// Atomic version
+unsigned char fifo_get(fifo_t *fifo, unsigned char *pc)
+{
+  unsigned char t;
+  NVIC_DisableIRQ(USB_IRQn);
+  t = fifo_get_isr(fifo, pc);
+  NVIC_EnableIRQ(USB_IRQn);
+  return t;
+}
+
+
 //Atomic version
 int fifo_avail(fifo_t *fifo)
 {
   int t;
   NVIC_DisableIRQ(USB_IRQn);
-  t = _fifo_avail(fifo);
+  t = fifo_avail_isr(fifo);
   NVIC_EnableIRQ(USB_IRQn);
   return t;
-}
-
-int _fifo_avail(fifo_t *fifo)
-{
-	return (SERIAL_FIFO_SIZE + fifo->head - fifo->tail) % SERIAL_FIFO_SIZE;
 }
 
 //Atomic version
@@ -112,12 +121,8 @@ int fifo_free(fifo_t *fifo)
 {
   int t;
   NVIC_DisableIRQ(USB_IRQn);
-  t = _fifo_free(fifo);
+  t = fifo_free_isr(fifo);
   NVIC_EnableIRQ(USB_IRQn);
   return t;
 }
 
-int _fifo_free(fifo_t *fifo)
-{
-	return (SERIAL_FIFO_SIZE - 1 - fifo_avail(fifo));
-}

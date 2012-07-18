@@ -38,13 +38,17 @@ typedef struct {
 } fifo_t;
 
 void fifo_init(fifo_t *fifo, unsigned char *buf);
+
+// The following functions must be called from NON-interrupt code
 unsigned char fifo_put(fifo_t *fifo, unsigned char c);
-unsigned char _fifo_put(fifo_t *fifo, unsigned char c);
 unsigned char fifo_get(fifo_t *fifo, unsigned char *pc);
-unsigned char _fifo_get(fifo_t *fifo, unsigned char *pc);
 int  fifo_avail(fifo_t *fifo);
-int  _fifo_avail(fifo_t *fifo);
 int fifo_free(fifo_t *fifo);
-int _fifo_free(fifo_t *fifo);
+
+// The following functions must be called from interrupt service routines
+unsigned char fifo_put_isr(fifo_t *fifo, unsigned char c);
+unsigned char fifo_get_isr(fifo_t *fifo, unsigned char *pc);
+int  fifo_avail_isr(fifo_t *fifo);
+int fifo_free_isr(fifo_t *fifo);
 
 #endif

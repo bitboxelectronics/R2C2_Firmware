@@ -27,7 +27,7 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "lpc17xx.h"
+#include "LPC17xx.h"
 #include "lpc17xx_uart.h"
 #include "lpc17xx_pinsel.h"
 

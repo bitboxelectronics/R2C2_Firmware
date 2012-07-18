@@ -28,7 +28,7 @@
 #define LPC17XX_CLKPWR_H_
 
 /* Includes ------------------------------------------------------------------- */
-#include "lpc17xx.h"
+#include "LPC17xx.h"
 #include "lpc_types.h"
 
 #ifdef __cplusplus
@@ -350,6 +350,7 @@ extern "C"
 #define CLKPWR_PCON_PDFLAG		((uint32_t)(1<<10))
 /** Deep Power-down entry flag */
 #define CLKPWR_PCON_DPDFLAG		((uint32_t)(1<<11))
+
 
 /*********************************************************************//**
  * Macro defines for Power Control for Peripheral Register

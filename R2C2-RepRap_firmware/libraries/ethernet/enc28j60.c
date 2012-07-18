@@ -23,7 +23,7 @@
 #include <stdint.h>
 //#include <avr/interrupt.h>
 
-#include "lpc17xx.h"
+#include "LPC17xx.h"
 #include "lpc17xx_pinsel.h"
 #include "lpc17xx_ssp.h"
 

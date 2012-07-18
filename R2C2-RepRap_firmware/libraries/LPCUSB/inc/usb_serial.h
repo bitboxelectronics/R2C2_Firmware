@@ -27,31 +27,31 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef	_SERIAL_H
-#define	_SERIAL_H
+#ifndef	_USB_SERIAL_H
+#define	_USB_SERIAL_H
 
 #include <stdint.h>
 
 
-// initialise serial subsystem
-void serial_init(void);
+// initialise USB serial subsystem
+void usb_serial_init(void);
 
 // send one character
-void serial_writechar(char data);
+void usb_serial_writechar(char data);
 
 // read one character
-char serial_popchar(void);
+char usb_serial_popchar(void);
 
 // return number of characters in the receive buffer, and number of spaces in the send buffer
-int serial_rxchars(void);
+int usb_serial_rxchars(void);
 
 //
-uint8_t serial_txchars(void);
+uint8_t usb_serial_txchars(void);
 
 // read/write many characters
 // uint8_t serial_recvblock(uint8_t *block, int blocksize);
-void serial_writeblock(void *data, int datalen);
+void usb_serial_writeblock(void *data, int datalen);
 
-void serial_writestr(char *data);
+void usb_serial_writestr(char *data);
 
-#endif	/* _SERIAL_H */
+#endif	/* _USB_SERIAL_H */

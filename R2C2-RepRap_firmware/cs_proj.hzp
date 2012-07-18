@@ -49,13 +49,12 @@
       <file file_name="libraries/NXP/Drivers/source/lpc17xx_uart.c"/>
       <file file_name="libraries/NXP/Drivers/source/lpc17xx_wdt.c"/>
     </folder>
-    <folder Name="lib_R2C2">
+    <folder Name="lib_R2C2" file_name="">
       <file file_name="libraries/R2C2/adc.c"/>
       <file file_name="libraries/R2C2/buzzer.c"/>
       <file file_name="libraries/R2C2/ios.c"/>
       <file file_name="libraries/R2C2/sdcard.c"/>
       <file file_name="libraries/R2C2/sermsg.c"/>
-      <file file_name="libraries/R2C2/sersendf.c"/>
       <file file_name="libraries/R2C2/soundplay.c"/>
       <file file_name="libraries/R2C2/spi.c"/>
       <file file_name="libraries/R2C2/timer.c"/>

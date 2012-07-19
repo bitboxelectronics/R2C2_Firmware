@@ -35,11 +35,6 @@
 
 #include "uart.h"
 
-#if 0
-//Debug UART
-#define DBG_UART_NUM  3
-#define DBG_UART      LPC_UART3
-#endif
 
 // for LPC1758
 #define MAX_UART 4
@@ -80,11 +75,12 @@ static bool _uart_init (int uart_num)
 
 	/*
 	* Initialize UART pin connect
-  * defaults for R2C2:
-	* UART0: P0.2  -> TXD0, P0.3  -> RXD0
-	* UART1: P0.15 -> TXD1; P0.16 -> RXD1
-	* UART2: not used
-	* UART3: P4.28 -> TXD3; P4.29 -> RXD3
+  * default setup                         for R2C2 usage:
+	* UART0: P0.2  -> TXD0, P0.3  -> RXD0   not available, used for ADCs
+	* UART1: P2.0  -> TXD1; P2.1  -> RXD1   available on expansion header
+	* UART2: P0.10 -> TXD2; P0.11 -> RXD2   not available
+	* UART3: P4.28 -> TXD3; P4.29 -> RXD3   debug port, RXD is shared with boot switch
+  
 	*/
 	PinCfg.OpenDrain = PINSEL_PINMODE_NORMAL;
 	PinCfg.Pinmode = PINSEL_PINMODE_PULLUP;
@@ -104,19 +100,25 @@ static bool _uart_init (int uart_num)
 
     case 1:
     {
-      PinCfg.Funcnum = PINSEL_FUNC_3;
-      PinCfg.Portnum = 0;
-      PinCfg.Pinnum = 15;
+      PinCfg.Funcnum = PINSEL_FUNC_2;
+      PinCfg.Portnum = 2;
+      PinCfg.Pinnum = 0;
       PINSEL_ConfigPin(&PinCfg);
-      PinCfg.Portnum = 0;
-      PinCfg.Pinnum = 16;
+      PinCfg.Portnum = 2;
+      PinCfg.Pinnum = 1;
       PINSEL_ConfigPin(&PinCfg);
     }
     break;
 
     case 2:
     {
-      
+      PinCfg.Funcnum = PINSEL_FUNC_1;
+      PinCfg.Portnum = 0;
+      PinCfg.Pinnum = 10;
+      PINSEL_ConfigPin(&PinCfg);
+      PinCfg.Portnum = 0;
+      PinCfg.Pinnum = 11;
+      PINSEL_ConfigPin(&PinCfg);
     }
     break;
 

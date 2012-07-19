@@ -31,7 +31,7 @@
 #define	_UART_H
 
 void uart_init(int uart_num);
-int uart_data_available(int uart_num);
+int  uart_data_available(int uart_num);
 char uart_receive(int uart_num);
 void uart_send(int uart_num, char byte);
 

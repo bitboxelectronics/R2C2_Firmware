@@ -32,8 +32,12 @@
 
 #include "lw_io.h"
 
+#include "lw_syscalls.h"
+
 //TODO:
 #define debug lw_printf
 
+
+#define debug_init() uart_init(DEV_DBGOUT)
 
 #endif	/* _DEBUG_H */

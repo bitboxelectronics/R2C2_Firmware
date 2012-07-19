@@ -82,6 +82,7 @@
       <file file_name="RepRap/Mendel/eth_shell_task.c"/>
       <file file_name="RepRap/Mendel/app_config.c"/>
       <file file_name="RepRap/Mendel/pin_control.c"/>
+      <file file_name="RepRap/Mendel/uart_shell_task.c"/>
     </folder>
     <folder Name="lib_FreeRTOS">
       <file file_name="libraries/FreeRTOS/Source/list.c"/>

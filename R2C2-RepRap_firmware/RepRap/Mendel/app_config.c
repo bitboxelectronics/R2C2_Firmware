@@ -234,20 +234,19 @@ void app_config_set_defaults(void)
 
 }
 
-// read the config files from SD
+//TODO: move to sys level
+FATFS fs;       /* Work area (file system object) for logical drive */
+
+// read the config files from SD Card
 void app_config_read (void)
 {
-      
-  /* initialize SPI for SDCard */
-  spi_init();
-
-  /* access to "config.txt" file on SDCard */
-
-  FATFS fs;       /* Work area (file system object) for logical drive */
   FIL file;       /* file object */
   FRESULT res;    /* FatFs function common result code */
+      
+  /* TODO: initialize SPI for SDCard */
+  spi_init();
 
-  /* Register a work area for logical drive 0 */
+  /* TODO: Register a work area for logical drive 0 */
   res = f_mount(0, &fs);
   if (res)
     debug("Err mount fs\n");

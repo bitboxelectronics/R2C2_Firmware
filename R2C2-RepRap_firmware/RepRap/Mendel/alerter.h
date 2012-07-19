@@ -32,6 +32,8 @@
 */
 
 
+#ifndef _ALERTER_H
+#define _ALERTER_H
 
 #include "lpc_types.h"
 
@@ -45,3 +47,4 @@
 
 void alert_event(int32_t beep_event);
 
+#endif

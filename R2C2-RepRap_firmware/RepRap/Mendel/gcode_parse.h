@@ -28,8 +28,8 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef	GCODE_PARSE_H
-#define	GCODE_PARSE_H
+#ifndef	_GCODE_PARSE_H
+#define	_GCODE_PARSE_H
 
 #include	<stdint.h>
 

@@ -215,19 +215,13 @@ static tConfigItem config_lookup_pindef [] =
 
 };
 
-// read the config files from SD
-void read_config (void)
+void app_config_set_defaults(void)
 {
-  char *pLine;
-
-  //TODO: should set defaults earlier in startup
-
-  // first set defaults
   set_defaults (config_lookup, NUM_TOKENS(config_lookup));
   
   set_defaults (config_lookup_pindef, NUM_TOKENS(config_lookup_pindef));
-  
-  // set default axis map for R2C2 - printer
+
+    // set default axis map for R2C2 - printer
   config.num_axes = NUM_AXES;
   config.axis[0].letter_code = 'X';
   config.axis[0].is_configured = true;
@@ -237,7 +231,13 @@ void read_config (void)
   config.axis[2].is_configured = true;
   config.axis[3].letter_code = 'E';
   config.axis[3].is_configured = true;
-    
+
+}
+
+// read the config files from SD
+void app_config_read (void)
+{
+      
   /* initialize SPI for SDCard */
   spi_init();
 
@@ -253,40 +253,42 @@ void read_config (void)
     debug("Err mount fs\n");
   else  
   {
-    res = read_config_file ("config.txt", config_lookup, NUM_TOKENS(config_lookup));
-    
     res = read_config_file ("conf_pin.txt", config_lookup_pindef, NUM_TOKENS(config_lookup_pindef));
-    
-    // TODO: should read GCode later after machine ready
 
-    //read_gcode_file ("autoexec.g");
-    
-    res = f_open(&file, "autoexec.g", FA_OPEN_EXISTING | FA_READ);
-    if (res == FR_OK)
-    {
-      tLineBuffer line_buf;
-      
-      pLine = f_gets(line_buf.data, sizeof(line_buf.data), &file); /* read one line */
-      while (pLine)
-      {
-        line_buf.len = strlen(pLine);
-        gcode_parse_line (&line_buf);
-        pLine = f_gets(line_buf.data, sizeof(line_buf.data), &file); /* read next line */
-      }
-
-      /* Close file */
-      res = f_close(&file);
-      if (res)
-        debug("Error closing autoexec.g\n");
-    }  
-  
+    res = read_config_file ("config.txt", config_lookup, NUM_TOKENS(config_lookup));
   }
-  // 
 }
 
 // print the config tables
-void print_config()
+void app_config_print()
 {
   print_config_table (config_lookup, NUM_TOKENS(config_lookup) );
 }
 
+// read a file and execute GCode commands
+void exec_gcode_file (char *filename)
+{
+  char *pLine;
+  FIL file;
+  FRESULT res;
+
+  res = f_open(&file, filename, FA_OPEN_EXISTING | FA_READ);
+  if (res == FR_OK)
+  {
+    tLineBuffer line_buf;
+    
+    pLine = f_gets(line_buf.data, sizeof(line_buf.data), &file); /* read one line */
+    while (pLine)
+    {
+      line_buf.len = strlen(pLine);
+      gcode_parse_line (&line_buf);
+      pLine = f_gets(line_buf.data, sizeof(line_buf.data), &file); /* read next line */
+    }
+
+    /* Close file */
+    res = f_close(&file);
+    if (res)
+      debug("Error closing %s\n", filename);
+  }  
+
+}

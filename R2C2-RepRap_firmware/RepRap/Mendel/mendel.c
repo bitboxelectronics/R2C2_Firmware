@@ -54,6 +54,7 @@
 
 #include "eth_shell_task.h"
 #include "usb_shell_task.h"
+#include "uart_shell_task.h"
 #include "gcode_task.h"
 
 
@@ -139,18 +140,18 @@ void check_boot_request (void)
 
 static void PrinterInit (void)
 {
-  // initialise some drivers useful for debugging
+  app_config_set_defaults();
 
+  // initialise some drivers useful for debugging
   buzzer_init();
 
   // initialize USB serial and/or a UART driver to capture messages from read_config
   usb_serial_init();
-  uart_init(3);
 
-  // NB Anything before read_config call must not rely on anything in config!
-  // read_config must not use any peripherals apart from SPI?
-  // read_config uses USB for error/debug messages
-  read_config();
+  debug_init();
+
+  // read_config will use SPI and a message output (control interface or debug)
+  app_config_read();
 
   // set up inputs and outputs
   io_init();
@@ -163,6 +164,7 @@ static void PrinterInit (void)
 
 void PrinterTask( void *pvParameters )
 {
+  tShellParams shell_params;
   long timer1 = 0;
 
   PrinterInit();
@@ -170,8 +172,14 @@ void PrinterTask( void *pvParameters )
   // -- init complete, can now start other tasks --
 
   xTaskCreate( GcodeTask,    (signed char *)"Gcode", 512, ( void * ) NULL, tskIDLE_PRIORITY, NULL );
-  xTaskCreate( USBShellTask, (signed char *)"USBSh", 128, ( void * ) NULL, tskIDLE_PRIORITY, NULL );
-  xTaskCreate( EthShellTask, (signed char *)"EthSh", 128, ( void * ) NULL, tskIDLE_PRIORITY, NULL );
+  xTaskCreate( USBShellTask, (signed char *)"USBSh", 256, ( void * ) NULL, tskIDLE_PRIORITY, NULL );
+  xTaskCreate( EthShellTask, (signed char *)"EthSh", 256, ( void * ) NULL, tskIDLE_PRIORITY, NULL );
+
+  // Start a Gcode shell on a UART
+  shell_params.uart_num = 1;
+  xTaskCreate( uart_shell_task, (signed char *)"UartSh", 256, ( void * ) &shell_params, tskIDLE_PRIORITY, NULL );
+
+  exec_gcode_file ("autoexec.g");
 
   // -- all startup done, signal readiness
 

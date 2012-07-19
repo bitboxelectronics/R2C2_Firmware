@@ -179,10 +179,18 @@ typedef struct
   int32_t beep_on_events;
 } tApplicationConfiguration;
 
+// Variables
 
 extern tApplicationConfiguration config;
 
-void read_config (void);
-void print_config (void);
+// Functions
+
+void app_config_set_defaults(void);
+
+void app_config_read (void);
+void app_config_print (void);
+
+//TODO: move?
+void exec_gcode_file (char *filename);
 
 #endif /* _APP_CONFIG_H */

@@ -1175,7 +1175,7 @@ eParseResult process_gcode_command()
       // M600 print the values read from the config file                  
       case 600:
       {
-        print_config();
+        app_config_print();
       }
       break;
       

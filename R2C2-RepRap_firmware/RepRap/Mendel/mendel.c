@@ -175,9 +175,11 @@ void PrinterTask( void *pvParameters )
   xTaskCreate( USBShellTask, (signed char *)"USBSh", 256, ( void * ) NULL, tskIDLE_PRIORITY, NULL );
   xTaskCreate( EthShellTask, (signed char *)"EthSh", 256, ( void * ) NULL, tskIDLE_PRIORITY, NULL );
 
+#if 0
   // Start a Gcode shell on a UART
   shell_params.uart_num = 1;
   xTaskCreate( uart_shell_task, (signed char *)"UartSh", 256, ( void * ) &shell_params, tskIDLE_PRIORITY, NULL );
+#endif
 
   exec_gcode_file ("autoexec.g");
 

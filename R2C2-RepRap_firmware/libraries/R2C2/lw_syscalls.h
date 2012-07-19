@@ -39,12 +39,29 @@
 #define DEV_USB_SERIAL  4
 
 // >>>>>>>>>>>>>> Standard handles are redirected here <<<<<<<<<<<<<<<
+#define R2C2_STANDARD_INTERFACES
+
+#ifdef R2C2_STANDARD_INTERFACES
+// Standard config for R2C2 board
+
+// USB is primary GCode interface
 #define DEV_STDIN     DEV_USB_SERIAL
 #define DEV_STDOUT    DEV_USB_SERIAL
-#define DEV_STDERR    DEV_USB_SERIAL
+#define DEV_STDERR    DEV_USB_SERIAL  // not actually used
 
-#define DEV_DBGOUT    DEV_USB_SERIAL
-//#define DEV_DBGOUT    DEV_UART3
+// Debug on "debug" UART, 
+#define DEV_DBGOUT    DEV_UART3
+
+#else
+// alternate setup
+#define DEV_STDIN     DEV_UART1
+#define DEV_STDOUT    DEV_UART1
+#define DEV_STDERR    DEV_UART1  // not actually used
+
+// Debug on "debug" UART, 
+#define DEV_DBGOUT    DEV_UART3
+
+#endif
 // ===================================================================
 
 int _write(int file, char *ptr, int len) ;

@@ -89,7 +89,7 @@ void str_buf_init (tStrBuffer *pHeader, char *pData, int max_size)
 
 void str_buf_init_std (tStrBuffer *pBuffer)
 {
-  str_buf_init (pBuffer, &pBuffer->data, MAX_SIZE);
+  str_buf_init (pBuffer, pBuffer->data, MAX_SIZE);
 }
 
 

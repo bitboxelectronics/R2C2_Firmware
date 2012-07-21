@@ -40,11 +40,6 @@
 #include "debug.h"    // may not be initialised yet
 //#include "uart.h"     // may not be initialised yet
 
-
-#ifdef _CROSSWORKS
-#define stricmp strcasecmp
-#endif
-
 #define MAX_LINE_LEN 80
 
 typedef struct
@@ -303,7 +298,7 @@ FRESULT read_config_file (char *filename, tConfigItem lookup[], int num_tokens)
         found = false;      
         for (j=0; (j < num_tokens) && !found; j++)
         {
-          if (stricmp (pToken, lookup[j].name) == 0)
+          if (strcasecmp (pToken, lookup[j].name) == 0)
           {
             found = true;
             pToken = get_token (NULL);

@@ -44,7 +44,8 @@
 #include <lwip/snmp.h>
 #include "netif/etharp.h"
 
-#include "r2c2.h"
+//#include "r2c2.h"
+#include "timer.h"
 #include "enc28j60.h"
 
 

@@ -33,38 +33,244 @@
 
 #include "stdbool.h"
 
+#include "str_buffer.h"
+
 #include "uart.h"
 
 
-// for LPC1758
-#define MAX_UART 4
 
-static LPC_UART_TypeDef *uart_def_p [MAX_UART] = {
-  LPC_UART0,
-  (LPC_UART_TypeDef *)LPC_UART1,  //TODO: is UART1 actually different?
-  LPC_UART2,
-  LPC_UART3};
+typedef struct {
+
+  LPC_UART_TypeDef *uart_def_p;
+
+  // Current Tx Interrupt enable state
+  __IO FlagStatus TxIntStat;
+
+  tStrBuffer rx_buffer;
+  tStrBuffer tx_buffer;
+
+} tUartControl;
+
+
+// --------------------------------------------------------------------------
+// CONFIG here
+
+#define USE_INTERRUPT
+
+#define CFG_MAX_UART  4
+
+// LPC1758 has max of 4, we use UART1 and UART3
+// don't allocate buffers for UARTs we don't use
+
+//tUartControl uart0 = {.uart_def_p = LPC_UART0};
+tUartControl uart1 = {.uart_def_p = (LPC_UART_TypeDef *)LPC_UART1};
+//tUartControl uart2 = {.uart_def_p = LPC_UART2};
+tUartControl uart3 = {.uart_def_p = LPC_UART3};
+
+static tUartControl *uart_control [CFG_MAX_UART] = 
+{
+  NULL,
+  &uart1,
+  NULL,
+  &uart3
+};
+// --------------------------------------------------------------------------
+
+  
+//  {.uart_def_p = (LPC_UART_TypeDef *)LPC_UART1},  //TODO: UART1 features
+  
 
 // ---------------------------------------------------------------------------
 // Private generic helper functions
 // ---------------------------------------------------------------------------
 
-static LPC_UART_TypeDef *_get_uart_def (int uart_num)
+static tUartControl *_get_uart_control (int uart_num)
 {
-  if ((uart_num >= 0) && (uart_num < MAX_UART))
-    return uart_def_p [uart_num];
+  if ((uart_num >= 0) && (uart_num < CFG_MAX_UART))
+  {
+    return uart_control [uart_num];
+  }
   else
     return NULL;
 }
+
+static LPC_UART_TypeDef *_get_uart_def (int uart_num)
+{
+  if ((uart_num >= 0) && (uart_num < CFG_MAX_UART))
+  {
+    if (uart_control [uart_num] == NULL)
+      return NULL;
+    else
+      return uart_control [uart_num]->uart_def_p;
+  }
+  else
+    return NULL;
+}
+
+/********************************************************************//**
+ * @brief 		UART transmit function (ring buffer used)
+ *********************************************************************/
+void UART_IntTransmit (tUartControl *pControl)
+{
+  // Disable THRE interrupt
+  UART_IntConfig(pControl->uart_def_p, UART_INTCFG_THRE, DISABLE);
+
+	/* Wait for FIFO buffer empty, transfer UART_TX_FIFO_SIZE bytes
+	 * of data or break whenever ring buffers are empty */
+	
+  /* Wait until THR empty ?? */
+  while (UART_CheckBusy(pControl->uart_def_p) == SET);
+
+	while (!str_buf_is_empty (&pControl->tx_buffer))
+  {
+#if 0
+    /* Move a piece of data into the transmit FIFO */
+    if (UART_Send(pControl->uart_def_p, (uint8_t *)&rb.tx[rb.tx_tail], 1, NONE_BLOCKING))
+    {
+        /* Update transmit ring FIFO tail pointer */
+        __BUF_INCR(rb.tx_tail);
+    	} else {
+    		break;
+    	}
+#endif
+    char c = str_buf_getc (&pControl->tx_buffer);
+    UART_SendByte (pControl->uart_def_p, c);
+
+    if ( UART_CheckBusy (pControl->uart_def_p) == SET)
+      break;
+  }
+
+  /* If there is no more data to send, disable the transmit
+       interrupt - else enable it or keep it enabled */
+	if (str_buf_is_empty (&pControl->tx_buffer)) 
+  {
+    UART_IntConfig (pControl->uart_def_p, UART_INTCFG_THRE, DISABLE);
+    // Reset Tx Interrupt state
+    pControl->TxIntStat = RESET;
+  }
+  else
+  {
+    // Set Tx Interrupt state
+		pControl->TxIntStat = SET;
+    UART_IntConfig (pControl->uart_def_p, UART_INTCFG_THRE, ENABLE);
+  }
+}
+
+/********************************************************************//**
+ * @brief 		UART receive function (ring buffer used)
+ *********************************************************************/
+void UART_IntReceive(tUartControl *pControl)
+{
+	uint8_t tmpc;
+	uint32_t rLen;
+
+	while(1)
+  {
+		// Call UART read function in UART driver
+		rLen = UART_Receive(pControl->uart_def_p, &tmpc, 1, NONE_BLOCKING);
+		// If data received
+		if (rLen)
+    {
+			/* Check if buffer has more space
+			 * If no space, data will be discarded
+			 */
+			if (str_buf_is_full (&pControl->rx_buffer))
+      {
+        pControl->rx_buffer.header.err_overflow = 1;
+      }
+      else
+      {
+        str_buf_putc (&pControl->rx_buffer, tmpc);
+			}
+		}
+		// no more data
+		else {
+			break;
+		}
+	}
+}
+
+
+
+/*********************************************************************//**
+ * @brief		generic UART interrupt handler sub-routine
+ **********************************************************************/
+static void UART_IRQHandler (tUartControl *pControl)
+{
+  uint32_t intsrc, tmp, tmp1;
+
+	/* Determine the interrupt source */
+	intsrc = UART_GetIntId (pControl->uart_def_p);
+	tmp = intsrc & UART_IIR_INTID_MASK;
+
+#if 0
+  // Receive Line Status
+	if (tmp == UART_IIR_INTID_RLS)
+  {
+		// Check line status
+		tmp1 = UART_GetLineStatus(LPC_UART0);
+		// Mask out the Receive Ready and Transmit Holding empty status
+		tmp1 &= (UART_LSR_OE | UART_LSR_PE | UART_LSR_FE \
+				| UART_LSR_BI | UART_LSR_RXFE);
+		// If any error exist
+		if (tmp1) {
+				UART_IntErr(tmp1);
+		}
+	}
+#endif
+
+	// Receive Data Available or Character time-out?
+	if ((tmp == UART_IIR_INTID_RDA) || (tmp == UART_IIR_INTID_CTI))
+  {
+			UART_IntReceive(pControl);
+	}
+
+	// Transmit Holding Empty
+	if (tmp == UART_IIR_INTID_THRE)
+  {
+			UART_IntTransmit(pControl);
+	}
+
+}
+
+/*********************************************************************//**
+ * @brief		UART0 interrupt handler sub-routine
+ **********************************************************************/
+void UART0_IRQHandler(void)
+{
+  UART_IRQHandler (uart_control[0]);
+}
+
+void UART1_IRQHandler(void)
+{
+  UART_IRQHandler (uart_control[1]);
+}
+
+void UART2_IRQHandler(void)
+{
+  UART_IRQHandler (uart_control[2]);
+}
+
+void UART3_IRQHandler(void)
+{
+  UART_IRQHandler (uart_control[3]);
+}
+
 
 // uart_num can be 0 to MAX_UART-1
 static bool _uart_init (int uart_num)
 {
   LPC_UART_TypeDef *pUart;
+  tUartControl *pControl;
 
-  pUart = _get_uart_def (uart_num);
-  if (pUart == NULL)
+  pControl = _get_uart_control (uart_num);
+  if (pControl == NULL)
     return false;
+
+  pUart = pControl->uart_def_p;
+
+  str_buf_init_std (&pControl->rx_buffer);
+  str_buf_init_std (&pControl->tx_buffer);
 
 	// UART Configuration structure variable
 	UART_CFG_Type UARTConfigStruct;
@@ -163,48 +369,123 @@ static bool _uart_init (int uart_num)
 	// Initialize FIFO for UART peripheral
 	UART_FIFOConfig(pUart, &UARTFIFOConfigStruct);
 
+#ifdef USE_INTERRUPT
 	// Enable UART Transmit
 	UART_TxCmd(pUart, ENABLE);
+
+    /* Enable UART Rx interrupt */
+	UART_IntConfig(pUart, UART_INTCFG_RBR, ENABLE);
+
+#if 0
+  /* Enable UART line status interrupt */
+	UART_IntConfig(pUart, UART_INTCFG_RLS, ENABLE);
+#endif
+  /*
+	 * Do not enable transmit interrupt here, since it is handled by
+	 * UART_Send() function, just to reset Tx Interrupt state for the
+	 * first time
+	 */
+	pControl->TxIntStat = RESET;
+
+  switch (uart_num)
+  {
+    case 0:
+      /* preemption = 1, sub-priority = 1 */
+      NVIC_SetPriority(UART0_IRQn, ((0x01<<3)|0x01));
+      /* Enable Interrupt for UART0 channel */
+      NVIC_EnableIRQ(UART0_IRQn);
+      break;
+
+    case 1:
+      /* preemption = 1, sub-priority = 1 */
+      NVIC_SetPriority(UART1_IRQn, ((0x01<<3)|0x01));
+      /* Enable Interrupt for UART1 channel */
+      NVIC_EnableIRQ(UART1_IRQn);
+      break;
+
+    case 3:
+      /* preemption = 1, sub-priority = 1 */
+      NVIC_SetPriority(UART3_IRQn, ((0x01<<3)|0x01));
+      /* Enable Interrupt for UART3 channel */
+      NVIC_EnableIRQ(UART3_IRQn);
+      break;
+  }
+#endif
 
   return true;
 }
 
 static int _uart_data_available(int uart_num)
 {
+  tUartControl *pControl;
   LPC_UART_TypeDef *pUart;
 
-  pUart = _get_uart_def (uart_num);
-  if (pUart == NULL)
+  pControl = _get_uart_control (uart_num);
+  if (pControl == NULL)
     return 0;
+  pUart = pControl->uart_def_p;
 
-	if (pUart->LSR & UART_LSR_RDR)
+#ifdef USE_INTERRUPT
+  return !str_buf_is_empty (&pControl->rx_buffer);
+#else
+  if (pUart->LSR & UART_LSR_RDR)
 	  return 1;
 	else
 	  return 0;
+#endif
 }
 
 
 static void _uart_send(int uart_num, char byte)
 {
+  tUartControl *pControl;
   LPC_UART_TypeDef *pUart;
 
-  pUart = _get_uart_def (uart_num);
-  if (pUart == NULL)
+  pControl = _get_uart_control (uart_num);
+  if (pControl == NULL)
     return;
 
+  pUart = pControl->uart_def_p;
+
+#ifdef USE_INTERRUPT
+  // put byte into buffer
+  str_buf_putc (&pControl->tx_buffer, byte);
+
+  if (pControl->TxIntStat == RESET) 
+  {
+		UART_IntTransmit(pControl);
+	}
+  else
+  {
+    // re-enable Tx Interrupt
+  	UART_IntConfig (pUart, UART_INTCFG_THRE, ENABLE);
+	}
+#else
+  
+//
 	while ( (pUart->LSR & UART_LSR_THRE) == 0) ;
 	UART_SendByte(pUart, byte);
+#endif
 }
 
 static char _uart_receive (int uart_num)
 {
+  tUartControl *pControl;
   LPC_UART_TypeDef *pUart;
 
-  pUart = _get_uart_def (uart_num);
-  if (pUart == NULL)
+  pControl = _get_uart_control (uart_num);
+  if (pControl == NULL)
     return 0;
+  pUart = pControl->uart_def_p;
 	
+#ifdef USE_INTERRUPT
+  if (str_buf_is_empty (&pControl->rx_buffer))
+    return 0;
+  else
+    return str_buf_getc (&pControl->rx_buffer);
+#else
   return UART_ReceiveByte(pUart);
+#endif
 }
 
 static void _uart_writestr(int uart_num, char *data)

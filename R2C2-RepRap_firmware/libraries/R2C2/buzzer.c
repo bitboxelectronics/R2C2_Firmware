@@ -134,6 +134,17 @@ void buzzer_wait(void)
   
 }
 
+void buzzer_play_sync (float frequency, uint32_t duration)
+{
+  buzzer_pwm_set_frequency(frequency);
+  buzzer_pwm_start();
+  
+  while (duration--)
+    delay_us (1000);
+  buzzer_pwm_stop();
+}
+
+
 void buzzer_init (void)
 {
   PINSEL_CFG_Type PinCfg;

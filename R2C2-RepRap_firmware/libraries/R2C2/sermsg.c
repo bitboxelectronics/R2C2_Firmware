@@ -31,130 +31,178 @@
 #include	"sermsg.h"
 #include	"lw_io.h"
 
-void serwrite_hex4(uint8_t v) {
-	v &= 0xF;
-	if (v < 10)
-		lw_putchar('0' + v);
-	else
-		lw_putchar('A' - 10 + v);
+// --------------------------------------------------------------------------
+// to stdout
+// --------------------------------------------------------------------------
+
+void serwrite_hex4(uint8_t v)
+{
+  fserwrite_hex4 (stdout, v);
 }
 
-void serwrite_hex8(uint8_t v) {
-	serwrite_hex4(v >> 4);
-	serwrite_hex4(v & 0x0F);
+void serwrite_hex8(uint8_t v)
+{
+  fserwrite_hex8 (stdout, v);
 }
 
-void serwrite_hex16(uint16_t v) {
-	serwrite_hex8(v >> 8);
-	serwrite_hex8(v & 0xFF);
+void serwrite_hex16(uint16_t v)
+{
+  fserwrite_hex16 (stdout, v);
 }
 
-void serwrite_hex32(uint32_t v) {
-	serwrite_hex16(v >> 16);
-	serwrite_hex16(v & 0xFFFF);
+void serwrite_hex32(uint32_t v)
+{
+  fserwrite_hex32 (stdout, v);
 }
 
-void serwrite_uint32(uint32_t v) {
-	uint8_t t = 0;
-	if (v >= 1000000000) {
-		for (t = 0; v >= 1000000000; v -= 1000000000, t++);
-		lw_putchar(t + '0');
-	}
+// functions for sending decimal
 
-	if (v >= 100000000) {
-		for (t = 0; v >= 100000000; v -= 100000000, t++);
-		lw_putchar(t + '0');
-	}
-	else if (t != 0)
-		lw_putchar('0');
-
-	if (v >= 10000000) {
-		for (t = 0; v >= 10000000; v -= 10000000, t++);
-		lw_putchar(t + '0');
-	}
-	else if (t != 0)
-		lw_putchar('0');
-
-	if (v >= 1000000) {
-		for (t = 0; v >= 1000000; v -= 1000000, t++);
-		lw_putchar(t + '0');
-	}
-	else if (t != 0)
-		lw_putchar('0');
-
-	if (v >= 100000) {
-		for (t = 0; v >= 100000; v -= 100000, t++);
-		lw_putchar(t + '0');
-	}
-	else if (t != 0)
-		lw_putchar('0');
-
-	if (v >= 10000) {
-		for (t = 0; v >= 10000; v -= 10000, t++);
-		lw_putchar(t + '0');
-	}
-	else if (t != 0)
-		lw_putchar('0');
-
-	if (v >= 1000) {
-		for (t = 0; v >= 1000; v -= 1000, t++);
-		lw_putchar(t + '0');
-	}
-	else if (t != 0)
-		lw_putchar('0');
-
-	if (v >= 100) {
-		t = v / 100;
-		lw_putchar(t + '0');
-		v -= (t * 100);
-	}
-	else if (t != 0)
-		lw_putchar('0');
-
-	if (v >= 10) {
-	        /* 99 > v > 10 */
-		t = v / 10;
-		lw_putchar(t + '0');
-		v -= (t * 10);
-	}
-	else if (t != 0)
-		lw_putchar('0');
-
-	lw_putchar(v + '0');
+void serwrite_uint32(uint32_t v)
+{
+  fserwrite_uint32 (stdout, v);
 }
 
-void serwrite_int32(int32_t v) {
-	if (v < 0) {
-		lw_putchar('-');
-		v = -v;
-	}
-
-	serwrite_uint32(v);
+void serwrite_int32(int32_t v)
+{
+  fserwrite_int32 (stdout, v);
 }
 
 void serwrite_double(double v)
 {
+  fserwrite_double (stdout, v);
+}
+
+
+
+// --------------------------------------------------------------------------
+// to LW_FILE
+// --------------------------------------------------------------------------
+
+void fserwrite_hex4(LW_FILE *f, uint8_t v) {
+	v &= 0xF;
+	if (v < 10)
+		lw_fputc('0' + v, f);
+	else
+		lw_fputc('A' - 10 + v, f);
+}
+
+void fserwrite_hex8(LW_FILE *f, uint8_t v) {
+	fserwrite_hex4(f, v >> 4);
+	fserwrite_hex4(f, v & 0x0F);
+}
+
+void fserwrite_hex16(LW_FILE *f, uint16_t v) {
+	fserwrite_hex8(f, v >> 8);
+	fserwrite_hex8(f, v & 0xFF);
+}
+
+void fserwrite_hex32(LW_FILE *f, uint32_t v) {
+	fserwrite_hex16(f, v >> 16);
+	fserwrite_hex16(f, v & 0xFFFF);
+}
+
+
+void fserwrite_uint32(LW_FILE *f, uint32_t v) {
+	uint8_t t = 0;
+	if (v >= 1000000000) {
+		for (t = 0; v >= 1000000000; v -= 1000000000, t++);
+		lw_fputc(t + '0', f);
+	}
+
+	if (v >= 100000000) {
+		for (t = 0; v >= 100000000; v -= 100000000, t++);
+		lw_fputc(t + '0', f);
+	}
+	else if (t != 0)
+		lw_fputc('0', f);
+
+	if (v >= 10000000) {
+		for (t = 0; v >= 10000000; v -= 10000000, t++);
+		lw_fputc(t + '0', f);
+	}
+	else if (t != 0)
+		lw_fputc('0', f);
+
+	if (v >= 1000000) {
+		for (t = 0; v >= 1000000; v -= 1000000, t++);
+		lw_fputc(t + '0', f);
+	}
+	else if (t != 0)
+		lw_fputc('0', f);
+
+	if (v >= 100000) {
+		for (t = 0; v >= 100000; v -= 100000, t++);
+		lw_fputc(t + '0', f);
+	}
+	else if (t != 0)
+		lw_fputc('0', f);
+
+	if (v >= 10000) {
+		for (t = 0; v >= 10000; v -= 10000, t++);
+		lw_fputc(t + '0', f);
+	}
+	else if (t != 0)
+		lw_fputc('0', f);
+
+	if (v >= 1000) {
+		for (t = 0; v >= 1000; v -= 1000, t++);
+		lw_fputc(t + '0', f);
+	}
+	else if (t != 0)
+		lw_fputc('0', f);
+
+	if (v >= 100) {
+		t = v / 100;
+		lw_fputc(t + '0', f);
+		v -= (t * 100);
+	}
+	else if (t != 0)
+		lw_fputc('0', f);
+
+	if (v >= 10) {
+	  /* 99 > v > 10 */
+		t = v / 10;
+		lw_fputc(t + '0', f);
+		v -= (t * 10);
+	}
+	else if (t != 0)
+		lw_fputc('0', f);
+
+	lw_fputc(v + '0', f);
+}
+
+void fserwrite_int32(LW_FILE *f, int32_t v) {
+	if (v < 0) {
+		lw_fputc('-', f);
+		v = -v;
+	}
+
+	fserwrite_uint32(f, v);
+}
+
+void fserwrite_double(LW_FILE *f, double v)
+{
   if (v < 0)
   {
-    lw_putchar ('-');
+    lw_fputc('-', f);
     v = -v;
   }
   
   /* print first part before '.' */
-  serwrite_uint32((uint32_t) v);
+  fserwrite_uint32(f, (uint32_t) v);
 
   /* print the '.' */
-  lw_putchar('.');
+  lw_fputc('.', f);
 
   /* print last part after '.' */
   v = v - (int32_t)v;
 
   v = v * 1000.0;
   if (v < 100.0)
-  	lw_putchar('0');
+  	lw_fputc('0', f);
   if (v < 10.0)
-  	lw_putchar('0');
-  serwrite_uint32((uint32_t) v);  	
+  	lw_fputc('0', f);
+  fserwrite_uint32(f, (uint32_t) v);  	
   
 }
 

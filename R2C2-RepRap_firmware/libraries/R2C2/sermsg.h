@@ -33,6 +33,10 @@
 
 #include <stdint.h>
 
+#include "lw_io.h"
+
+// --------------------------------------------------------------------------
+
 // functions for sending hexadecimal
 void serwrite_hex4(uint8_t v);
 void serwrite_hex8(uint8_t v);
@@ -49,5 +53,26 @@ void serwrite_uint32(uint32_t v);
 void serwrite_int32(int32_t v);
 
 void serwrite_double(double v);
+//
+// --------------------------------------------------------------------------
+
+void fserwrite_hex4(LW_FILE *f, uint8_t v);
+void fserwrite_hex8(LW_FILE *f, uint8_t v);
+void fserwrite_hex16(LW_FILE *f, uint16_t v);
+void fserwrite_hex32(LW_FILE *f, uint32_t v);
+
+// functions for sending decimal
+#define	fserwrite_uint8(f,v)		fserwrite_uint32(f,v)
+#define	fserwrite_int8(f,v)     fserwrite_int32(f,v)
+#define	fserwrite_uint16(f,v)   fserwrite_uint32(f,v)
+#define	fserwrite_int16(f,v)		fserwrite_int32(f,v)
+
+void fserwrite_uint32(LW_FILE *f, uint32_t v);
+void fserwrite_int32(LW_FILE *f, int32_t v);
+
+void fserwrite_double(LW_FILE *f, double v);
+
+//
+// --------------------------------------------------------------------------
 
 #endif	/* _SERMSG_H */

@@ -32,6 +32,7 @@
 
 #include <stdarg.h>
 #include <stddef.h>
+#include "stdint.h"
 
 // some conflicts with stdio.h: stdin, stdout, stderr
 
@@ -44,6 +45,15 @@
 #define LW_TMP_MAX     256
 #define LW_L_tmpnam    256
 
+
+#define LW_O_RDONLY 0     // Open for reading only.
+#define LW_O_WRONLY 1     // Open for writing only. 
+#define LW_O_RDWR   2     // Open for reading and writing.
+
+#ifndef EOF
+#define EOF (-1)
+#endif
+
 // configuration
 #define MAX_FILES LW_FOPEN_MAX
 
@@ -53,21 +63,37 @@ typedef struct
   int handle;
   int dev_major;
   int dev_minor;
+
+  int flags;
+  int mode;
+
+  uint8_t in_use :1;
 } LW_FILE;
 
 typedef long fpos_t;
 
-// 
+// Directed to stdout
 int lw_putchar (int c);
 int lw_puts (const char *s);
 int lw_printf (const char *format, ...);
+
+// Functions with LW_FILE * parameter
+LW_FILE *lw_fopen(char *filename, char *mode);
 
 int lw_putc (int c, LW_FILE *f);
 int lw_fputc(int c, LW_FILE *f);
 int lw_fputs(const char *s, LW_FILE *f);
 
-//
+int lw_fprintf(LW_FILE *, const char *, ...);
+int lw_vfprintf(LW_FILE *, const char *, va_list);
+
+int lw_fgetc(LW_FILE *);
+
+// additional functions
+// directed to dbgout
 int lw_dbg_printf (const char *format, ...);
+
+int lw_frxready (LW_FILE *f);
 
 // ---------------------------
 
@@ -85,7 +111,6 @@ int sprintf(char *__s, const char *__format, ...);
 int snprintf(char *__s, size_t __n, const char *__format, ...);
 int vsnprintf(char *__s, size_t __n, const char *__format, __va_list __arg);
 
-int printf(const char *__format, ...);
 int vprintf(const char *__format, __va_list __arg);
 int vsprintf(char *__s, const char *__format, __va_list __arg);
 
@@ -102,11 +127,9 @@ int fclose(FILE *);
 int feof(FILE *);
 int ferror(FILE *);
 int fflush(FILE *);
-int fgetc(FILE *);
 int fgetpos(FILE *, fpos_t *);
 char *fgets(char *, int, FILE *);
 FILE *fopen(const char *, const char *);
-int fprintf(FILE *, const char *, ...);
 size_t fread(void *, size_t, size_t, FILE *);
 FILE *freopen(const char *, const char *, FILE *);
 int fscanf(FILE *, const char *, ...);
@@ -124,7 +147,6 @@ int setvbuf(FILE *, char *, int, size_t);
 FILE *tmpfile(void);
 char * tmpnam(char *);
 int ungetc(int, FILE *);
-int vfprintf(FILE *, const char *, __va_list);
 int vfscanf(FILE *, const char *, __va_list);
 
 #endif

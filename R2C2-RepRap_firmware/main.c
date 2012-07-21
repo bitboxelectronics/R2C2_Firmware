@@ -36,10 +36,16 @@
 /* Application includes */
 #include "r2c2.h"
 #include "uart.h"
-
+#include "soundplay.h"
 
 //TODO:
-#define DBG   uart3_writestr
+#ifdef debug
+#define DBG_INIT()   uart_init()
+#define DBGF(s)   uart3_writestr(s)
+#else
+#define DBG_INIT()
+#define DBGF(s)
+#endif
 
 #define USER_FLASH_START 0x10000 /* For USB bootloader */
 //#define USER_FLASH_START 0x0 /* No USB bootloader */
@@ -63,6 +69,15 @@ void vApplicationTickHook( void )
   r2c2_SysTick();
 }
 
+void fatal_error (void)
+{
+  for( ;; )
+  {
+    buzzer_play_sync (FREQ_B4, 1000);
+    buzzer_play_sync (FREQ_A4, 1000);
+  }
+}
+
 /**********************************************************************/
 void vApplicationStackOverflowHook( xTaskHandle *pxTask, signed char *pcTaskName )
 {
@@ -71,9 +86,9 @@ void vApplicationStackOverflowHook( xTaskHandle *pxTask, signed char *pcTaskName
   ( void ) pxTask;
   ( void ) pcTaskName;
 
-  DBG ("stkov\n");
+  //DBGF ("stkov\n");
 
-  for( ;; );
+  fatal_error();
 }
 
 /**********************************************************************
@@ -97,29 +112,20 @@ int main(void)
   in case the user application uses interrupts */
   SCB->VTOR = (USER_FLASH_START & 0x1FFFFF80);
 
-#ifdef UARTDEBUG
-  uart_init();
-  DBG ("init\n");
-#endif 
+  DBG_INIT();
+  DBGF ("init\n");
 
 #if 0
-  // Initialize USB<->Serial
-  //TODO: may need config to be loaded first
-  serial_init();
-  
+// #ifndef USE_FREERTOS
   SysTickTimer_Init(); // Initialize the timer for millis()
 #endif
 
-#if 0
-  //test debug output  
-  uart_init(3);
-  lw_fputs ("hello\n", dbgout);
-#endif
 
-
+  // enter the application
   app_main ();
 
   /* should never get here */
-  DBG ("main:err\n");
+  DBGF ("main:err\n");
+  fatal_error();
   while(1) ;
 }

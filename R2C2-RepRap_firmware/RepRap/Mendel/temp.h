@@ -37,6 +37,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+
 #include "adc.h"
 
 // set target temperature
@@ -50,9 +51,6 @@ uint16_t temp_get_target(uint8_t sensor_number);
 
 // true if last read temp is close to target temp, false otherwise
 uint8_t temp_achieved(uint8_t sensor_number);
-
-// send current temperature to host
-void temp_print(void);
 
 // periodically read temperature and update heater with PID
 void temp_tick(void);

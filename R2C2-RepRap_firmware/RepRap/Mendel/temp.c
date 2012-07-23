@@ -29,13 +29,12 @@
 */
 
 #include "adc.h"
-#include "temp.h"
-#include "machine.h"
-//#include "pinout.h"
-#include "pin_control.h"
-#include "lw_io.h"
-#include "stepper.h"
 #include "app_config.h"
+#include "temp.h"
+//#include "machine.h"
+#include "pin_control.h"
+#include "debug.h"
+#include "stepper.h"    // TODO: steptimeout
 
 
 /* Table for NTC EPCOS B57560G104F and R1 = 330R for Extruder0
@@ -130,11 +129,6 @@ uint8_t	temp_achieved(uint8_t sensor_number)
     return 255;
 
   return 0;
-}
-
-void temp_print()
-{
-  lw_printf ("ok T:%u.0 B:%u.0\r\n", current_temp[EXTRUDER_0], current_temp[HEATED_BED_0]); /* for RepRap software */
 }
 
 void temp_tick(void)

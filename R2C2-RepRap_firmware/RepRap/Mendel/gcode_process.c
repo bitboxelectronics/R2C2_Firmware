@@ -741,8 +741,16 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
 
       // M105- get temperature
       case 105:
-      temp_print();
-      reply_sent = true;
+      {        
+        uint16_t extruder0_temp;
+        uint16_t heated_bed_temp;
+
+        extruder0_temp = temp_get (EXTRUDER_0);
+        heated_bed_temp = temp_get (HEATED_BED_0);
+
+        lw_fprintf (pGcodeInputMsg->out_file, "ok T:%u.0 B:%u.0\r\n", extruder0_temp, heated_bed_temp); /* for RepRap software */
+        reply_sent = true;
+      }
       break;
 
       // M106- fan on

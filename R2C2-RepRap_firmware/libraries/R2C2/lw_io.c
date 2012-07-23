@@ -43,21 +43,35 @@
 
 LW_FILE file_table [MAX_FILES] = 
 {
-    {.handle=0, .dev_major = DEV_STDIN,  .dev_minor = 0, .flags = LW_O_RDONLY, .in_use=1},
-    {.handle=1, .dev_major = DEV_STDOUT, .dev_minor = 0, .flags = LW_O_WRONLY, .in_use=1},
-    {.handle=2, .dev_major = DEV_STDERR, .dev_minor = 0, .flags = LW_O_WRONLY, .in_use=1},
-//    {.handle=3, .dev_major = DEV_DBGOUT, .dev_minor = 0},
+//    {.handle=0, .dev_major = DEV_STDIN,  .dev_minor = 0, .flags = LW_O_RDONLY, .in_use=1},
+//    {.handle=1, .dev_major = DEV_STDOUT, .dev_minor = 0, .flags = LW_O_WRONLY, .in_use=1},
+//    {.handle=2, .dev_major = DEV_STDERR, .dev_minor = 0, .flags = LW_O_WRONLY, .in_use=1},
 };
 
 
 // predefined file handles
-LW_FILE *stdin  = &file_table[0];
-LW_FILE *stdout = &file_table[1];
-LW_FILE *stderr = &file_table[2];
+LW_FILE *stdin;
+LW_FILE *stdout;
+LW_FILE *stderr;
 
-//LW_FILE *dbgout = &file_table[3];
+LW_FILE *dbgout;
 
 #define CHECK_PTR(p) if (p == NULL) return EOF;
+
+// ----------------------------------------------------------------
+// functions
+// ----------------------------------------------------------------
+
+bool lw_initialise (void)
+{
+  //open the standard file handles
+
+  stdin = lw_fopen ("usbser", "r");
+  stdout = lw_fopen ("usbser", "w");
+  stderr = lw_fopen ("usbser", "w");
+
+  dbgout = lw_fopen ("uart3", "w");
+}
 
 // ----------------------------------------------------------------
 // functions taking FILE parameter

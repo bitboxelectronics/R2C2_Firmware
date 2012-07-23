@@ -35,7 +35,7 @@
 #include "gcode_parse.h"
 
 #include "lw_io.h"
-#include "sermsg.h"
+//#include "sermsg.h"
 
 #include "temp.h"
 #include "timer.h"
@@ -261,12 +261,16 @@ static void zero_e(void)
   plan_set_current_position (&new_pos);
 }
 
+// --------------------------------------------------------------------------
+// SD Card functions
+// --------------------------------------------------------------------------
+
 void sd_initialise(void)
 {
   sd_active = true;
 }
 
-FRESULT sd_list_dir_sub (char *path)
+FRESULT sd_list_dir_sub (char *path, LW_FILE *out_file)
 {
     FRESULT res;
     FILINFO fno;
@@ -295,17 +299,17 @@ FRESULT sd_list_dir_sub (char *path)
 #endif
             if (fno.fattrib & AM_DIR) 
             {
-                lw_printf("%s/%s/\r\n", path, fn);
+                lw_fprintf(out_file, "%s/%s/\r\n", path, fn);
                 
                 strcat (path, "/");
                 strcat (path, fn);
                 // sprintf(&path[i], "/%s", fn);
-                res = sd_list_dir_sub(path);
+                res = sd_list_dir_sub(path, out_file);
                 if (res != FR_OK) break;
                 path[i] = 0;
             } else 
             {
-                lw_printf("%s/%s\r\n", path, fn);
+                lw_fprintf(out_file, "%s/%s\r\n", path, fn);
             }
         }
     }
@@ -313,16 +317,16 @@ FRESULT sd_list_dir_sub (char *path)
     return res;    
 }
 
-void sd_list_dir (void)
+void sd_list_dir (LW_FILE *out_file)
 {
   char path[120];
     
   strcpy (path, "");
     
-  sd_list_dir_sub(path);
+  sd_list_dir_sub(path, out_file);
 }
 
-unsigned sd_open(FIL *pFile, char *path, uint8_t flags)
+unsigned sd_open(FIL *pFile, char *path, uint8_t flags, LW_FILE *out_file)
 {
   FRESULT res;
 
@@ -335,7 +339,7 @@ unsigned sd_open(FIL *pFile, char *path, uint8_t flags)
   else
   {
     //debug
-    lw_printf ("sd_open:%d", res);
+    lw_fprintf (out_file, "sd_open:%d", res);
     return 0;
   }
 }
@@ -389,7 +393,7 @@ void sd_seek(FIL *pFile, unsigned pos)
 *                                                                           *
 ****************************************************************************/
 
-eParseResult process_gcode_command()
+eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
 {
   double backup_f;
   uint8_t axisSelected = 0;
@@ -423,11 +427,10 @@ eParseResult process_gcode_command()
       next_targetd.feed_rate = next_target.target.feed_rate;
   }
 
-//  lw_printf(" X:%ld Y:%ld Z:%ld E:%ld F:%ld\r\n", (int32_t)next_target.target.X, (int32_t)next_target.target.Y, (int32_t)next_target.target.Z, (int32_t)next_target.target.E, (uint32_t)next_target.target.F);
-//  lw_printf(" X:%g Y:%g Z:%g E:%g F:%g\r\n", next_targetd.x, next_targetd.y, next_targetd.z, next_targetd.e, next_targetd.feed_rate);
+//  lw_fprintf(pGcodeInputMsg->out_file, " X:%ld Y:%ld Z:%ld E:%ld F:%ld\r\n", (int32_t)next_target.target.X, (int32_t)next_target.target.Y, (int32_t)next_target.target.Z, (int32_t)next_target.target.E, (uint32_t)next_target.target.F);
+//  lw_fprintf(pGcodeInputMsg->out_file, " X:%g Y:%g Z:%g E:%g F:%g\r\n", next_targetd.x, next_targetd.y, next_targetd.z, next_targetd.e, next_targetd.feed_rate);
     
   // E ALWAYS absolute 
-  // host should periodically reset E with "G92 E0", otherwise we overflow our registers after only a few layers
 	
   if (next_target.seen_G)
   {
@@ -592,9 +595,7 @@ eParseResult process_gcode_command()
 
       // unknown gcode: spit an error
       default:
-              lw_puts("E: Bad G-code ");
-              serwrite_uint8(next_target.G);
-              lw_puts("\r\n");
+        lw_fprintf (pGcodeInputMsg->out_file, "E: Bad G-code %d\r\n", next_target.G);
     }
   }
   else if (next_target.seen_M)
@@ -604,10 +605,10 @@ eParseResult process_gcode_command()
 
       // SD File functions
       case 20: // M20 - list SD Card files
-      lw_puts("Begin file list\r\n");
+      lw_fputs("Begin file list\r\n", pGcodeInputMsg->out_file);
       // list files in root folder
-      sd_list_dir();
-      lw_puts("End file list\r\n");
+      sd_list_dir(pGcodeInputMsg->out_file);
+      lw_fputs("End file list\r\n", pGcodeInputMsg->out_file);
       break;
 
       case 21: // M21 - init SD card
@@ -630,16 +631,16 @@ eParseResult process_gcode_command()
       {
         sd_printing = false;
         sd_close(&file);
-        if (sd_open(&file, next_target.filename, FA_READ)) 
+        if (sd_open(&file, next_target.filename, FA_READ, pGcodeInputMsg->out_file)) 
         {
           filesize = sd_filesize(&file);
-          lw_printf("File opened: %s Size: %d\r\n", next_target.filename, filesize);
+          lw_fprintf(pGcodeInputMsg->out_file, "File opened: %s Size: %d\r\n", next_target.filename, filesize);
           sd_pos = 0;
-          lw_printf("File selected\r\n");
+          lw_fprintf(pGcodeInputMsg->out_file, "File selected\r\n");
         }
         else
         {
-          lw_printf("file.open failed\r\n");
+          lw_fprintf(pGcodeInputMsg->out_file, "file.open failed\r\n");
         }
       }
       break;
@@ -669,11 +670,11 @@ eParseResult process_gcode_command()
       case 27: //M27 - Get SD status
       if(sd_active)
       {
-        lw_printf("SD printing byte %d/%d\r\n", sd_pos, filesize);
+        lw_fprintf(pGcodeInputMsg->out_file, "SD printing byte %d/%d\r\n", sd_pos, filesize);
       }
       else
       {
-    	  lw_puts("Not SD printing\r\n");
+    	  lw_fputs("Not SD printing\r\n", pGcodeInputMsg->out_file);
       }
       break;
     
@@ -685,14 +686,14 @@ eParseResult process_gcode_command()
         sd_close(&file);
         sd_printing = false;
 
-        if (!sd_open(&file, next_target.filename, FA_CREATE_ALWAYS | FA_WRITE))
+        if (!sd_open(&file, next_target.filename, FA_CREATE_ALWAYS | FA_WRITE, pGcodeInputMsg->out_file))
         {
-          lw_printf("open failed, File: %s.\r\n", next_target.filename);
+          lw_fprintf(pGcodeInputMsg->out_file, "open failed, File: %s.\r\n", next_target.filename);
         }
         else
         {
           sd_writing_file = true;
-          lw_printf("Writing to file: %s\r\n", next_target.filename);
+          lw_fprintf(pGcodeInputMsg->out_file, "Writing to file: %s\r\n", next_target.filename);
         }
       }
       break;
@@ -803,14 +804,14 @@ eParseResult process_gcode_command()
       }
       else
       {
-        lw_printf("ok C: X:%g Y:%g Z:%g E:%g\r\n", startpoint.x, startpoint.y, startpoint.z, startpoint.e);
+        lw_fprintf(pGcodeInputMsg->out_file, "ok C: X:%g Y:%g Z:%g E:%g\r\n", startpoint.x, startpoint.y, startpoint.z, startpoint.e);
       }
       reply_sent = true;
       break;
       
       // M115- report firmware version
       case 115:
-        lw_printf("FIRMWARE_NAME:Teacup_R2C2 FIRMWARE_URL:http%%3A//github.com/bitboxelectronics/R2C2_Firmware PROTOCOL_VERSION:1.0 MACHINE_TYPE:Mendel\r\n");
+        lw_fprintf(pGcodeInputMsg->out_file, "FIRMWARE_NAME:Teacup_R2C2 FIRMWARE_URL:http%%3A//github.com/bitboxelectronics/R2C2_Firmware PROTOCOL_VERSION:1.0 MACHINE_TYPE:Mendel\r\n");
       break;
 
       // M119 - Get Endstop Status
@@ -834,7 +835,7 @@ eParseResult process_gcode_command()
               else
                 buf [7] = 'L';
               
-              lw_puts ( buf);
+              lw_fputs (buf, pGcodeInputMsg->out_file);
             }
             // max limit?
             if (config.axis[axis].pin_max_limit.port != 0xFF)
@@ -847,12 +848,12 @@ eParseResult process_gcode_command()
               else
                 buf [7] = 'L';
               
-              lw_puts ( buf);
+              lw_fputs (buf, pGcodeInputMsg->out_file);
             }
           }
         }
             
-        lw_puts ("\r\n");
+        lw_fputs ("\r\n", pGcodeInputMsg->out_file);
       }
       break;
 
@@ -932,7 +933,7 @@ eParseResult process_gcode_command()
       if ((next_target.seen_X | next_target.seen_Y | next_target.seen_Z | next_target.seen_E) == 0)
       {
         reply_sent = true;
-        lw_printf ("ok X%g Y%g Z%g E%g\r\n", 
+        lw_fprintf (pGcodeInputMsg->out_file, "ok X%g Y%g Z%g E%g\r\n", 
           config.axis[X_AXIS].steps_per_mm,
           config.axis[Y_AXIS].steps_per_mm,
           config.axis[Z_AXIS].steps_per_mm,
@@ -959,7 +960,7 @@ eParseResult process_gcode_command()
       if ((next_target.seen_X | next_target.seen_Y | next_target.seen_Z | next_target.seen_E) == 0)
       {
         reply_sent = true;
-        lw_printf ("ok X%d Y%d Z%d E%d\r\n", 
+        lw_fprintf (pGcodeInputMsg->out_file, "ok X%d Y%d Z%d E%d\r\n", 
           config.axis[X_AXIS].maximum_feedrate,
           config.axis[Y_AXIS].maximum_feedrate,
           config.axis[Z_AXIS].maximum_feedrate,
@@ -985,7 +986,7 @@ eParseResult process_gcode_command()
       {
         // TODO: per axis accel
         reply_sent = true;
-        lw_printf ("ok X%g\r\n", 
+        lw_fprintf (pGcodeInputMsg->out_file, "ok X%g\r\n", 
           config.acceleration
           );
       }
@@ -1083,10 +1084,10 @@ eParseResult process_gcode_command()
       else if (next_target.seen_S)
       {
         reply_sent = true;
-        lw_printf ("ok [%d] = %d\r\n", next_target.S, temp_get_table_entry (EXTRUDER_0, next_target.S));
+        lw_fprintf (pGcodeInputMsg->out_file, "ok [%d] = %d\r\n", next_target.S, temp_get_table_entry (EXTRUDER_0, next_target.S));
       }
       else
-        lw_puts ("E: bad param\r\n");
+        lw_fputs ("E: bad param\r\n", pGcodeInputMsg->out_file);
       break;
 
       // M501 - set/get adc value for temperature
@@ -1098,10 +1099,10 @@ eParseResult process_gcode_command()
       else if (next_target.seen_S)
       {
         reply_sent = true;
-        lw_printf ("ok [%d] = %d\r\n", next_target.S, temp_get_table_entry (HEATED_BED_0, next_target.S));
+        lw_fprintf (pGcodeInputMsg->out_file, "ok [%d] = %d\r\n", next_target.S, temp_get_table_entry (HEATED_BED_0, next_target.S));
       }
       else
-        lw_puts ("E: bad param\r\n");
+        lw_fputs ("E: bad param\r\n", pGcodeInputMsg->out_file);
       break;
 
       // M542 - nozzle wipe/move to rest location
@@ -1181,16 +1182,15 @@ eParseResult process_gcode_command()
       
       // unknown mcode: spit an error
       default:
-        lw_puts("E: Bad M-code ");
-        serwrite_uint8(next_target.M);
-        lw_puts("\r\n");
+        lw_fprintf (pGcodeInputMsg->out_file, "E: Bad M-code %d\r\n", next_target.M);
     }
   }
 
   if (!reply_sent)
   {
-    lw_puts("ok\r\n");
-    //lw_printf("ok Q:%d\r\n", plan_queue_size());
+    lw_fputs("ok\r\n", pGcodeInputMsg->out_file);
+
+    //lw_fprintf(pGcodeInputMsg->out_file, "ok Q:%d\r\n", plan_queue_size());
   }
   
   return result;

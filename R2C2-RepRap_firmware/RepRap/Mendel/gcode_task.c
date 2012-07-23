@@ -84,7 +84,7 @@ void GcodeTask( void *pvParameters )
                 while (plan_queue_full())
                     /* wait */ ;
 
-                parse_result = gcode_parse_line (GcodeInputMsg.pLineBuf);
+                parse_result = gcode_parse_line (&GcodeInputMsg);
 
                 GcodeInputMsg.pLineBuf->len = 0;
                 GcodeInputMsg.pLineBuf->seen_lf = 0;
@@ -98,7 +98,8 @@ void GcodeTask( void *pvParameters )
           {
               sd_line_buf.seen_lf = 1;
 
-              parse_result = gcode_parse_line (&sd_line_buf);
+              //parse_result = gcode_parse_line (&sd_line_buf);
+              //tGcodeInputMsg GcodeInputMsg
 
               sd_line_buf.len = 0;
               sd_line_buf.seen_lf = 0;

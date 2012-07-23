@@ -32,59 +32,63 @@
 #include "task.h"
 
 #include "r2c2.h"
-
 #include "gcode_parse.h"
 #include "gcode_task.h"
-
 #include "lw_io.h"
-#include "uart.h"
-
 #include "uart_shell_task.h"
 
 
 static volatile tLineBuffer LineBuf;
 static tGcodeInputMsg GcodeInputMsg;
 
-void uart_shell_task ( tShellParams *pParameters )
+
+static void _task_init (tShellParams *pParameters)
 {
-    uint8_t c;
-    int uart_num = pParameters->uart_num;
-    eParseResult parse_result;
-
-    // TASK INIT
-
     GcodeInputMsg.pLineBuf = &LineBuf;
-
-    uart_init (uart_num);
+    GcodeInputMsg.out_file = pParameters->out_file;
 
     // say hi to host
-    lw_printf("Start\r\nOK\r\n");
+    lw_fprintf(pParameters->out_file, "Start\r\nOK\r\n");
+}
 
-    // TASK BODY
+static void _task_poll (tShellParams *pParameters)
+{
+  uint8_t c;
+  eParseResult parse_result;
 
-    // process received data
-    for( ;; )
+  // process characters from the serial port
+  while (!LineBuf.seen_lf && (lw_frxready (pParameters->in_file) != 0) )
+  {
+    c = lw_fgetc (pParameters->in_file);
+
+    if (LineBuf.len < MAX_LINE)
+      LineBuf.data [LineBuf.len++] = c;
+
+    if ((c==10) || (c==13))
     {
-        // process characters from the serial port
-        while (!LineBuf.seen_lf && (uart_data_available(uart_num) != 0) )
-        {
-          c = uart_receive(uart_num);
-      
-          if (LineBuf.len < MAX_LINE)
-            LineBuf.data [LineBuf.len++] = c;
+      if (LineBuf.len > 1)
+      {
+        LineBuf.seen_lf = 1;
+        xQueueSend (GcodeRxQueue, &GcodeInputMsg, portMAX_DELAY); // TODO
+      }
+      else
+        LineBuf.len = 0;
+    }      
+  }
+}
 
-          if ((c==10) || (c==13))
-          {
-            if (LineBuf.len > 1)
-            {
-              LineBuf.seen_lf = 1;
-              xQueueSend (GcodeRxQueue, &GcodeInputMsg, portMAX_DELAY);
-            }
-            else
-              LineBuf.len = 0;
-          }      
-        }
 
-    }
+void uart_shell_task ( tShellParams *pParameters )
+{
+  // TASK INIT
+
+  _task_init(pParameters);
+
+  // TASK BODY
+
+  for( ;; )
+  {
+    _task_poll(pParameters);
+  }
 }
 

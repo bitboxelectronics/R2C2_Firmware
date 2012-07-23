@@ -29,60 +29,43 @@
 */
 
 
-#include	<string.h>
-#include <stdbool.h>
+#include  <string.h>
+#include  <stdbool.h>
 
 #include	"lw_io.h"
-#include	"sermsg.h"
+//#include	"sermsg.h"
 
 #include	"gcode_parse.h"
 #include	"gcode_process.h"
-#include        "machine.h"
-#include        "app_config.h"
+#include  "machine.h"
+#include  "app_config.h"
 
-GCODE_COMMAND next_target;
-
-/*
-	Switch user friendly values to coding friendly values
-
-	This also affects the possible build volume. We have +-2^31 numbers available and as we internally measure position in steps and use a precision factor of 1000, this translates into a possible range of
-
-		2^31 mm / STEPS_PER_MM_x / 1000
-
-	for each axis. For a M6 threaded rod driven machine and 1/16 microstepping this evaluates to
-
-		2^31 mm / 200 / 1 / 16 / 1000 = 671 mm,
-
-	which is about the worst case we have. All other machines have a bigger build volume.
-*/
-
-#if 0
-static uint32_t steps_per_m_x;
-static uint32_t steps_per_m_y;
-static uint32_t steps_per_m_z;
-static uint32_t steps_per_m_e;
-
-static double steps_per_in_x;
-static double steps_per_in_y;
-static double steps_per_in_z;
-static double steps_per_in_e;
-#endif
-
-static uint8_t last_field = 0;
 
 #define crc(a, b)		(a ^ b)
 
+/*
+	Internal representations of values uses double for motion axes, feedrate.
+*/
+
+// This holds the parsed command used by gcode_process
+GCODE_COMMAND next_target;
+
+// context variables used during parsing of aline
+static char last_field = 0; // letter code
+
 static struct {
-  uint8_t sign; 
-  int exponent;
+  uint8_t   sign; 
+  int       exponent;
   } read_digit;
+
 static double value;
 
+
 // accept the next character and process it
-void gcode_parse_char(uint8_t c);
+static void gcode_parse_char(uint8_t c);
 
 // uses the global variable next_target.N
-void request_resend(void);
+static void request_resend(tGcodeInputMsg *pGcodeInputMsg);
 
 
 void gcode_parse_init(void)
@@ -163,10 +146,13 @@ double inch_to_mm (double inches)
 */
 
 
-eParseResult gcode_parse_line (tLineBuffer *pLine) 
+eParseResult gcode_parse_line (tGcodeInputMsg *pGcodeInputMsg) 
 {
   int j;
+  tLineBuffer *pLine;
   eParseResult result = PR_OK;
+
+  pLine = pGcodeInputMsg->pLineBuf;
 
   for (j=0; j < pLine->len; j++)
     gcode_parse_char (pLine->data [j]);
@@ -220,7 +206,7 @@ eParseResult gcode_parse_line (tLineBuffer *pLine)
             else
             {
               // process
-              result = process_gcode_command();
+              result = process_gcode_command(pGcodeInputMsg);
 
               // expect next line number
               if (next_target.seen_N == 1)
@@ -228,41 +214,44 @@ eParseResult gcode_parse_line (tLineBuffer *pLine)
 			      }
 			}
 			else {
-				lw_puts("Expected checksum ");
-				serwrite_uint8(next_target.checksum_calculated);
-				lw_puts("\r\n");
-				request_resend();
+				lw_fprintf(pGcodeInputMsg->out_file, "Expected checksum %u\r\n", next_target.checksum_calculated);
+				request_resend(pGcodeInputMsg);
 			}
 		}
 		else {
-			lw_puts("Expected line number ");
-			serwrite_uint32(next_target.N_expected);
-			lw_puts("\r\n");
-			request_resend();
+			lw_fprintf(pGcodeInputMsg->out_file, "Expected line number %ul\r\n", next_target.N_expected);
+			request_resend(pGcodeInputMsg);
 		}
 
 		// reset variables
 		next_target.seen_X = next_target.seen_Y = next_target.seen_Z = \
-                next_target.seen_E = next_target.seen_F = next_target.seen_S = \
-                next_target.seen_P = next_target.seen_N = next_target.seen_M = \
-                next_target.seen_checksum = next_target.seen_semi_comment = \
+      next_target.seen_E = next_target.seen_F = next_target.seen_S = \
+      next_target.seen_P = next_target.seen_N = next_target.seen_M = 0;
+
+    next_target.seen_checksum = next_target.seen_semi_comment = \
                 next_target.seen_parens_comment = next_target.checksum_read = \
                 next_target.checksum_calculated = 0;
+
 		next_target.chpos = 0;
-		last_field = 0;
-		read_digit.sign = read_digit.exponent = 0;
-		value = 0;
 
 		// dont assume a G1 by default
 		next_target.seen_G = 0;
 		next_target.G = 0;
 
-		if (next_target.option_relative) {
+  //TODO:
+		if (next_target.option_relative) 
+    {
 			next_target.target.x = next_target.target.y = next_target.target.z = 0.0;
 			next_target.target.e = 0.0;
 		}
+
+    //
+  	last_field = 0;
+		read_digit.sign = read_digit.exponent = 0;
+		value = 0;
 	}
-	
+
+
 	return result;
     
 }
@@ -483,8 +472,7 @@ void gcode_parse_char(uint8_t c)
 *                                                                           *
 ****************************************************************************/
 
-void request_resend(void) {
-	lw_puts("rs ");
-	serwrite_uint8(next_target.N);
-	lw_puts("\r\n");
+static void request_resend (tGcodeInputMsg *pGcodeInputMsg) 
+{
+	lw_fprintf(pGcodeInputMsg->out_file, "rs %ul\r\n", next_target.N);
 }

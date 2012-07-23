@@ -34,7 +34,9 @@
 typedef struct
 {
   // file/device/network handles
-  int uart_num;
+  LW_FILE *in_file;
+  LW_FILE *out_file;
+
 } tShellParams;
 
 void uart_shell_task ( tShellParams *pParameters );

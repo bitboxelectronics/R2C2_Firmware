@@ -32,12 +32,10 @@
 #include "task.h"
 
 #include "r2c2.h"
-
+#include "lw_io.h"
 #include "gcode_parse.h"
 #include "gcode_task.h"
-
 #include "usb_serial.h"
-
 #include "usb_shell_task.h"
 
 
@@ -53,6 +51,7 @@ void USBShellTask( void *pvParameters )
     // TASK INIT
 
     GcodeInputMsg.pLineBuf = &LineBuf;
+    GcodeInputMsg.out_file = lw_fopen ("usbser", "w");
 
     // say hi to host
     usb_serial_writestr("Start\r\nOK\r\n");

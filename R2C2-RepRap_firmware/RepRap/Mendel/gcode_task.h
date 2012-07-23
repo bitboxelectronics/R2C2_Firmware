@@ -29,12 +29,30 @@
 #ifndef	_GCODE_TASK_H
 #define	_GCODE_TASK_H
 
+#include "FreeRTOS.h"
 #include "queue.h"
 
-#include "gcode_parse.h"
+#include "lw_io.h"
 
-typedef struct {
+#define MAX_LINE 120
+
+typedef struct
+{
+  char    data [MAX_LINE];
+  int     len;
+  uint8_t seen_lf :1;
+} tLineBuffer;
+
+// GCode input message
+// This message is sent to gcode_task to process a line of GCode
+typedef struct 
+{
+    // The GCode line
     tLineBuffer *pLineBuf;
+
+    // the file handle of the source control interface
+    // gcode_task will write output to this file via lw_io
+    LW_FILE *out_file;
 } tGcodeInputMsg;
 
 extern xQueueHandle GcodeRxQueue;

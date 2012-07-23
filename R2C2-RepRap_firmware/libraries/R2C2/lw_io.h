@@ -33,6 +33,7 @@
 #include <stdarg.h>
 #include <stddef.h>
 #include "stdint.h"
+#include "stdbool.h"
 
 // some conflicts with stdio.h: stdin, stdout, stderr
 
@@ -71,6 +72,9 @@ typedef struct
 } LW_FILE;
 
 typedef long fpos_t;
+
+
+bool lw_initialise (void);
 
 // Directed to stdout
 int lw_putchar (int c);

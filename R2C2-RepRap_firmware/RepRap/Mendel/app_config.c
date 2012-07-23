@@ -243,8 +243,6 @@ void app_config_read (void)
   FIL file;       /* file object */
   FRESULT res;    /* FatFs function common result code */
       
-  /* TODO: initialize SPI for SDCard */
-  spi_init();
 
   /* TODO: Register a work area for logical drive 0 */
   res = f_mount(0, &fs);
@@ -270,17 +268,20 @@ void exec_gcode_file (char *filename)
   char *pLine;
   FIL file;
   FRESULT res;
+  tGcodeInputMsg GcodeInputMsg;
 
   res = f_open(&file, filename, FA_OPEN_EXISTING | FA_READ);
   if (res == FR_OK)
   {
     tLineBuffer line_buf;
+    GcodeInputMsg.pLineBuf = &line_buf;
+    GcodeInputMsg.out_file = NULL;
     
     pLine = f_gets(line_buf.data, sizeof(line_buf.data), &file); /* read one line */
     while (pLine)
     {
       line_buf.len = strlen(pLine);
-      gcode_parse_line (&line_buf);
+      gcode_parse_line (&GcodeInputMsg);
       pLine = f_gets(line_buf.data, sizeof(line_buf.data), &file); /* read next line */
     }
 

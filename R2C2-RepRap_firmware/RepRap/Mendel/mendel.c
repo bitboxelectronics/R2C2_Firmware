@@ -145,13 +145,21 @@ static void PrinterInit (void)
   // initialise some drivers useful for debugging
   buzzer_init();
 
-  // initialize USB serial and/or a UART driver to capture messages from read_config
-  usb_serial_init();
+  // initialize low-level USB serial and UART drivers
+  _sys_init_devices();
 
-  debug_init();
+  // open standard files
+  lw_initialise();
+
+  //debug_init();
+
+  /* initialize SPI for SDCard */
+  spi_init();
 
   // read_config will use SPI and a message output (control interface or debug)
   app_config_read();
+
+  // init devices?
 
   // set up inputs and outputs
   io_init();
@@ -171,15 +179,20 @@ void PrinterTask( void *pvParameters )
 
   // -- init complete, can now start other tasks --
 
+  // GCode engine
   xTaskCreate( GcodeTask,    (signed char *)"Gcode", 512, ( void * ) NULL, tskIDLE_PRIORITY, NULL );
-  xTaskCreate( USBShellTask, (signed char *)"USBSh", 256, ( void * ) NULL, tskIDLE_PRIORITY, NULL );
-  xTaskCreate( EthShellTask, (signed char *)"EthSh", 256, ( void * ) NULL, tskIDLE_PRIORITY, NULL );
 
-#if 0
+  // GCode control interfaces
+  xTaskCreate( USBShellTask, (signed char *)"USBSh", 128, ( void * ) NULL, tskIDLE_PRIORITY, NULL );
+
+  // option
+  xTaskCreate( EthShellTask, (signed char *)"EthSh", 128, ( void * ) NULL, tskIDLE_PRIORITY, NULL );
+
+  // option
   // Start a Gcode shell on a UART
-  shell_params.uart_num = 1;
-  xTaskCreate( uart_shell_task, (signed char *)"UartSh", 256, ( void * ) &shell_params, tskIDLE_PRIORITY, NULL );
-#endif
+  shell_params.in_file = lw_fopen ("uart1", "r");
+  shell_params.out_file = lw_fopen ("uart1", "w");
+  xTaskCreate( uart_shell_task, (signed char *)"UartSh", 128, ( void * ) &shell_params, tskIDLE_PRIORITY, NULL );
 
   exec_gcode_file ("autoexec.g");
 
@@ -243,13 +256,15 @@ void PrinterTask( void *pvParameters )
 
 void app_main (void)
 {
-
+  portBASE_TYPE res;
   /* Create the main system task. 
   *  NB: our system timer tick is called from FreeRTOS timer tick, which only runs after scheduler has started.
   *  Therefore, we start only PrinterTask to do initialisation which requires timer, namely the FatFs/SD code.
   */
   //TODO: Check stack usage
-  xTaskCreate( PrinterTask,  (signed char *)"Print", 768, ( void * ) NULL, tskIDLE_PRIORITY, NULL );
+  res = xTaskCreate( PrinterTask,  (signed char *)"Print", 512, ( void * ) NULL, tskIDLE_PRIORITY, NULL );
+  if (res != pdPASS)
+    debug ("error starting PrinterTask\n");
 
   /* Start the scheduler. */
   vTaskStartScheduler();

@@ -33,40 +33,22 @@
 
 #include	<stdint.h>
 
+#include "gcode_task.h"
 #include "planner.h"
 
 // whether the asterisk (checksum-command) is included for checksum calculation
 // undefined for RepRap host software
 //#define ASTERISK_IN_CHECKSUM_INCLUDED
 
-// wether to insist on N line numbers
+// whether to insist on N line numbers
 // if not defined, N's are completely ignored
 //#define	REQUIRE_LINENUMBER
 
-// wether to insist on a checksum
+// whether to insist on a checksum
 //#define	REQUIRE_CHECKSUM
 
 #ifndef ABS
 #define ABS(v)          (((v) >= 0)?(v):(-(v)))
-#endif
-
-#if 0
-// this is a very crude decimal-based floating point structure. a real floating point would at least have signed exponent
-typedef struct {
-	uint32_t	sign			:1;
-	uint64_t	mantissa	:24;
-	uint32_t	exponent	:7;
-} decfloat;
-
-// target is simply a point in space/time
-typedef struct {
-        int64_t                                         X;
-        int64_t                                         Y;
-        int64_t                                         Z;
-//        int64_t                                         E;
-        double E;
-        uint64_t                                        F;
-} TARGET;
 #endif
 
 // this holds all the possible data from a received command
@@ -85,21 +67,23 @@ typedef struct {
 	uint8_t					seen_checksum				:1;
 	uint8_t					seen_semi_comment		:1;
 	uint8_t					seen_parens_comment	:1;
-	uint8_t					getting_string				:1;
+	uint8_t					getting_string			:1;
 
 	uint8_t					option_relative			:1;
 	uint8_t					option_inches				:1;
 
+  // command words
 	uint8_t						G;
+	uint8_t						G_fraction;
 	uint16_t				  M;
-	tTarget						target;
-
+	
+  // parameters
+  tTarget						target; // info required for motion in planner/stepper X,Y,Z,E,F
 	int16_t						S;
 	uint16_t					P;
-
 	uint32_t					N;
-	uint32_t					N_expected;
 
+	uint32_t					N_expected;
 	uint8_t						checksum_read;
 	uint8_t						checksum_calculated;
 
@@ -108,13 +92,6 @@ typedef struct {
 	char              filename [120];
 } GCODE_COMMAND;
 
-#define MAX_LINE 120
-typedef struct
-{
-  char    data [MAX_LINE];
-  int     len;
-  uint8_t seen_lf :1;
-} tLineBuffer;
 
 typedef enum {
   PR_OK,
@@ -127,13 +104,11 @@ typedef enum {
 // the command being processed
 extern GCODE_COMMAND next_target;
 
-// utility functions
-//int32_t	decfloat_to_int(decfloat *df, int32_t multiplicand, int32_t denominator);
 
 
 void gcode_parse_init(void);
 
-eParseResult gcode_parse_line (tLineBuffer *pLine);
+eParseResult gcode_parse_line (tGcodeInputMsg *pGcodeInputMsg);
 
 
 #endif	/* GCODE_PARSE_H */

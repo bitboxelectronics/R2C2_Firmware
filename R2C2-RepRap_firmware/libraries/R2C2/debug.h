@@ -30,14 +30,13 @@
 #ifndef	_DEBUG_H
 #define	_DEBUG_H
 
-#include "lw_io.h"
+#define debug(format, ...) dbg_printf(format, ## __VA_ARGS__)
 
-#include "lw_syscalls.h"
+void dbg_init();
 
-//TODO:
-#define debug lw_printf
+void dbg_printf (char *format, ...);
 
+void dbg_direct (char *s);
 
-#define debug_init() uart_init(DEV_DBGOUT)
 
 #endif	/* _DEBUG_H */

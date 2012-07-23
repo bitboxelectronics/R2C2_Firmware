@@ -41,6 +41,8 @@
 
 static volatile tLineBuffer LineBuf;
 static tGcodeInputMsg GcodeInputMsg;
+//static tShellParams *task_params;
+
 
 void USBShellTask( void *pvParameters )
 {
@@ -49,6 +51,7 @@ void USBShellTask( void *pvParameters )
     eParseResult parse_result;
 
     // TASK INIT
+    //task_params = *pvParameters;
 
     GcodeInputMsg.pLineBuf = &LineBuf;
     GcodeInputMsg.out_file = lw_fopen ("usbser", "w");

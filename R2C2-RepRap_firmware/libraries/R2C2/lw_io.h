@@ -93,10 +93,6 @@ int lw_vfprintf(LW_FILE *, const char *, va_list);
 
 int lw_fgetc(LW_FILE *);
 
-// additional functions
-// directed to dbgout
-int lw_dbg_printf (const char *format, ...);
-
 int lw_frxready (LW_FILE *f);
 
 // ---------------------------
@@ -104,8 +100,6 @@ int lw_frxready (LW_FILE *f);
 extern LW_FILE *stdin;
 extern LW_FILE *stdout;
 extern LW_FILE *stderr;
-
-extern LW_FILE *dbgout;
 
 /***
 #ifdef NOT_YET

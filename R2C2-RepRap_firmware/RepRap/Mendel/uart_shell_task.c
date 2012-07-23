@@ -40,7 +40,7 @@
 
 static volatile tLineBuffer LineBuf;
 static tGcodeInputMsg GcodeInputMsg;
-
+static tShellParams task_params;
 
 static void _task_init (tShellParams *pParameters)
 {
@@ -81,14 +81,15 @@ static void _task_poll (tShellParams *pParameters)
 void uart_shell_task ( tShellParams *pParameters )
 {
   // TASK INIT
+  task_params = *pParameters;
 
-  _task_init(pParameters);
+  _task_init(&task_params);
 
   // TASK BODY
 
   for( ;; )
   {
-    _task_poll(pParameters);
+    _task_poll(&task_params);
   }
 }
 

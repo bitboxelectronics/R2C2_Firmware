@@ -54,8 +54,6 @@ LW_FILE *stdin;
 LW_FILE *stdout;
 LW_FILE *stderr;
 
-LW_FILE *dbgout;
-
 #define CHECK_PTR(p) if (p == NULL) return EOF;
 
 // ----------------------------------------------------------------
@@ -70,7 +68,6 @@ bool lw_initialise (void)
   stdout = lw_fopen ("usbser", "w");
   stderr = lw_fopen ("usbser", "w");
 
-  dbgout = lw_fopen ("uart3", "w");
 }
 
 // ----------------------------------------------------------------
@@ -169,22 +166,22 @@ int lw_vfprintf(LW_FILE *f, const char *format, va_list args)
           break;
         case 'u':
           if (j == 4)
-            serwrite_uint32(va_arg(args, unsigned int));
+            fserwrite_uint32(f, va_arg(args, unsigned int));
           else
-            serwrite_uint16(va_arg(args, unsigned int));
+            fserwrite_uint16(f, va_arg(args, unsigned int));
           j = 0;
           break;
         case 'd':
           if (j == 4)
-            serwrite_int32(va_arg(args, int));
+            fserwrite_int32(f, va_arg(args, int));
           else
-            serwrite_int16(va_arg(args, int));
+            fserwrite_int16(f, va_arg(args, int));
           j = 0;
           break;
 
           /* print a double in normal notation */
           case 'g':
-            serwrite_double(va_arg(args, double));
+            fserwrite_double(f, va_arg(args, double));
             j = 0;
             break;
 
@@ -192,23 +189,23 @@ int lw_vfprintf(LW_FILE *f, const char *format, va_list args)
           case 'x':
             lw_puts("0x");
             if (j == 4)
-              serwrite_hex32(va_arg(args, unsigned int));
+              fserwrite_hex32(f, va_arg(args, unsigned int));
             else
-              serwrite_hex16(va_arg(args, unsigned int));
+              fserwrite_hex16(f, va_arg(args, unsigned int));
             j = 0;
             break;
           case 'c':
-            lw_putchar(va_arg(args, unsigned int));
+            lw_fputc(va_arg(args, unsigned int), f);
             j = 0;
             break;
           case 's':
-            lw_puts(va_arg(args, char *));
+            lw_fputs(va_arg(args, char *), f);
             j = 0;
             break;
 
           /* escape % char */
           case '%':
-            lw_putchar('%');
+            lw_fputc('%', f);
             j = 0;
             break;
 
@@ -222,7 +219,7 @@ int lw_vfprintf(LW_FILE *f, const char *format, va_list args)
           j = 2;
         }
       else {
-        lw_putchar(c);
+        lw_fputc(c, f);
       }
     }
   }
@@ -252,11 +249,6 @@ int lw_printf (const char *format, ...)
 
   lw_vfprintf (stdout, format, args);
   va_end(args);
-}
-
-int lw_dbg_printf (const char *format, ...)
-{
-  // TODO
 }
 
 int lw_frxready (LW_FILE *f)

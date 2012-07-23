@@ -35,6 +35,7 @@
 #include "config.h"
 #include "spi.h"
 #include "ff.h"
+#include "lw_io.h"
 
 // TODO: remove dependencies on these ?
 #include "debug.h"    // may not be initialised yet

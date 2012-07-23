@@ -31,6 +31,7 @@
 #ifndef _LW_SYSCALLS_H
 #define _LW_SYSCALLS_H
 
+#if 0
 // NB these numbers must correspond to 'Devices' table
 #define DEV_UART0       0
 #define DEV_UART1       1
@@ -48,6 +49,8 @@
 
 #else
 #error not defined
+#endif
+
 #endif
 // ===================================================================
 

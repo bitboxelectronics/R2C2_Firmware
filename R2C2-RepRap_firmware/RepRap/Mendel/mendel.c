@@ -151,7 +151,7 @@ static void PrinterInit (void)
   // open standard files
   lw_initialise();
 
-  //debug_init();
+  dbg_init();
 
   /* initialize SPI for SDCard */
   spi_init();

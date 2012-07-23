@@ -32,13 +32,11 @@
 #include  <string.h>
 #include  <stdbool.h>
 
-#include	"lw_io.h"
-//#include	"sermsg.h"
-
+#include  "app_config.h"
 #include	"gcode_parse.h"
 #include	"gcode_process.h"
+#include	"lw_io.h"
 #include  "machine.h"
-#include  "app_config.h"
 
 
 #define crc(a, b)		(a ^ b)
@@ -90,43 +88,6 @@ void gcode_parse_init(void)
 	utility functions
 */
 
-#if 0
-static int32_t	decfloat_to_int(decfloat *df, int32_t multiplicand, int32_t denominator) {
-	int64_t	r = df->mantissa;
-	uint8_t	e = df->exponent;
-
-	// e=1 means we've seen a decimal point but no digits after it, and e=2 means we've seen a decimal point with one digit so it's too high by one if not zero
-	if (e)
-		e--;
-
-	// scale factors
-	if (multiplicand != 1)
-		r *= multiplicand;
-	if (denominator != 1)
-		r /= denominator;
-
-	// sign
-	if (df->sign)
-		r = -r;
-
-	// exponent- try to keep divides to a minimum for common (small) values at expense of slightly more code
-	while (e >= 5) {
-		r /= 100000;
-		e -= 5;
-	}
-
-	if (e == 1)
-		r /= 10;
-	else if (e == 2)
-		r /= 100;
-	else if (e == 3)
-		r /= 1000;
-	else if (e == 4)
-		r /= 10000;
-
-	return r;
-}
-#endif
 
 double power (double x, int exp)
 {  

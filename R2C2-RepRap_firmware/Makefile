@@ -151,6 +151,7 @@ APPSRC = \
 	$(APPDIR)/pin_control.c \
 	$(APPDIR)/geometry.c \
 	$(APPDIR)/alerter.c \
+	$(APPDIR)/uart_shell_task.c \
 	$(APPDIR)/usb_shell_task.c \
 	$(APPDIR)/eth_shell_task.c \
 	$(APPDIR)/gcode_task.c \

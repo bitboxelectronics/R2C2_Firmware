@@ -36,7 +36,7 @@
 // Includes
 // --------------------------------------------------------------------------
 
-#include "String.h"
+#include "string.h"
 
 #include "str_buffer.h"
 

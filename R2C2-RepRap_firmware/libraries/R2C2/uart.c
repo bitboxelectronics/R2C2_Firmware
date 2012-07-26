@@ -107,6 +107,93 @@ static LPC_UART_TypeDef *_get_uart_def (int uart_num)
     return NULL;
 }
 
+extern Status uart_set_divisors(LPC_UART_TypeDef *UARTx, uint32_t baudrate);
+
+static void configure_uart (LPC_UART_TypeDef *UARTx, UART_CFG_Type *UART_ConfigStruct)
+{
+	uint32_t tmp;
+
+	// Set Line Control register ----------------------------
+
+	uart_set_divisors(UARTx, (UART_ConfigStruct->Baud_rate));
+
+	if (((LPC_UART1_TypeDef *)UARTx) == LPC_UART1)
+	{
+		tmp = (((LPC_UART1_TypeDef *)UARTx)->LCR & (UART_LCR_DLAB_EN | UART_LCR_BREAK_EN)) \
+				& UART_LCR_BITMASK;
+	}
+	else
+	{
+		tmp = (UARTx->LCR & (UART_LCR_DLAB_EN | UART_LCR_BREAK_EN)) & UART_LCR_BITMASK;
+	}
+
+	switch (UART_ConfigStruct->Databits){
+	case UART_DATABIT_5:
+		tmp |= UART_LCR_WLEN5;
+		break;
+	case UART_DATABIT_6:
+		tmp |= UART_LCR_WLEN6;
+		break;
+	case UART_DATABIT_7:
+		tmp |= UART_LCR_WLEN7;
+		break;
+	case UART_DATABIT_8:
+	default:
+		tmp |= UART_LCR_WLEN8;
+		break;
+	}
+
+	if (UART_ConfigStruct->Parity == UART_PARITY_NONE)
+	{
+		// Do nothing...
+	}
+	else
+	{
+		tmp |= UART_LCR_PARITY_EN;
+		switch (UART_ConfigStruct->Parity)
+		{
+		case UART_PARITY_ODD:
+			tmp |= UART_LCR_PARITY_ODD;
+			break;
+
+		case UART_PARITY_EVEN:
+			tmp |= UART_LCR_PARITY_EVEN;
+			break;
+
+		case UART_PARITY_SP_1:
+			tmp |= UART_LCR_PARITY_F_1;
+			break;
+
+		case UART_PARITY_SP_0:
+			tmp |= UART_LCR_PARITY_F_0;
+			break;
+		default:
+			break;
+		}
+	}
+
+	switch (UART_ConfigStruct->Stopbits){
+	case UART_STOPBIT_2:
+		tmp |= UART_LCR_STOPBIT_SEL;
+		break;
+	case UART_STOPBIT_1:
+	default:
+		// Do no thing
+		break;
+	}
+
+
+	// Write back to LCR, configure FIFO and Disable Tx
+	if (((LPC_UART1_TypeDef *)UARTx) ==  LPC_UART1)
+	{
+		((LPC_UART1_TypeDef *)UARTx)->LCR = (uint8_t)(tmp & UART_LCR_BITMASK);
+	}
+	else
+	{
+		UARTx->LCR = (uint8_t)(tmp & UART_LCR_BITMASK);
+	}
+}
+
 /********************************************************************//**
  * @brief 		UART transmit function (ring buffer used)
  *********************************************************************/
@@ -262,6 +349,12 @@ static bool _uart_init (int uart_num)
 {
   LPC_UART_TypeDef *pUart;
   tUartControl *pControl;
+	// UART Configuration structure variable
+	UART_CFG_Type UARTConfigStruct;
+	// UART FIFO configuration Struct variable
+	UART_FIFO_CFG_Type UARTFIFOConfigStruct;
+	// Pin configuration for UART
+	PINSEL_CFG_Type PinCfg;
 
   pControl = _get_uart_control (uart_num);
   if (pControl == NULL)
@@ -272,12 +365,6 @@ static bool _uart_init (int uart_num)
   str_buf_init_std (&pControl->rx_buffer);
   str_buf_init_std (&pControl->tx_buffer);
 
-	// UART Configuration structure variable
-	UART_CFG_Type UARTConfigStruct;
-	// UART FIFO configuration Struct variable
-	UART_FIFO_CFG_Type UARTFIFOConfigStruct;
-	// Pin configuration for UART
-	PINSEL_CFG_Type PinCfg;
 
 	/*
 	* Initialize UART pin connect
@@ -411,6 +498,36 @@ static bool _uart_init (int uart_num)
       break;
   }
 #endif
+
+  return true;
+}
+
+bool uart_get_config (int uart_num, tPortSettings *port_settings_p)
+{
+  //TODO: get the current UART settings
+
+  return false;
+}
+
+bool uart_configure(int uart_num, tPortSettings *port_settings_p)
+{
+  tUartControl *pControl;
+  LPC_UART_TypeDef *pUart;
+	UART_CFG_Type UARTConfigStruct;
+
+  pControl = _get_uart_control (uart_num);
+  if (pControl == NULL)
+    return false;
+  pUart = pControl->uart_def_p;
+
+	UART_ConfigStructInit(&UARTConfigStruct);
+
+	UARTConfigStruct.Baud_rate = port_settings_p->baud_rate;
+  UARTConfigStruct.Databits = port_settings_p->data_bits;
+	UARTConfigStruct.Parity = port_settings_p->parity;
+	UARTConfigStruct.Stopbits = port_settings_p->stop_bits;
+
+  configure_uart (pUart, &UARTConfigStruct);
 
   return true;
 }

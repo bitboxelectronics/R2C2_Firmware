@@ -51,11 +51,17 @@ typedef struct {
     };
 } tConfigItem;
 
+typedef struct {
+  char *key;
+  uint32_t hash;
+  } tKeyHash ;
 
 void set_defaults (tConfigItem lookup[], int num_tokens);
 
-FRESULT read_config_file (char *filename, tConfigItem lookup[], int num_tokens);
+FRESULT read_config_file (char *filename, tConfigItem lookup[], int num_tokens, tKeyHash hashes[]);
 
 void print_config_table (tConfigItem lookup[], int num_token);
+
+void create_key_hash (int num_tokens,  tConfigItem lookup[], tKeyHash hashes[]);
 
 #endif /* CONFIG_H */

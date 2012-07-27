@@ -53,6 +53,8 @@
 #include "stepper.h"
 #include "geometry.h"
 
+extern tGcodeInputMsg file_input_msg;
+
 FIL       file;
 uint32_t  filesize = 0;
 uint32_t  sd_pos = 0;
@@ -84,7 +86,7 @@ static char tolower (char c)
 }
 #endif
 
-static void enqueue_moved (tTarget *pTarget)
+static void enqueue_move (tTarget *pTarget)
 {
   // grbl
   tActionRequest request;
@@ -163,7 +165,7 @@ static void SpecialMoveE (double e, double feed_rate)
     next_targetd = startpoint;
     next_targetd.e = startpoint.e + e;
     next_targetd.feed_rate = feed_rate;
-    enqueue_moved(&next_targetd);
+    enqueue_move(&next_targetd);
   }
 }
 
@@ -255,7 +257,6 @@ static void zero_z(void)
 static void zero_e(void)
 {
   // extruder only runs one way and we have no "endstop", just set this point as home
-  //startpoint.E = current_position.E = 0;
   tTarget new_pos = startpoint;
   new_pos.e = 0;
   plan_set_current_position (&new_pos);
@@ -441,7 +442,7 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
       case 0:
       backup_f = next_targetd.feed_rate;
       next_targetd.feed_rate = config.axis[X_AXIS].maximum_feedrate * 2;
-      enqueue_moved (&next_targetd);
+      enqueue_move (&next_targetd);
       next_targetd.feed_rate = backup_f;
       break;
 
@@ -455,7 +456,7 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
         
         next_targetd.e = startpoint.e + d * extruder_1_speed / next_targetd.feed_rate * 24.0;
       }
-      enqueue_moved(&next_targetd);
+      enqueue_move(&next_targetd);
       break;
 
       //	G2 - Arc Clockwise
@@ -485,7 +486,7 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
 
       //	G30 - go home via point
       case 30:
-      enqueue_moved(&next_targetd);
+      enqueue_move(&next_targetd);
       // no break here, G30 is move and then go home
 
       //	G28 - go home
@@ -524,7 +525,7 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
           next_targetd = startpoint;
           next_targetd.z += 3;
           next_targetd.feed_rate = config.axis[Z_AXIS].homing_feedrate;
-          enqueue_moved(&next_targetd);
+          enqueue_move(&next_targetd);
         }
                 
         zero_x();
@@ -596,6 +597,7 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
       // unknown gcode: spit an error
       default:
         lw_fprintf (pGcodeInputMsg->out_file, "E: Bad G-code %d\r\n", next_target.G);
+        result = PR_ERROR;
     }
   }
   else if (next_target.seen_M)
@@ -612,10 +614,9 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
       break;
 
       case 21: // M21 - init SD card
+      // NB : assume that the disk has been mounted by app init
       sd_printing = false;
       sd_initialise();
-      // NB : assume that the disk has been mounted in config.c
-      // TODO: mount volume here and change config.c
       break;
 
       case 22: // M22 - release SD card
@@ -624,23 +625,27 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
       // TODO: should unmount volume
       break;
     
-      case 23: // M23 <filename> - Select file
+      case 23: // M23 <filename> - Select and open file
       if (!sd_active)
+      {
         sd_initialise();
-      if(sd_active)
+      }
+
+      if (sd_active)
       {
         sd_printing = false;
         sd_close(&file);
         if (sd_open(&file, next_target.filename, FA_READ, pGcodeInputMsg->out_file)) 
         {
+          file_input_msg.out_file = pGcodeInputMsg->out_file;
           filesize = sd_filesize(&file);
-          lw_fprintf(pGcodeInputMsg->out_file, "File opened: %s Size: %d\r\n", next_target.filename, filesize);
           sd_pos = 0;
+          lw_fprintf(pGcodeInputMsg->out_file, "File opened: %s Size: %d\r\n", next_target.filename, filesize);
           lw_fprintf(pGcodeInputMsg->out_file, "File selected\r\n");
         }
         else
         {
-          lw_fprintf(pGcodeInputMsg->out_file, "file.open failed\r\n");
+          lw_fprintf(pGcodeInputMsg->out_file, "E: file.open failed\r\n");
         }
       }
       break;
@@ -681,6 +686,7 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
       case 28: //M28 <filename> - Start SD write
       if (!sd_active)
         sd_initialise();
+
       if(sd_active)
       {
         sd_close(&file);
@@ -688,7 +694,7 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
 
         if (!sd_open(&file, next_target.filename, FA_CREATE_ALWAYS | FA_WRITE, pGcodeInputMsg->out_file))
         {
-          lw_fprintf(pGcodeInputMsg->out_file, "open failed, File: %s.\r\n", next_target.filename);
+          lw_fprintf(pGcodeInputMsg->out_file, "E: open failed, File: %s.\r\n", next_target.filename);
         }
         else
         {
@@ -699,9 +705,10 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
       break;
     
       case 29: //M29 - Stop SD write
-      // processed in gcode_parse_char()
+      // processed in gcode_parse_line()
       break;
     
+
       case 82: // M82 - use absolute distance for extrusion
       // no-op, we always do absolute
       break;
@@ -1124,7 +1131,7 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
           next_targetd = startpoint;
           next_targetd.z = 2;
           next_targetd.feed_rate = config.axis[Z_AXIS].maximum_feedrate;
-          enqueue_moved(&next_targetd);
+          enqueue_move(&next_targetd);
         }
         
         if (config.have_wipe_pos)
@@ -1144,7 +1151,7 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
           next_targetd.feed_rate = config.axis[X_AXIS].maximum_feedrate;
         }
         
-        enqueue_moved(&next_targetd);
+        enqueue_move(&next_targetd);
       }
       break;
 
@@ -1157,13 +1164,13 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
           next_targetd.y = config.wipe_exit_pos_y;
           next_targetd.z = startpoint.z;
           next_targetd.feed_rate = config.axis[X_AXIS].maximum_feedrate;
-          enqueue_moved(&next_targetd);
+          enqueue_move(&next_targetd);
           
           next_targetd.x = config.wipe_entry_pos_x;
           next_targetd.y = config.wipe_entry_pos_y;
           next_targetd.z = startpoint.z;
           next_targetd.feed_rate = config.axis[X_AXIS].maximum_feedrate;
-          enqueue_moved(&next_targetd);
+          enqueue_move(&next_targetd);
           
         }
       break;
@@ -1191,6 +1198,7 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
       // unknown mcode: spit an error
       default:
         lw_fprintf (pGcodeInputMsg->out_file, "E: Bad M-code %d\r\n", next_target.M);
+        result = PR_ERROR;
     }
   }
 

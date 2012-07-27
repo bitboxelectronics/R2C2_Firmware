@@ -270,7 +270,64 @@ void print_config_table (tConfigItem lookup[], int num_tokens)
   }
 }
 
-FRESULT read_config_file (char *filename, tConfigItem lookup[], int num_tokens)
+static unsigned long str_hash(char *str)
+{
+    unsigned long hash = 5381;
+    int c;
+
+    while (c = *str++)
+        hash = ((hash << 5) + hash) + tolower(c); /* hash * 33 + c */
+
+    return hash;
+}
+
+static int find_key (char *key, int num_tokens, tConfigItem lookup[], tKeyHash hashes[])
+{
+  unsigned j;
+  uint32_t hash;
+
+  if (hashes == NULL)
+  {
+    for (j=0; (j < num_tokens); j++)
+    {
+      if (strcasecmp (key, lookup[j].name) == 0)
+      {
+        return j;
+      }
+    }
+    return -1;
+  }
+  else
+  {
+    hash = str_hash (key);
+    for (j=0; (j < num_tokens); j++)
+    {
+      if (hash == hashes[j].hash)
+      {
+        if (strcasecmp (key, lookup[j].name) == 0)
+        {
+          return j;
+        }
+      }
+    }
+    return -1;
+
+  }
+
+}
+
+
+void create_key_hash_table (int num_tokens,  tConfigItem lookup[], tKeyHash hashes[])
+{
+  int j;
+  for (j = 0; j < num_tokens; j++)
+  {
+    hashes[j].key = lookup[j].name;
+    hashes[j].hash = str_hash(hashes[j].key);
+  }
+}
+
+FRESULT read_config_file (char *filename, tConfigItem lookup[], int num_tokens, tKeyHash hashes[])
 {
   FIL file;       /* file object */
   FRESULT res;
@@ -296,12 +353,10 @@ FRESULT read_config_file (char *filename, tConfigItem lookup[], int num_tokens)
       pToken = get_token (pLine);
       if (pToken && *pToken != '#')
       {
-        found = false;      
-        for (j=0; (j < num_tokens) && !found; j++)
+        j = find_key (pToken, num_tokens, lookup, hashes);
+
+        if (j != -1)
         {
-          if (strcasecmp (pToken, lookup[j].name) == 0)
-          {
-            found = true;
             pToken = get_token (NULL);
             if (pToken && (*pToken == '='))
             {
@@ -334,10 +389,8 @@ FRESULT read_config_file (char *filename, tConfigItem lookup[], int num_tokens)
             }
             else
               lw_printf ("Expected '='%s\r\n", line);              
-          }
         }
-        
-        if (!found)
+        else
           lw_printf ("Unknown config: %s\r\n", pToken);
       }
       

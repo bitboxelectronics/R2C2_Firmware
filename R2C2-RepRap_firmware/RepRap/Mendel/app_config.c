@@ -215,6 +215,13 @@ static tConfigItem config_lookup_pindef [] =
 
 };
 
+
+tKeyHash config_keys [NUM_TOKENS(config_lookup)];
+tKeyHash config_pindef_keys [NUM_TOKENS(config_lookup_pindef)];
+
+
+
+
 void app_config_set_defaults(void)
 {
   set_defaults (config_lookup, NUM_TOKENS(config_lookup));
@@ -234,26 +241,18 @@ void app_config_set_defaults(void)
 
 }
 
-//TODO: move to sys level
-FATFS fs;       /* Work area (file system object) for logical drive */
 
 // read the config files from SD Card
 void app_config_read (void)
 {
-  FIL file;       /* file object */
   FRESULT res;    /* FatFs function common result code */
       
+  create_key_hash_table (NUM_TOKENS(config_lookup_pindef), config_lookup_pindef, config_pindef_keys);
+  create_key_hash_table (NUM_TOKENS(config_lookup), config_lookup, config_keys);
 
-  /* TODO: Register a work area for logical drive 0 */
-  res = f_mount(0, &fs);
-  if (res)
-    debug("Err mount fs\n");
-  else  
-  {
-    res = read_config_file ("conf_pin.txt", config_lookup_pindef, NUM_TOKENS(config_lookup_pindef));
+  res = read_config_file ("conf_pin.txt", config_lookup_pindef, NUM_TOKENS(config_lookup_pindef), config_pindef_keys);
 
-    res = read_config_file ("config.txt", config_lookup, NUM_TOKENS(config_lookup));
-  }
+  res = read_config_file ("config.txt", config_lookup, NUM_TOKENS(config_lookup), config_keys);
 }
 
 // print the config tables
@@ -261,6 +260,8 @@ void app_config_print()
 {
   print_config_table (config_lookup, NUM_TOKENS(config_lookup) );
 }
+
+static tLineBuffer line_buf;
 
 // read a file and execute GCode commands
 void exec_gcode_file (char *filename)
@@ -273,7 +274,6 @@ void exec_gcode_file (char *filename)
   res = f_open(&file, filename, FA_OPEN_EXISTING | FA_READ);
   if (res == FR_OK)
   {
-    tLineBuffer line_buf;
     GcodeInputMsg.pLineBuf = &line_buf;
     GcodeInputMsg.out_file = NULL;
     

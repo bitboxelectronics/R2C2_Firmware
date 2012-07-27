@@ -32,6 +32,7 @@
 #include "FreeRTOS.h"
 #include "queue.h"
 
+//#include "gcode_parse.h"
 #include "lw_io.h"
 
 #define MAX_LINE 120
@@ -40,19 +41,36 @@ typedef struct
 {
   char    data [MAX_LINE];
   int     len;
-  uint8_t seen_lf :1;
+
+//  uint8_t seen_lf :1;
 } tLineBuffer;
+
+typedef enum {
+  PR_RESEND,    // bad checksum     (rs ... response )
+  PR_ERROR,     // invalid command  (E: ... response)
+  PR_OK,        // valid, done      (ok ...)
+  PR_OK_QUEUED, // valid, queued    (ok ...)
+  PR_BUSY,      // valid, queue full (would block)  (busy)
+
+  PR_READY      // queue no longer full
+  } eParseResult;
 
 // GCode input message
 // This message is sent to gcode_task to process a line of GCode
-typedef struct 
+typedef volatile struct 
 {
     // The GCode line
     tLineBuffer *pLineBuf;
 
+    bool in_use;
+
     // the file handle of the source control interface
     // gcode_task will write output to this file via lw_io
+    // if NULL, no output generated
     LW_FILE *out_file;
+
+    eParseResult result;
+
 } tGcodeInputMsg;
 
 extern xQueueHandle GcodeRxQueue;

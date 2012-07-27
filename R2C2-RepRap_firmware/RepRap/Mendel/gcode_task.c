@@ -41,11 +41,15 @@
 
 xQueueHandle  GcodeRxQueue = NULL;
 
-tLineBuffer   sd_line_buf;
+static tLineBuffer   sd_line_buf;
 
 // static xQueueHandle TxQueue = NULL;
 
-static tGcodeInputMsg GcodeInputMsg;
+// for input from serial control interface - USB, UART, ethernet etc
+static tGcodeInputMsg *pGcodeInputMsg;
+
+// for input from local filesystem
+tGcodeInputMsg file_input_msg;
 
 void GcodeTask( void *pvParameters )
 {
@@ -63,13 +67,16 @@ void GcodeTask( void *pvParameters )
     st_init();
 
 
-    GcodeRxQueue = xQueueCreate( QUEUE_LEN, sizeof( tGcodeInputMsg ) );
+    GcodeRxQueue = xQueueCreate( QUEUE_LEN, sizeof(tGcodeInputMsg *) );
     if( GcodeRxQueue == NULL )
     {
         /* Not enough heap available to create the buffer queues, can't do
            anything so just delete ourselves. */
         vTaskDelete( NULL );
     }
+
+    file_input_msg.pLineBuf = &sd_line_buf;
+    file_input_msg.out_file = NULL; // should be directed to interface that initiated SD command
 
     // TASK BODY
 
@@ -78,38 +85,45 @@ void GcodeTask( void *pvParameters )
     {
         if (uxQueueMessagesWaiting(GcodeRxQueue) > 0)
         {
-            if (xQueueReceive (GcodeRxQueue, &GcodeInputMsg, portMAX_DELAY))
+            if (xQueueReceive (GcodeRxQueue, &pGcodeInputMsg, portMAX_DELAY))
             {
+#ifdef WAIT
                 // if queue is full, we wait
                 while (plan_queue_full())
                     /* wait */ ;
+#endif
+                parse_result = gcode_parse_line (pGcodeInputMsg);
 
-                parse_result = gcode_parse_line (&GcodeInputMsg);
-
-                GcodeInputMsg.pLineBuf->len = 0;
-                GcodeInputMsg.pLineBuf->seen_lf = 0;
+                pGcodeInputMsg->result = parse_result;
+                pGcodeInputMsg->pLineBuf->len = 0;
+                pGcodeInputMsg->in_use = false;
             }
         }
 
-        // process SD file if no serial command pending
-        if (!sd_line_buf.seen_lf && sd_printing)
+        // process SD file
+        if (sd_printing)
         {
-          if (sd_read_file (&sd_line_buf))
+
+          if (!file_input_msg.in_use)
           {
-              sd_line_buf.seen_lf = 1;
+            if (sd_read_file (&sd_line_buf))
+            {
+                file_input_msg.in_use = true;
 
-              //parse_result = gcode_parse_line (&sd_line_buf);
-              //tGcodeInputMsg GcodeInputMsg
+                parse_result = gcode_parse_line (&file_input_msg);
 
-              sd_line_buf.len = 0;
-              sd_line_buf.seen_lf = 0;
-
-          } 
-          else
-          {
-            sd_printing = false;
-            lw_puts ("Done printing file\r\n");
+                file_input_msg.result = parse_result;
+                file_input_msg.pLineBuf->len = 0;
+                file_input_msg.in_use = false;
+            } 
+            else
+            {
+              // end of file reached, stop printing
+              sd_printing = false;
+              lw_fputs ("Done printing file\r\n", file_input_msg.out_file);
+            }
           }
+
         }
 
     } // for ()

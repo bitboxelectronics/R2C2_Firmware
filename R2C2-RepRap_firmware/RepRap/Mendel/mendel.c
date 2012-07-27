@@ -51,14 +51,16 @@
 #include "stepper.h"
 #include "usb_serial.h"
 #include "uart.h"
-
+#include "ff.h"
 #include "eth_shell_task.h"
 #include "usb_shell_task.h"
 #include "uart_shell_task.h"
 #include "gcode_task.h"
 
+FATFS   fs;       /* Work area (file system object) for logical drive */
 
-tTimer temperatureTimer;
+tTimer  temperatureTimer;
+
 
 /* Initialize ADC for reading sensors */
 void adc_init(void)
@@ -140,6 +142,8 @@ void check_boot_request (void)
 
 static void PrinterInit (void)
 {
+  FRESULT res;
+
   app_config_set_defaults();
 
   // initialise some drivers useful for debugging
@@ -156,8 +160,15 @@ static void PrinterInit (void)
   /* initialize SPI for SDCard */
   spi_init();
 
-  // read_config will use SPI and a message output (control interface or debug)
-  app_config_read();
+  /* Register a work area for logical drive 0 */
+  res = f_mount(0, &fs);
+  if (res)
+    debug("Err mount fs\n");
+  else  
+  {
+    // read_config will use SPI and a message output (control interface or debug)
+    app_config_read();
+  }
 
   // init devices?
 

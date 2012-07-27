@@ -53,7 +53,7 @@ typedef  struct {
 typedef struct {
   eActionType action_type;
   
-  // Fields used by the bresenham algorithm for tracing the line
+  // Fields used by the Bresenham algorithm for tracing the line
   uint32_t steps_x, steps_y, steps_z; // Step count along each axis
   uint32_t steps_e; 
   uint32_t direction_bits;            // The direction bit set for this block (refers to *_DIRECTION_BIT in config.h)
@@ -93,7 +93,10 @@ typedef struct {
 } tActionRequest;
 
 
-
+// startpoint is start point for the NEXT move to be queued - it is the 
+// end point of the LAST move in the queue.
+// NB : this variable is ** READ-ONLY ** outside of planner.c !!
+// to change the start point, must use plan_set_current_position()
 extern tTarget startpoint;
 
       

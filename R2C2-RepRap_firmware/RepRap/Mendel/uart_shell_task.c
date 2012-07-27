@@ -38,7 +38,7 @@
 #include "uart_shell_task.h"
 
 
-static volatile tLineBuffer LineBuf;
+static tLineBuffer LineBuf;
 static tGcodeInputMsg GcodeInputMsg;
 static tShellParams task_params;
 
@@ -57,7 +57,7 @@ static void _task_poll (tShellParams *pParameters)
   eParseResult parse_result;
 
   // process characters from the serial port
-  while (!LineBuf.seen_lf && (lw_frxready (pParameters->in_file) != 0) )
+  while (!GcodeInputMsg.in_use && (lw_frxready (pParameters->in_file) != 0) )
   {
     c = lw_fgetc (pParameters->in_file);
 
@@ -68,8 +68,9 @@ static void _task_poll (tShellParams *pParameters)
     {
       if (LineBuf.len > 1)
       {
-        LineBuf.seen_lf = 1;
-        xQueueSend (GcodeRxQueue, &GcodeInputMsg, portMAX_DELAY); // TODO
+        GcodeInputMsg.in_use = 1;
+        tGcodeInputMsg *p_message = &GcodeInputMsg; 
+        xQueueSend (GcodeRxQueue, &p_message, portMAX_DELAY); // TODO
       }
       else
         LineBuf.len = 0;

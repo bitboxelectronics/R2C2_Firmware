@@ -48,7 +48,7 @@
 // This holds the parsed command used by gcode_process
 GCODE_COMMAND next_target;
 
-// context variables used during parsing of aline
+// context variables used during parsing of a line
 static char last_field = 0; // letter code
 
 static struct {
@@ -115,9 +115,13 @@ eParseResult gcode_parse_line (tGcodeInputMsg *pGcodeInputMsg)
 
   pLine = pGcodeInputMsg->pLineBuf;
 
+  //TODO: parse_char never detects errors? there must be some surely
   for (j=0; j < pLine->len; j++)
     gcode_parse_char (pLine->data [j]);
     
+  //TODO: more than one command per line
+  //TODO: gcode context for each interface
+
 	// end of line
 	//if ((c == 10) || (c == 13)) 
 	{
@@ -135,21 +139,24 @@ eParseResult gcode_parse_line (tGcodeInputMsg *pGcodeInputMsg)
 				((next_target.checksum_calculated == next_target.checksum_read) || (next_target.seen_checksum == 0))
 				#endif
 				) {
+            // --------------------------------------------------------------------------
+            //     SD
+            // --------------------------------------------------------------------------
             if (sd_writing_file)
             {
               if (next_target.seen_M && (next_target.M >= 20) && (next_target.M <= 29) )
               {
-                if (next_target.seen_M && next_target.M == 29)
+                if (next_target.seen_M && (next_target.M == 29))
                 { 
                   // M29 - stop writing
                   sd_writing_file = false;
                   sd_close (&file);
-                  lw_puts("Done saving file\r\n");
+                  lw_fputs("Done saving file\r\n", pGcodeInputMsg->out_file);
                 }
                 else
                 {
                   // else - do not write SD M-codes to file
-                  lw_puts("ok\r\n");
+                  lw_fputs("ok\r\n", pGcodeInputMsg->out_file);
                 }
               }
               else
@@ -159,11 +166,14 @@ eParseResult gcode_parse_line (tGcodeInputMsg *pGcodeInputMsg)
                   pLine->data [pLine->len-1] = 10;
                   
                 if (sd_write_to_file(pLine->data, pLine->len))
-                  lw_puts("ok\r\n");
+                  lw_fputs("ok\r\n", pGcodeInputMsg->out_file);
                 else
-                  lw_puts("error writing to file\r\n");
+                  lw_fputs("error writing to file\r\n", pGcodeInputMsg->out_file);
               }
             }
+            // --------------------------------------------------------------------------
+            //     Not in SD write mode
+            // --------------------------------------------------------------------------
             else
             {
               // process
@@ -174,14 +184,18 @@ eParseResult gcode_parse_line (tGcodeInputMsg *pGcodeInputMsg)
                   next_target.N_expected = next_target.N + 1;
 			      }
 			}
-			else {
+			else 
+      {
 				lw_fprintf(pGcodeInputMsg->out_file, "Expected checksum %u\r\n", next_target.checksum_calculated);
 				request_resend(pGcodeInputMsg);
+        result = PR_RESEND;
 			}
 		}
-		else {
+		else 
+    {
 			lw_fprintf(pGcodeInputMsg->out_file, "Expected line number %ul\r\n", next_target.N_expected);
 			request_resend(pGcodeInputMsg);
+      result = PR_RESEND;
 		}
 
 		// reset variables

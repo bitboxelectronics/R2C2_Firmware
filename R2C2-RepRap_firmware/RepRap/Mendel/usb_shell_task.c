@@ -39,7 +39,7 @@
 #include "usb_shell_task.h"
 
 
-static volatile tLineBuffer LineBuf;
+static tLineBuffer LineBuf;
 static tGcodeInputMsg GcodeInputMsg;
 //static tShellParams *task_params;
 
@@ -65,7 +65,7 @@ void USBShellTask( void *pvParameters )
     for( ;; )
     {
         // process characters from the serial port
-        while (!LineBuf.seen_lf && (usb_serial_rxchars() != 0) )
+        while (!GcodeInputMsg.in_use && (usb_serial_rxchars() != 0) )
         {
           c = usb_serial_popchar();
       
@@ -76,8 +76,9 @@ void USBShellTask( void *pvParameters )
           {
             if (LineBuf.len > 1)
             {
-              LineBuf.seen_lf = 1;
-              xQueueSend (GcodeRxQueue, &GcodeInputMsg, portMAX_DELAY);
+              GcodeInputMsg.in_use = 1;
+              tGcodeInputMsg *p_message = &GcodeInputMsg; 
+              xQueueSend (GcodeRxQueue, &p_message, portMAX_DELAY);
             }
             else
               LineBuf.len = 0;

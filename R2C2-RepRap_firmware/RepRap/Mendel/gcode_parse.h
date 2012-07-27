@@ -93,17 +93,10 @@ typedef struct {
 } GCODE_COMMAND;
 
 
-typedef enum {
-  PR_OK,
-  PR_RESEND,
-  PR_ERROR,
-  PR_BUSY
-  } eParseResult;
 
   
-// the command being processed
+// the command that has been parsed
 extern GCODE_COMMAND next_target;
-
 
 
 void gcode_parse_init(void);

@@ -36,13 +36,17 @@
 #include "ff.h"
 
 
+#define FM_GCODE    0
+#define FM_HEX_BIN  1
+
 // for SD functions
+extern bool      sd_active;       // SD card active
+extern bool      sd_printing;     // printing from SD file
+extern bool      sd_writing_file; // writing to SD file
 extern FIL       file;
+extern uint8_t   file_mode;
 extern uint32_t  filesize;
 extern uint32_t  sd_pos;
-extern bool      sd_printing;     // printing from SD file
-extern bool      sd_active;       // SD card active
-extern bool      sd_writing_file; // writing to SD file
 
 extern void sd_close (FIL *pFile);
 extern bool sd_write_to_file(char *pStr, unsigned bytes_to_write);

@@ -33,34 +33,33 @@
 
 #include "gcode_process.h"
 #include "gcode_parse.h"
-
 #include "lw_io.h"
-//#include "sermsg.h"
-
 #include "temp.h"
 #include "timer.h"
-//#include "pinout.h"
 #include "pin_control.h"
 #include "app_config.h"
 #include "ff.h"
 #include "buzzer.h"
 #include "soundplay.h"
-
 //#include "debug.h"
 #include "ios.h"
-
 #include "planner.h"
 #include "stepper.h"
 #include "geometry.h"
 
+
 extern tGcodeInputMsg file_input_msg;
 
+extern void reboot (void);
+
+
+bool      sd_active = false;        // SD card active
+bool      sd_printing = false;      // printing from SD file
+bool      sd_writing_file = false;  // writing to SD file
 FIL       file;
+uint8_t   file_mode;
 uint32_t  filesize = 0;
 uint32_t  sd_pos = 0;
-bool      sd_printing = false;      // printing from SD file
-bool      sd_active = false;        // SD card active
-bool      sd_writing_file = false;  // writing to SD file
 
 #define EXTRUDER_NUM_1  1
 #define EXTRUDER_NUM_2  2
@@ -340,7 +339,7 @@ unsigned sd_open(FIL *pFile, char *path, uint8_t flags, LW_FILE *out_file)
   else
   {
     //debug
-    lw_fprintf (out_file, "sd_open:%d", res);
+    lw_fprintf (out_file, "sd_open:%d\r\n", res);
     return 0;
   }
 }
@@ -635,12 +634,12 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
       {
         sd_printing = false;
         sd_close(&file);
-        if (sd_open(&file, next_target.filename, FA_READ, pGcodeInputMsg->out_file)) 
+        if (sd_open(&file, next_target.str_param, FA_READ, pGcodeInputMsg->out_file)) 
         {
           file_input_msg.out_file = pGcodeInputMsg->out_file;
           filesize = sd_filesize(&file);
           sd_pos = 0;
-          lw_fprintf(pGcodeInputMsg->out_file, "File opened: %s Size: %d\r\n", next_target.filename, filesize);
+          lw_fprintf(pGcodeInputMsg->out_file, "File opened: %s Size: %d\r\n", next_target.str_param, filesize);
           lw_fprintf(pGcodeInputMsg->out_file, "File selected\r\n");
         }
         else
@@ -692,14 +691,19 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
         sd_close(&file);
         sd_printing = false;
 
-        if (!sd_open(&file, next_target.filename, FA_CREATE_ALWAYS | FA_WRITE, pGcodeInputMsg->out_file))
+        if (!sd_open(&file, next_target.str_param, FA_CREATE_ALWAYS | FA_WRITE, pGcodeInputMsg->out_file))
         {
-          lw_fprintf(pGcodeInputMsg->out_file, "E: open failed, File: %s.\r\n", next_target.filename);
+          lw_fprintf(pGcodeInputMsg->out_file, "E: open failed, File: %s.\r\n", next_target.str_param);
         }
         else
         {
+          if (next_target.seen_S && (next_target.S == 1))
+            file_mode = FM_HEX_BIN;
+          else
+            file_mode = FM_GCODE;
+
           sd_writing_file = true;
-          lw_fprintf(pGcodeInputMsg->out_file, "Writing to file: %s\r\n", next_target.filename);
+          lw_fprintf(pGcodeInputMsg->out_file, "Writing to file: %s\r\n", next_target.str_param);
         }
       }
       break;
@@ -708,6 +712,9 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
       // processed in gcode_parse_line()
       break;
     
+      case 30: //M30 <data> - write raw data to SD file
+      // processed in gcode_parse_line()
+      break;
 
       case 82: // M82 - use absolute distance for extrusion
       // no-op, we always do absolute
@@ -826,7 +833,7 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
       
       // M115- report firmware version
       case 115:
-        lw_fprintf(pGcodeInputMsg->out_file, "FIRMWARE_NAME:Teacup_R2C2 FIRMWARE_URL:http%%3A//github.com/bitboxelectronics/R2C2_Firmware PROTOCOL_VERSION:1.0 MACHINE_TYPE:Mendel\r\n");
+        lw_fprintf(pGcodeInputMsg->out_file, "FIRMWARE_NAME:Teacup_R2C2 FIRMWARE_URL:http%%3A//github.com/bitboxelectronics/R2C2_Firmware PROTOCOL_VERSION:1.0 MACHINE_TYPE:Mendel R2C2_BOOTLOAD:1.0\r\n");
       break;
 
       // M119 - Get Endstop Status
@@ -1058,7 +1065,7 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
         float frequency = 1000;  // 1kHz
         float duration = 1000; // 1 second
         
-		if (next_target.seen_S)
+        if (next_target.seen_S)
           frequency = next_target.S;
         if (next_target.seen_P)
           duration = next_target.P;
@@ -1068,28 +1075,33 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
       }  
       break;
       
-	  // Plays Jingle Bell from Static Library
-	  case 301:
-	  {
-	     play_jingle_bell();
+      // Plays Jingle Bell from Static Library
+      case 301:
+      {
+         play_jingle_bell();
       }
-	  break;
+      break;
 
-	  // Plays Music from command line:
-	  // Usage:
-	  //   M302 "music" P"tempo"
-	  // Example:
-	  //   M302 D4b3a3g3 P600
-	  //
-	  case 302:
-	  {
-		if (next_target.seen_P) {
+      // Plays Music from command line:
+      // Usage:
+      //   M302 "music" P"tempo"
+      // Example:
+      //   M302 D4b3a3g3 P600
+      //
+      case 302:
+      {
+        if (next_target.seen_P) {
           set_whole_note_time(next_target.P);
-	    }
-		play_music_string(next_target.filename);		
+        }
+        play_music_string(next_target.str_param);    
       }
-	  break;
-	  
+      break;
+    
+      case 401:
+      // reset
+      reboot();
+      break;
+
       // M500 - set/get adc value for temperature
       // S: temperature (degrees C, 0-300)
       // P: ADC val

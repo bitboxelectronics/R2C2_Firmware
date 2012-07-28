@@ -87,9 +87,10 @@ typedef struct {
 	uint8_t						checksum_read;
 	uint8_t						checksum_calculated;
 
+
   // for SD functions
-	uint8_t						chpos;
-	char              filename [120];
+	uint8_t						str_pos;
+	char              str_param [121];
 } GCODE_COMMAND;
 
 

@@ -31,6 +31,7 @@
 
 #include  <string.h>
 #include  <stdbool.h>
+#include  <ctype.h>
 
 #include  "app_config.h"
 #include	"gcode_parse.h"
@@ -60,7 +61,7 @@ static double value;
 
 
 // accept the next character and process it
-static void gcode_parse_char(uint8_t c);
+static void gcode_parse_char(tLineBuffer *pLine, uint8_t c);
 
 // uses the global variable next_target.N
 static void request_resend(tGcodeInputMsg *pGcodeInputMsg);
@@ -102,6 +103,41 @@ double inch_to_mm (double inches)
   return inches * 25.4;
 }
 
+static uint8_t char_to_hex (char c)
+{
+  c= tolower(c);
+  if ( (c >='0') && ( c <= '9'))
+    return c - '0';
+  else if ( (c >='a') && ( c <= 'f'))
+    return c - 'a' + 10;
+  else
+    return 0;
+}
+
+static int hex_to_bin (char *s, int len)
+{
+  int ch_pos;
+  int byte_pos;
+  uint8_t byte_val;
+
+  byte_pos = 0;
+  ch_pos = 0;
+
+  while (ch_pos < len)
+  {
+    byte_val = char_to_hex (s[ch_pos]);
+    ch_pos ++;
+    if (ch_pos < len)
+    {
+      byte_val = (byte_val << 4) + char_to_hex (s[ch_pos]);
+    }
+    ch_pos ++;
+
+    s[byte_pos++] = byte_val;
+  }
+  return byte_pos;
+}
+
 /*
 	public functions
 */
@@ -109,15 +145,20 @@ double inch_to_mm (double inches)
 
 eParseResult gcode_parse_line (tGcodeInputMsg *pGcodeInputMsg) 
 {
-  int j;
+  //int j;
   tLineBuffer *pLine;
   eParseResult result = PR_OK;
+  int len;
 
   pLine = pGcodeInputMsg->pLineBuf;
 
   //TODO: parse_char never detects errors? there must be some surely
-  for (j=0; j < pLine->len; j++)
-    gcode_parse_char (pLine->data [j]);
+  pLine->ch_pos = 0;
+  while (pLine->ch_pos < pLine->len)
+  {
+    gcode_parse_char (pLine, pLine->data [pLine->ch_pos]);
+    pLine->ch_pos++;
+  }
     
   //TODO: more than one command per line
   //TODO: gcode context for each interface
@@ -165,10 +206,31 @@ eParseResult gcode_parse_line (tGcodeInputMsg *pGcodeInputMsg)
                 if (pLine->data [pLine->len-1] == 13)
                   pLine->data [pLine->len-1] = 10;
                   
-                if (sd_write_to_file(pLine->data, pLine->len))
-                  lw_fputs("ok\r\n", pGcodeInputMsg->out_file);
+                if (next_target.seen_M && (next_target.M == 30))
+                {
+                  if (file_mode == FM_HEX_BIN)
+                  {
+                    len = hex_to_bin (next_target.str_param, strlen(next_target.str_param));
+                  }
+                  else
+                  {
+                    strcat (next_target.str_param, "\n");
+                    len = strlen(next_target.str_param);
+                  }
+
+                  if (sd_write_to_file(next_target.str_param, len))
+                    lw_fputs("ok\r\n", pGcodeInputMsg->out_file);
+                  else
+                    lw_fputs("error writing to file\r\n", pGcodeInputMsg->out_file);
+
+                }
                 else
-                  lw_fputs("error writing to file\r\n", pGcodeInputMsg->out_file);
+                {
+                  if (sd_write_to_file(pLine->data, pLine->len))
+                    lw_fputs("ok\r\n", pGcodeInputMsg->out_file);
+                  else
+                    lw_fputs("error writing to file\r\n", pGcodeInputMsg->out_file);
+                }
               }
             }
             // --------------------------------------------------------------------------
@@ -207,7 +269,7 @@ eParseResult gcode_parse_line (tGcodeInputMsg *pGcodeInputMsg)
                 next_target.seen_parens_comment = next_target.checksum_read = \
                 next_target.checksum_calculated = 0;
 
-		next_target.chpos = 0;
+		next_target.str_pos = 0;
 
 		// dont assume a G1 by default
 		next_target.seen_G = 0;
@@ -237,7 +299,7 @@ eParseResult gcode_parse_line (tGcodeInputMsg *pGcodeInputMsg)
 *                                                                           *
 ****************************************************************************/
 
-void gcode_parse_char(uint8_t c) 
+void gcode_parse_char(tLineBuffer *pLine, uint8_t c) 
 {
   uint8_t save_ch;
 
@@ -331,14 +393,14 @@ void gcode_parse_char(uint8_t c)
 
   if (next_target.getting_string)
   {
-    if ((c == 10) || (c == 13) || ( c == ' ')  || ( c == '*'))
+    if ((c == 10) || (c == 13) || ( c == ' ')  || ( c == '*') || ( c == '\"'))
       next_target.getting_string = 0;
     else
     {
-      if (next_target.chpos < sizeof(next_target.filename))
+      if (next_target.str_pos < sizeof(next_target.str_param))
       {
-        next_target.filename [next_target.chpos++] = c;
-        next_target.filename [next_target.chpos] = 0;
+        next_target.str_param [next_target.str_pos++] = c;
+        next_target.str_param [next_target.str_pos] = 0;
       }
     }      
   }
@@ -399,6 +461,13 @@ void gcode_parse_char(uint8_t c)
 				break;
 			case '(':
 				next_target.seen_parens_comment = 1;
+
+        if ((pLine->ch_pos < pLine->len-4) && (strncmp (&pLine->data[pLine->ch_pos+1], "STR\"", 4) == 0))
+        {
+          next_target.str_pos = 0;
+          next_target.getting_string = 1;
+          pLine->ch_pos += 4;
+        }
 				break;
 
 			// now for some numeracy
@@ -427,9 +496,16 @@ void gcode_parse_char(uint8_t c)
 						read_digit.exponent++;
 				}
 		}
-	} else if ( next_target.seen_parens_comment == 1 && c == ')')
-		next_target.seen_parens_comment = 0; // recognize stuff after a (comment)
-
+	} else if ( next_target.seen_parens_comment == 1)
+  {
+    if (c == ')')
+      next_target.seen_parens_comment = 0; // recognize stuff after a (comment)
+    else if (next_target.getting_string)
+    {
+      if (c == '\"')
+        next_target.getting_string = 0;
+    }
+  }
 
 	#ifndef ASTERISK_IN_CHECKSUM_INCLUDED
 	if (next_target.seen_checksum == 0)

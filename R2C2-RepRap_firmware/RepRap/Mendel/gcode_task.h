@@ -41,8 +41,7 @@ typedef struct
 {
   char    data [MAX_LINE];
   int     len;
-
-//  uint8_t seen_lf :1;
+	int     ch_pos;
 } tLineBuffer;
 
 typedef enum {

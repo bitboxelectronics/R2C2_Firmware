@@ -130,13 +130,16 @@ void temperatureTimerCallback (tTimer *pTimer)
   temp_tick();
 }
 
+void reboot (void)
+{
+  NVIC_SystemReset();
+}
+
 void check_boot_request (void)
 {
   if (digital_read (BOOT_SW_PORT, _BV(BOOT_SW_PIN_NUMBER)) == 0)
   {
-    WDT_Init (WDT_CLKSRC_PCLK, WDT_MODE_RESET);
-    WDT_Start (10);
-    while (1);
+    reboot();
   }
 }
 

@@ -68,6 +68,8 @@
 #define MM_REPRAP_MENDEL  0
 #define MM_RAPMAN         1
 
+#define MAX_BUTTONS       10
+
 // configuration settings for one axis
 typedef struct
 {
@@ -118,31 +120,70 @@ typedef struct
 // configuration for system
 typedef struct
 {
-  int32_t machine_model;
+  // machine config
+  int32_t       machine_model;
   
-  int32_t num_axes;
+  int32_t       num_axes;
   tAxisSettings axis[MAX_AXES];
-  tPinDef pin_all_steppers_reset;
+
+  // machine control
+  tPinDef       pin_all_steppers_reset;
 
   double  acceleration;   // global default
   double  junction_deviation;
 
   int32_t auto_power_off_time; // seconds
+  int32_t step_led_flash_method; // how we control the Step pin to flash the stepper LED
   
-  int32_t control_panel;      // = 0 none, 1 = Makerbot
-  
-  int32_t tcp_ip_enabled;
-  int32_t network_interface;
+  int32_t beep_on_events;
+
+  // -- interfaces --
+  int32_t interface_control_panel_enabled;      // = 0 none, 1 = Makerbot Gen4
+  // LCD config
+  int32_t interface_cp_lcd_type;                // = 0 none, 1 = 4 bit 44780 compatible
+  int32_t interface_cp_lcd_rows;
+  int32_t interface_cp_lcd_cols;
+  tPinDef interface_cp_lcd_pin_data[8];     // 4 bit mode will use D4-D7
+  tPinDef interface_cp_lcd_pin_rs;
+  tPinDef interface_cp_lcd_pin_rw;          // optional
+  tPinDef interface_cp_lcd_pin_en;
+
+  // switched outputs (LED etc)
+  tPinDef interface_cp_led_0;   // red
+  tPinDef interface_cp_led_1;   // orange
+  tPinDef interface_cp_led_2;   // green
+
+  // input buttons
+  tPinDef interface_cp_btn [MAX_BUTTONS];
+
+  // TCP/IP - ethernet
+  int32_t interface_tcp_ip_enabled;
+  int32_t interface_tcp_ip_phy_type;
+
+  // USB has nothing to configure?
+  int32_t interface_usb_enabled;
+
+  // UART
+  int32_t interface_uart_enabled;
+  int32_t interface_uart_baud_rate;
+  tPinDef interface_uart_pin_tx;
+  tPinDef interface_uart_pin_rx;
+
+  // debug
+  int32_t debug_enabled;
+  int32_t debug_flags;
+  int32_t debug_uart_baud_rate;
+  tPinDef debug_pin_tx;
+  tPinDef debug_pin_rx;
+
 
   // rate when homing (fast)
   // direction to move when homing (depends on endstop locations)
   // position at home
   // printable volume size
   
-  int32_t debug_flags;
   
-  int32_t step_led_flash_method; // how we control the Step pin to flash the stepper LED
-  
+  // more machine config  
   // The following are specific to printers
 
   int32_t num_extruders;
@@ -176,7 +217,6 @@ typedef struct
   int32_t wait_on_temp;
   int32_t enable_extruder_1;
   
-  int32_t beep_on_events;
 } tApplicationConfiguration;
 
 // Variables

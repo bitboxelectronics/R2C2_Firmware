@@ -62,6 +62,6 @@ FRESULT read_config_file (char *filename, tConfigItem lookup[], int num_tokens, 
 
 void print_config_table (tConfigItem lookup[], int num_token);
 
-void create_key_hash (int num_tokens,  tConfigItem lookup[], tKeyHash hashes[]);
+void create_key_hash_table (int num_tokens,  tConfigItem lookup[], tKeyHash hashes[]);
 
 #endif /* CONFIG_H */

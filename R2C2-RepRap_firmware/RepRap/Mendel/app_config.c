@@ -58,16 +58,20 @@ static tConfigItem config_lookup [] =
   { "machine_model",        &config.machine_model, TYPE_INT, {.val_i=0}},
   { "acceleration",         &config.acceleration, TYPE_DOUBLE, {.val_d=100.0}},         /* 100mm / second^2 */
   { "junction_deviation",   &config.junction_deviation, TYPE_DOUBLE, {.val_d=0.05}},  
-
-  { "debug_flags",          &config.debug_flags, TYPE_INT, {.val_i=0}},
-  { "step_led_flash_method", &config.step_led_flash_method, TYPE_INT, {.val_i = STEP_LED_FLASH_VARIABLE}},
   
   { "auto_power_off_time",  &config.auto_power_off_time, TYPE_INT, {.val_i = 0}},
   
-  { "control_panel",        &config.control_panel, TYPE_INT, {.val_i = 0}},
+  //  
+  // interfaces
+  //
+  { "debug_flags",          &config.debug_flags, TYPE_INT, {.val_i=0}},
+  { "step_led_flash_method", &config.step_led_flash_method, TYPE_INT, {.val_i = STEP_LED_FLASH_VARIABLE}},
+  { "beep_on_events",       &config.beep_on_events, TYPE_INT, {.val_i=0x0000000F}},
+
+  { "control_panel",        &config.interface_control_panel_enabled, TYPE_INT, {.val_i = 0}},
   
-  { "tcp_ip_enabled",       &config.tcp_ip_enabled, TYPE_INT, {.val_i = 0}},
-  { "network_interface",    &config.network_interface, TYPE_INT, {.val_i = 0}},
+  { "tcp_ip_enabled",       &config.interface_tcp_ip_enabled, TYPE_INT, {.val_i = 0}},
+  { "network_interface",    &config.interface_tcp_ip_phy_type, TYPE_INT, {.val_i = 0}},
 
   //  
   // axis config
@@ -147,7 +151,6 @@ static tConfigItem config_lookup [] =
   { "num_extruders", &config.num_extruders, TYPE_INT, {.val_i=1}},
 
   { "enable_extruder_1", &config.enable_extruder_1, TYPE_INT, {.val_i=1}},
-  { "beep_on_events", &config.beep_on_events, TYPE_INT, {.val_i=0x0000000F}},
 };
 
 
@@ -216,8 +219,8 @@ static tConfigItem config_lookup_pindef [] =
 };
 
 
-tKeyHash config_keys [NUM_TOKENS(config_lookup)];
-tKeyHash config_pindef_keys [NUM_TOKENS(config_lookup_pindef)];
+static tKeyHash config_keys [NUM_TOKENS(config_lookup)];
+static tKeyHash config_pindef_keys [NUM_TOKENS(config_lookup_pindef)];
 
 
 

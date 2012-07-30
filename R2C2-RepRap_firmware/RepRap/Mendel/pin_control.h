@@ -92,7 +92,7 @@ void disable_all_axes (void);
 // other functions
 //  for ATX power supply?
 void atx_power_on();
-void axt_power_off();
+void atx_power_off();
 
 
 #endif

@@ -150,7 +150,7 @@ static tConfigItem config_lookup [] =
     
   { "num_extruders", &config.num_extruders, TYPE_INT, {.val_i=1}},
 
-  { "enable_extruder_1", &config.enable_extruder_1, TYPE_INT, {.val_i=1}},
+  { "enable_extruder_0", &config.enable_extruder_0, TYPE_INT, {.val_i=1}},
 };
 
 
@@ -211,10 +211,10 @@ static tConfigItem config_lookup_pindef [] =
   { "heated_bed.sensor_adc_channel",  &config.heated_bed_ctc.sensor_adc_channel,  TYPE_INT, {.val_i = HEATED_BED_0_SENSOR_ADC_CHANNEL}},
 
   // Extruder 1 (not supported yet)
-  { "extruder_1.heater",              &config.extruder_ctc[1].pin_heater,  TYPE_PIN_DEF, {.val_pin_def = EXTRUDER_0_HEATER_PIN}},
-  { "extruder_1.temp_sensor",         &config.extruder_ctc[1].pin_temp_sensor,  TYPE_PIN_DEF, {.val_pin_def = EXTRUDER_0_SENSOR_ADC_PIN}},
-  { "extruder_1.cooler",              &config.extruder_ctc[1].pin_cooler,  TYPE_PIN_DEF, {.val_pin_def = EXTRUDER_0_FAN_PIN}},
-  { "extruder_1.sensor_adc_channel",  &config.extruder_ctc[1].sensor_adc_channel,  TYPE_INT, {.val_i = EXTRUDER_0_SENSOR_ADC_CHANNEL}},
+  { "extruder_1.heater",              &config.extruder_ctc[1].pin_heater,  TYPE_PIN_DEF, {.val_pin_def = UNDEFINED_PIN_DEF}},
+  { "extruder_1.temp_sensor",         &config.extruder_ctc[1].pin_temp_sensor,  TYPE_PIN_DEF, {.val_pin_def = UNDEFINED_PIN_DEF}},
+  { "extruder_1.cooler",              &config.extruder_ctc[1].pin_cooler,  TYPE_PIN_DEF, {.val_pin_def = UNDEFINED_PIN_DEF}},
+  { "extruder_1.sensor_adc_channel",  &config.extruder_ctc[1].sensor_adc_channel,  TYPE_INT, {.val_i = UNDEFINED_PIN_DEF}},
 
 };
 

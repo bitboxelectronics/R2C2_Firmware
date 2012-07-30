@@ -61,12 +61,12 @@ uint8_t   file_mode;
 uint32_t  filesize = 0;
 uint32_t  sd_pos = 0;
 
-#define EXTRUDER_NUM_1  1
-#define EXTRUDER_NUM_2  2
-#define EXTRUDER_NUM_3  4
+#define EXTRUDER_NUM_0  1
+#define EXTRUDER_NUM_1  2
+#define EXTRUDER_NUM_2  4
 
 uint8_t   extruders_on;
-double    extruder_1_speed;         // in RPM
+double    extruder_0_speed;         // in RPM
 
 uint32_t  auto_prime_steps = 0;
 uint32_t  auto_reverse_steps = 0;
@@ -98,7 +98,7 @@ static void enqueue_move (tTarget *pTarget)
     request.target= *pTarget;
     request.target.invert_feed_rate =  false;
     
-    if (config.enable_extruder_1 == 0)
+    if (config.enable_extruder_0 == 0)
       request.target.e = startpoint.e;
 
     plan_buffer_action (&request);
@@ -159,7 +159,7 @@ static void SpecialMoveE (double e, double feed_rate)
 {
   tTarget next_targetd;
   
-  if (config.enable_extruder_1)
+  if (config.enable_extruder_0)
   {
     next_targetd = startpoint;
     next_targetd.e = startpoint.e + e;
@@ -447,13 +447,13 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
 
       // G1 - synchronised motion
       case 1:
-      if ( (extruders_on == EXTRUDER_NUM_1) && !next_target.seen_E)
+      if ( (extruders_on == EXTRUDER_NUM_0) && !next_target.seen_E)
       {
         // approximate translation for 3D code. distance to extrude is move distance times extruder speed factor
         //TODO: extrude distance for Z moves
         double d = calc_distance (ABS(next_targetd.x - startpoint.x), ABS(next_targetd.y - startpoint.y));
         
-        next_targetd.e = startpoint.e + d * extruder_1_speed / next_targetd.feed_rate * 24.0;
+        next_targetd.e = startpoint.e + d * extruder_0_speed / next_targetd.feed_rate * 24.0;
       }
       enqueue_move(&next_targetd);
       break;
@@ -603,6 +603,27 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
   {
     switch (next_target.M)
     {
+      // M0 - Stop? / pause-feedhold 
+      case 0: 
+      break;
+
+      // M1 - SLeep  /pause-feedhold
+      case 1: 
+      break;
+
+      // M2 - Program end
+      case 2: 
+      break;
+
+      // M17 - Enable/power on steppers motors
+      case 17: 
+        enable_all_axes();
+      break;
+
+      // M18 - Disable all stepper motors
+      case 18: 
+        disable_all_axes();
+      break;
 
       // SD File functions
       case 20: // M20 - list SD Card files
@@ -716,13 +737,35 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
       // processed in gcode_parse_line()
       break;
 
+      case 80: // M80 - ATX Power On 
+        // Bring ATX PSU out of standby
+        // Enable motor/heater PSU (e.g. 12V/24V supply)
+        atx_power_on();
+      break;
+
+      case 81: // M81 - ATX Power Off 
+        // Put ATX PSU into standby, board runs off +5V standby
+        // Disable motor/heater PSU (e.g. 12V/24V supply)
+        atx_power_off();
+      break;
+
       case 82: // M82 - use absolute distance for extrusion
       // no-op, we always do absolute
       break;
+
+      case 83: // M83 - use relative distance for extrusion
+      // no-op, we always do absolute
+      break;
+
+      case 84: // M84 - disable idle hold / enable idle timeout
+      // when printer is idle, disable stepper motors to reduce nuisance noises
+      // default: idle hold is on (no idle timeout)
       
+      break;
+
       // M101- extruder on
       case 101:
-      extruders_on = EXTRUDER_NUM_1;
+      extruders_on = EXTRUDER_NUM_0;
       if (auto_prime_steps != 0)
       {      
         SpecialMoveE ((double)auto_prime_steps / auto_prime_factor, auto_prime_feed_rate);
@@ -741,9 +784,9 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
       }
       break;
 
-      // M104- set temperature
+      // M104- set temperature (fast)
       case 104:
-      if (config.enable_extruder_1)
+      if (config.enable_extruder_0)
       {
         temp_set(next_target.S, EXTRUDER_0);
       
@@ -782,13 +825,13 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
       case 108:
       if (next_target.seen_S)
       {
-        extruder_1_speed = (double)next_target.S / 10.0;
+        extruder_0_speed = (double)next_target.S / 10.0;
       }
       break;
 
       // M109- set temp and wait
       case 109:
-      if (config.enable_extruder_1)
+      if (config.enable_extruder_0)
       {
         temp_set(next_target.S, EXTRUDER_0);
         enqueue_wait_for_temperatures();
@@ -802,14 +845,15 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
 
       // M111- set debug level
       case 111:
-      //debug_flags = next_target.S;
+        if (next_target.seen_S)
+          config.debug_flags = next_target.S;
       break;
 
-      // M112- immediate stop
+      // M112- emergency/immediate stop
       case 112:
-      disableHwTimer(0); // disable stepper ?
-      //TODO: queue_flush();
-      power_off();
+        disableHwTimer(0); // disable stepper ?
+        //TODO: queue_flush();
+        atx_power_off();
       break;
 
       // M113- extruder PWM
@@ -833,7 +877,18 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
       
       // M115- report firmware version
       case 115:
-        lw_fprintf(pGcodeInputMsg->out_file, "FIRMWARE_NAME:Teacup_R2C2 FIRMWARE_URL:http%%3A//github.com/bitboxelectronics/R2C2_Firmware PROTOCOL_VERSION:1.0 MACHINE_TYPE:Mendel R2C2_BOOTLOAD:1.0\r\n");
+        lw_fprintf(pGcodeInputMsg->out_file, "FIRMWARE_NAME:Teacup_R2C2 FIRMWARE_URL:http%%3A//github.com/bitboxelectronics/R2C2_Firmware " 
+                "PROTOCOL_VERSION:1.0 MACHINE_TYPE:Mendel FEATURES:0/R2C2_BOOTLOAD\r\n");
+      break;
+
+      // M116 - Wait for all temperatures and other slowly-changing variables to arrive at their set values
+      case 116:
+
+      break;
+
+      // M118 - select features
+      case 118:
+
       break;
 
       // M119 - Get Endstop Status
@@ -924,29 +979,18 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
       // M190- power on
       case 190:
       {
-        int axis;
-
-        power_on();
-        
-        for (axis = 0; axis < config.num_axes; axis++)
-        {
-          if (config.axis [axis].is_configured)
-            axis_enable (axis);
-        }
+        atx_power_on();
+        enable_all_axes();
         steptimeout = 0;
       }
       break;
 
       // M191- power off
+      // same as M2?
       case 191:
       {
-        int axis;
-        for (axis = 0; axis < config.num_axes; axis++)
-        {
-          if (config.axis [axis].is_configured)
-            axis_disable (axis);
-        }
-        power_off();
+        disable_all_axes();
+        atx_power_off();
       }
       break;
 

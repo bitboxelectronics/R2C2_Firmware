@@ -62,11 +62,6 @@ FATFS   fs;       /* Work area (file system object) for logical drive */
 tTimer  temperatureTimer;
 
 
-/* Initialize ADC for reading sensors */
-void adc_init(void)
-{
-  ADC_Init(LPC_ADC, 200000); /* ADC conversion rate = 200Khz */
-}
 
 void ctc_init (tCtcSettings *ctc_config)
 {
@@ -104,7 +99,7 @@ void io_init(void)
 
   /* setup stepper axes */
   set_pin_mode (config.pin_all_steppers_reset, OUTPUT);
-  write_pin (config.pin_all_steppers_reset, DISABLE); /* Disable reset for all stepper motors */
+  write_pin (config.pin_all_steppers_reset, DISABLE); /* Disable reset state for all stepper motors */
 
   for (axis = 0; axis < MAX_AXES; axis++)
   {
@@ -225,10 +220,15 @@ void PrinterTask( void *pvParameters )
     {
       timer1 = millis() + DELAY1;
 
+      //TODO: there are two types of timeout, 
+      // 1: disable steppers when idle to avoid nuisance noise
+      // 2: safe power off (steppers, heaters) after being idle for a while, in case machine is unattended and
+      //    host has stopped without clean up, or user has just forgot to turn things off.
+       
       /* If there are no activity during 30 seconds, power off the machine */
       if (steptimeout > (30 * 1000/DELAY1))
       {
-        power_off();
+        atx_power_off();
       }
       else
       {

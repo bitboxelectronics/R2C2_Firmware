@@ -215,7 +215,7 @@ typedef struct
   
   // options
   int32_t wait_on_temp;
-  int32_t enable_extruder_1;
+  int32_t enable_extruder_0;
   
 } tApplicationConfiguration;
 

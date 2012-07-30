@@ -37,6 +37,12 @@
 #include "adc.h"
 
 
+/* Initialize ADC for reading sensors */
+void adc_init(void)
+{
+  ADC_Init(LPC_ADC, 200000); /* ADC conversion rate = 200Khz */
+}
+
 uint16_t analog_read(uint8_t adc_channel)
 {
   ADC_ChannelCmd(LPC_ADC, adc_channel, ENABLE);

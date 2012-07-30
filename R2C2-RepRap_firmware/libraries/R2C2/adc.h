@@ -34,6 +34,7 @@
 
 /* Initialize ADC for extruder temperature reading */
 void adc_init(void);
+
 uint16_t analog_read(uint8_t adc_channel);
 
 #endif

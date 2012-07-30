@@ -67,24 +67,24 @@
       </file>
       <file file_name="libraries/R2C2/str_buffer.c"/>
       <file file_name="libraries/R2C2/debug.c"/>
+      <file file_name="libraries/R2C2/config.c"/>
     </folder>
     <folder Name="app_reprap">
-      <file file_name="RepRap/Mendel/alerter.c"/>
-      <file file_name="RepRap/Mendel/config.c"/>
-      <file file_name="RepRap/Mendel/endstops.c"/>
-      <file file_name="RepRap/Mendel/gcode_parse.c"/>
-      <file file_name="RepRap/Mendel/gcode_process.c"/>
-      <file file_name="RepRap/Mendel/geometry.c"/>
-      <file file_name="RepRap/Mendel/mendel.c"/>
-      <file file_name="RepRap/Mendel/temp.c"/>
-      <file file_name="RepRap/Mendel/usb_shell_task.c"/>
-      <file file_name="app/grbl/planner.c"/>
-      <file file_name="app/grbl/stepper.c"/>
-      <file file_name="RepRap/Mendel/gcode_task.c"/>
-      <file file_name="RepRap/Mendel/eth_shell_task.c"/>
-      <file file_name="RepRap/Mendel/app_config.c"/>
-      <file file_name="RepRap/Mendel/pin_control.c"/>
-      <file file_name="RepRap/Mendel/uart_shell_task.c"/>
+      <file file_name="app/alerter.c"/>
+      <file file_name="app/app_config.c"/>
+      <file file_name="app/endstops.c"/>
+      <file file_name="app/eth_shell_task.c"/>
+      <file file_name="app/gcode_parse.c"/>
+      <file file_name="app/gcode_process.c"/>
+      <file file_name="app/gcode_task.c"/>
+      <file file_name="app/geometry.c"/>
+      <file file_name="app/mendel.c"/>
+      <file file_name="app/pin_control.c"/>
+      <file file_name="app/planner.c"/>
+      <file file_name="app/stepper.c"/>
+      <file file_name="app/temp.c"/>
+      <file file_name="app/uart_shell_task.c"/>
+      <file file_name="app/usb_shell_task.c"/>
     </folder>
     <folder Name="lib_FreeRTOS">
       <file file_name="libraries/FreeRTOS/Source/list.c"/>

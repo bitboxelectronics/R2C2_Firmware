@@ -45,6 +45,9 @@ void axis_unstep    (unsigned axis);
 void axis_set_direction (unsigned axis, unsigned dir);
 bool axis_min (unsigned axis);
 
+void enable_all_axes (void);
+void disable_all_axes (void);
+
 // Setting step outputs happens in time critical interrupts
 // these macros can be defined to faster/direct versions if necessary
 
@@ -88,8 +91,8 @@ bool axis_min (unsigned axis);
 
 // other functions
 //  for ATX power supply?
-void power_on();
-void power_off();
+void atx_power_on();
+void axt_power_off();
 
 
 #endif

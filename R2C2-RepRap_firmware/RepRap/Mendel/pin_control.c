@@ -64,13 +64,39 @@ bool axis_min (unsigned axis)
   else
     return false;  
 }
-  
-void power_on()
+
+// enable all axes
+void enable_all_axes (void)
+{
+  int axis;
+
+  for (axis = 0; axis < config.num_axes; axis++)
+  {
+    if (config.axis [axis].is_configured)
+      axis_enable (axis);
+  }
+}
+
+// disable all axes
+void disable_all_axes (void)
+{
+  int axis;
+
+  for (axis = 0; axis < config.num_axes; axis++)
+  {
+    if (config.axis [axis].is_configured)
+      axis_disable (axis);
+  }
+}
+
+
+
+void atx_power_on()
 {
   //TODO
 }
 
-void power_off()
+void atx_power_off()
 {
   //TODO
 }

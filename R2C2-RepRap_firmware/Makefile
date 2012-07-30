@@ -139,13 +139,12 @@ FREERTOS_SOURCE_DIR = $(FREERTOS_PATH)/Source
 FREERTOS_PORT_DIR = $(FREERTOS_SOURCE_DIR)/portable/GCC/ARM_CM3
 
 # application dir and source
-APPDIR = RepRap/Mendel
+APPDIR = app
 APPSRC = \
 	$(APPDIR)/gcode_parse.c \
 	$(APPDIR)/gcode_process.c \
 	$(APPDIR)/mendel.c \
 	$(APPDIR)/temp.c \
-	$(APPDIR)/config.c \
 	$(APPDIR)/app_config.c \
 	$(APPDIR)/endstops.c \
 	$(APPDIR)/pin_control.c \
@@ -155,8 +154,8 @@ APPSRC = \
 	$(APPDIR)/usb_shell_task.c \
 	$(APPDIR)/eth_shell_task.c \
 	$(APPDIR)/gcode_task.c \
-	app/grbl/planner.c \
-	app/grbl/stepper.c
+	$(APPDIR)/planner.c \
+	$(APPDIR)/stepper.c
 
 #	app/grbl/print.c \
 #	app/grbl/eeprom.c \

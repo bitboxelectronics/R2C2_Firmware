@@ -35,7 +35,7 @@
 //#include "settings.h"
 //#include "config.h"
 
-#include "RepRap/Mendel/app_config.h"
+#include "app_config.h"
 
 // The number of linear motions that can be in the plan at any give time
 

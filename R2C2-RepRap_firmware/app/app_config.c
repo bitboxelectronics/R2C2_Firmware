@@ -214,7 +214,7 @@ static tConfigItem config_lookup_pindef [] =
   { "extruder_1.heater",              &config.extruder_ctc[1].pin_heater,  TYPE_PIN_DEF, {.val_pin_def = UNDEFINED_PIN_DEF}},
   { "extruder_1.temp_sensor",         &config.extruder_ctc[1].pin_temp_sensor,  TYPE_PIN_DEF, {.val_pin_def = UNDEFINED_PIN_DEF}},
   { "extruder_1.cooler",              &config.extruder_ctc[1].pin_cooler,  TYPE_PIN_DEF, {.val_pin_def = UNDEFINED_PIN_DEF}},
-  { "extruder_1.sensor_adc_channel",  &config.extruder_ctc[1].sensor_adc_channel,  TYPE_INT, {.val_i = UNDEFINED_PIN_DEF}},
+  { "extruder_1.sensor_adc_channel",  &config.extruder_ctc[1].sensor_adc_channel,  TYPE_INT, {.val_i = 0}},
 
 };
 

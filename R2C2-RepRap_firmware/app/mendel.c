@@ -31,16 +31,13 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-/* RTOS includes. */
-#include "FreeRTOS.h"
-#include "task.h"
+#include "rtos_api.h"
 
 #include "lpc17xx_timer.h"
 #include "lpc17xx_wdt.h"
 #include "lpc17xx_adc.h"
 
 #include "r2c2.h"
-#include "machine.h"
 #include "gcode_parse.h"
 //#include "pinout.h"
 #include "pin_control.h"

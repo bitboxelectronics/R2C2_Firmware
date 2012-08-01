@@ -29,8 +29,8 @@
 #ifndef	_GCODE_TASK_H
 #define	_GCODE_TASK_H
 
-#include "FreeRTOS.h"
-#include "queue.h"
+#include "rtos_api.h"
+
 
 //#include "gcode_parse.h"
 #include "lw_io.h"

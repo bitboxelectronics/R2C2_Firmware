@@ -27,9 +27,8 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "FreeRTOS.h"
-#include "queue.h"
-#include "task.h"
+#include "machine.h"
+#include "rtos_api.h"
 
 #include "r2c2.h"
 #include "lw_io.h"

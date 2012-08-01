@@ -39,8 +39,9 @@
 #define F_CPU 100000000 /* 100MHz */
 
 
-
 //#define USE_BOOT_BUTTON
 
+
+#define USE_FREERTOS
 
 #endif	/* _MACHINE_H */  

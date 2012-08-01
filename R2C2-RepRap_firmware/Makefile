@@ -157,17 +157,11 @@ APPSRC = \
 	$(APPDIR)/planner.c \
 	$(APPDIR)/stepper.c
 
-#	app/grbl/print.c \
-#	app/grbl/eeprom.c \
-#	app/grbl/settings.c \
-# $(APPDIR)/dda_queue.c \
-#	$(APPDIR)/dda.c \
-
-
+# 
 #APPDIR = sample
 #APPSRC = $(APPDIR)/sample_app.c
 
-# Utility variables
+# 
 APPLIBDIR    = libraries
 INCLUDES = $(APPLIBDIR)/CMSISv1p30_LPC17xx/inc \
 	 $(APPLIBDIR)/LPCUSB/inc \
@@ -183,6 +177,11 @@ INCLUDES = $(APPLIBDIR)/CMSISv1p30_LPC17xx/inc \
 	 app/grbl/ \
 	 $(APPDIR)
 
+FREERTOS_SRC = $(FREERTOS_SOURCE_DIR)/list.c \
+	$(FREERTOS_SOURCE_DIR)/queue.c \
+	$(FREERTOS_SOURCE_DIR)/tasks.c \
+	$(FREERTOS_SOURCE_DIR)/portable/MemMang/heap_2.c \
+	$(FREERTOS_PORT_DIR)/port.c \
 
 # List C source files here. (C dependencies are automatically generated.)
 # use file-extension c for "c-only"-files
@@ -191,16 +190,12 @@ SRC = \
 	$(APPLIBDIR)/CMSISv1p30_LPC17xx/src/system_LPC17xx.c \
 	$(wildcard $(APPLIBDIR)/NXP/Drivers/source/lpc17xx_*.c) \
 	$(wildcard $(APPLIBDIR)/FatFs/src/*.c) \
-	$(wildcard $(APPLIBDIR)/R2C2/*.c) \
+	$(filter-out $(APPLIBDIR)/R2C2/lw_rtos.c, $(wildcard $(APPLIBDIR)/R2C2/*.c)) \
 	$(wildcard $(APPLIBDIR)/ethernet/*.c) \
-	$(FREERTOS_SOURCE_DIR)/list.c \
-	$(FREERTOS_SOURCE_DIR)/queue.c \
-	$(FREERTOS_SOURCE_DIR)/tasks.c \
-	$(FREERTOS_SOURCE_DIR)/portable/MemMang/heap_2.c \
-	$(FREERTOS_PORT_DIR)/port.c \
+	$(FREERTOS_SRC) \
 	$(APPSRC) \
 	main.c
-	
+
 	
 # List C source files here which must be compiled in ARM-Mode (no -mthumb).
 # use file-extension c for "c-only"-files

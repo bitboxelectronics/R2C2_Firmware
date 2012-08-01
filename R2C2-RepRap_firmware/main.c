@@ -27,13 +27,10 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
-/* RTOS includes. */
-#include "FreeRTOS.h"
-#include "task.h"
-
-#include "lw_io.h"
+#include "rtos_api.h"
 
 /* Application includes */
+#include "lw_io.h"
 #include "r2c2.h"
 #include "uart.h"
 #include "soundplay.h"
@@ -58,6 +55,16 @@ void startup_delay(void)
   for (volatile unsigned long i = 0; i < 500000; i++) { ; }
 }
 
+void fatal_error (void)
+{
+  for( ;; )
+  {
+    buzzer_play_sync (FREQ_B4, 1000);
+    buzzer_play_sync (FREQ_A4, 1000);
+  }
+}
+
+#ifdef USE_FREERTOS
 /**********************************************************************/
 /* Called from every tick interrupt */
 void vApplicationTickHook( void )
@@ -67,15 +74,6 @@ void vApplicationTickHook( void )
   ulTicksSinceLastDisplay++;
 
   r2c2_SysTick();
-}
-
-void fatal_error (void)
-{
-  for( ;; )
-  {
-    buzzer_play_sync (FREQ_B4, 1000);
-    buzzer_play_sync (FREQ_A4, 1000);
-  }
 }
 
 /**********************************************************************/
@@ -90,6 +88,8 @@ void vApplicationStackOverflowHook( xTaskHandle *pxTask, signed char *pcTaskName
 
   fatal_error();
 }
+
+#endif
 
 /**********************************************************************
  * @brief	Main sub-routine
@@ -115,8 +115,7 @@ int main(void)
   DBG_INIT();
   DBGF ("init\n");
 
-#if 0
-// #ifndef USE_FREERTOS
+#if !defined(USE_FREERTOS)
   SysTickTimer_Init(); // Initialize the timer for millis()
 #endif
 

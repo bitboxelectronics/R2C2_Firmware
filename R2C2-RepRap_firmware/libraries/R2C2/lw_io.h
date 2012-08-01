@@ -42,7 +42,7 @@
 #define SEEK_END 2
 
 #define LW_FILENAME_MAX 256
-#define LW_FOPEN_MAX   32
+#define LW_FOPEN_MAX   16
 #define LW_TMP_MAX     256
 #define LW_L_tmpnam    256
 

@@ -53,6 +53,6 @@ extern bool sd_write_to_file(char *pStr, unsigned bytes_to_write);
 extern bool sd_read_file (tLineBuffer *pLine);
 
 // when we have a command, feed it to this
-eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg);
+eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg, tGcodeInterpreterState *pInterpreterState);
 
 #endif	/* _GCODE_PROCESS_H */

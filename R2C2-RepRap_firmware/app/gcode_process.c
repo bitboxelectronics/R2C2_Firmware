@@ -28,6 +28,13 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
+/*
+  References:
+  [1]  http://reprap.org/wiki/G-code
+  [2]  "The NIST RS274NGC Interpreter - Version 3"
+
+*/
+
 #include   <string.h>
 #include   <ctype.h>  // for tolower
 
@@ -87,7 +94,6 @@ static char tolower (char c)
 
 static void enqueue_move (tTarget *pTarget)
 {
-  // grbl
   tActionRequest request;
   
   if (pTarget->x != startpoint.x || pTarget->y != startpoint.y ||
@@ -95,8 +101,8 @@ static void enqueue_move (tTarget *pTarget)
      )
   {  
     request.ActionType = AT_MOVE;
-    request.target= *pTarget;
-    request.target.invert_feed_rate =  false;
+    request.target = *pTarget;
+    request.target.invert_feed_rate = false;
     
     if (config.enable_extruder_0 == 0)
       request.target.e = startpoint.e;
@@ -157,14 +163,14 @@ static void SpecialMoveZ(double z, double f)
 
 static void SpecialMoveE (double e, double feed_rate) 
 {
-  tTarget next_targetd;
+  tTarget next_target;
   
   if (config.enable_extruder_0)
   {
-    next_targetd = startpoint;
-    next_targetd.e = startpoint.e + e;
-    next_targetd.feed_rate = feed_rate;
-    enqueue_move(&next_targetd);
+    next_target = startpoint;
+    next_target.e = startpoint.e + e;
+    next_target.feed_rate = feed_rate;
+    enqueue_move(&next_target);
   }
 }
 
@@ -393,69 +399,71 @@ void sd_seek(FIL *pFile, unsigned pos)
 *                                                                           *
 ****************************************************************************/
 
-eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
+eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg, tGcodeInterpreterState *pInterpreterState)
 {
   double backup_f;
   uint8_t axisSelected = 0;
   eParseResult result = PR_OK;
   bool reply_sent = false;
   
-  tTarget next_targetd = startpoint;
+  tTarget next_target = startpoint;
 
   // convert relative to absolute
-  if (next_target.option_relative)
+  if (pInterpreterState->option_relative)
   {  
-    next_targetd.x = startpoint.x + next_target.target.x;
-    next_targetd.y = startpoint.y + next_target.target.y;
-    next_targetd.z = startpoint.z + next_target.target.z;
-    next_targetd.e = startpoint.e + next_target.target.e;
-    if (next_target.seen_F)
-      next_targetd.feed_rate = next_target.target.feed_rate;
+    next_target.x = startpoint.x + gcode_command.target.x;
+    next_target.y = startpoint.y + gcode_command.target.y;
+    next_target.z = startpoint.z + gcode_command.target.z;
+    next_target.e = startpoint.e + gcode_command.target.e;
+    if (gcode_command.seen_F)
+      next_target.feed_rate = gcode_command.target.feed_rate;
   }
   else
   {
     // absolute
-    if (next_target.seen_X)
-      next_targetd.x = next_target.target.x;
-    if (next_target.seen_Y)
-      next_targetd.y = next_target.target.y;
-    if (next_target.seen_Z)
-      next_targetd.z = next_target.target.z;
-    if (next_target.seen_E)
-      next_targetd.e = next_target.target.e;  
-    if (next_target.seen_F)
-      next_targetd.feed_rate = next_target.target.feed_rate;
+    if (gcode_command.seen_X)
+      next_target.x = gcode_command.target.x;
+    if (gcode_command.seen_Y)
+      next_target.y = gcode_command.target.y;
+    if (gcode_command.seen_Z)
+      next_target.z = gcode_command.target.z;
+    if (gcode_command.seen_E)
+      next_target.e = gcode_command.target.e;  
+    if (gcode_command.seen_F)
+      next_target.feed_rate = gcode_command.target.feed_rate;
   }
 
-//  lw_fprintf(pGcodeInputMsg->out_file, " X:%ld Y:%ld Z:%ld E:%ld F:%ld\r\n", (int32_t)next_target.target.X, (int32_t)next_target.target.Y, (int32_t)next_target.target.Z, (int32_t)next_target.target.E, (uint32_t)next_target.target.F);
-//  lw_fprintf(pGcodeInputMsg->out_file, " X:%g Y:%g Z:%g E:%g F:%g\r\n", next_targetd.x, next_targetd.y, next_targetd.z, next_targetd.e, next_targetd.feed_rate);
+//  lw_fprintf(pGcodeInputMsg->out_file, " X:%ld Y:%ld Z:%ld E:%ld F:%ld\r\n", (int32_t)gcode_command.target.X, (int32_t)gcode_command.target.Y, (int32_t)gcode_command.target.Z, (int32_t)gcode_command.target.E, (uint32_t)gcode_command.target.F);
+//  lw_fprintf(pGcodeInputMsg->out_file, " X:%g Y:%g Z:%g E:%g F:%g\r\n", next_target.x, next_target.y, next_target.z, next_target.e, next_target.feed_rate);
     
   // E ALWAYS absolute 
 	
-  if (next_target.seen_G)
+  if (gcode_command.seen_G)
   {
-    switch (next_target.G)
+    switch (gcode_command.G)
     {
       // G0 - rapid, unsynchronised motion
       // since it would be a major hassle to force the stepper to not synchronise, just provide a fast feedrate and hope it's close enough to what host expects
+      // CAN BLOCK
       case 0:
-      backup_f = next_targetd.feed_rate;
-      next_targetd.feed_rate = config.axis[X_AXIS].maximum_feedrate * 2;
-      enqueue_move (&next_targetd);
-      next_targetd.feed_rate = backup_f;
+      backup_f = next_target.feed_rate;
+      next_target.feed_rate = config.axis[X_AXIS].maximum_feedrate * 2;
+      enqueue_move (&next_target);
+      next_target.feed_rate = backup_f;
       break;
 
       // G1 - synchronised motion
+      // CAN BLOCK
       case 1:
-      if ( (extruders_on == EXTRUDER_NUM_0) && !next_target.seen_E)
+      if ( (extruders_on == EXTRUDER_NUM_0) && !gcode_command.seen_E)
       {
         // approximate translation for 3D code. distance to extrude is move distance times extruder speed factor
         //TODO: extrude distance for Z moves
-        double d = calc_distance (ABS(next_targetd.x - startpoint.x), ABS(next_targetd.y - startpoint.y));
+        double d = calc_distance (ABS(next_target.x - startpoint.x), ABS(next_target.y - startpoint.y));
         
-        next_targetd.e = startpoint.e + d * extruder_0_speed / next_targetd.feed_rate * 24.0;
+        next_target.e = startpoint.e + d * extruder_0_speed / next_target.feed_rate * 24.0;
       }
-      enqueue_move(&next_targetd);
+      enqueue_move(&next_target);
       break;
 
       //	G2 - Arc Clockwise
@@ -465,51 +473,54 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
       // unimplemented
 
       //	G4 - Dwell
+      // CAN BLOCK
       case 4:
       // wait for all moves to complete
       synch_queue();
       
       // delay
-      delay_ms(next_target.P);
+      delay_ms(gcode_command.P);
       break;
 
       //	G20 - inches as units
       case 20:
-      next_target.option_inches = 1;
+        pInterpreterState->option_inches = 1;
       break;
 
       //	G21 - mm as units
       case 21:
-      next_target.option_inches = 0;
+        pInterpreterState->option_inches = 0;
       break;
 
       //	G30 - go home via point
+      // CAN BLOCK
       case 30:
-      enqueue_move(&next_targetd);
+      enqueue_move(&next_target);
       // no break here, G30 is move and then go home
 
       //	G28 - go home
+      // CAN BLOCK
       case 28:
       
-      if (next_target.seen_X)
+      if (gcode_command.seen_X)
       {
         zero_x();
         axisSelected = 1;
       }
 
-      if (next_target.seen_Y)
+      if (gcode_command.seen_Y)
       {
         zero_y();
         axisSelected = 1;
       }
 
-      if (next_target.seen_Z)
+      if (gcode_command.seen_Z)
       {
         zero_z();
         axisSelected = 1;
       }
 
-      if (next_target.seen_E)
+      if (gcode_command.seen_E)
       {
         zero_e();
         axisSelected = 1;
@@ -521,10 +532,10 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
         {
           // move stage down to clear Z endstop
           // Rapman only?
-          next_targetd = startpoint;
-          next_targetd.z += 3;
-          next_targetd.feed_rate = config.axis[Z_AXIS].homing_feedrate;
-          enqueue_move(&next_targetd);
+          next_target = startpoint;
+          next_target.z += 3;
+          next_target.feed_rate = config.axis[Z_AXIS].homing_feedrate;
+          enqueue_move(&next_target);
         }
                 
         zero_x();
@@ -539,15 +550,16 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
 
       // G90 - absolute positioning
       case 90:
-      next_target.option_relative = 0;
+        pInterpreterState->option_relative = 0;
       break;
 
       // G91 - relative positioning
       case 91:
-      next_target.option_relative = 1;
+        pInterpreterState->option_relative = 1;
       break;
 
       //	G92 - set home
+      // CAN BLOCK
       case 92:
       {
         tTarget new_pos;
@@ -557,25 +569,25 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
 
       new_pos = startpoint;
       
-      if (next_target.seen_X)
+      if (gcode_command.seen_X)
       {
-        new_pos.x = next_target.target.x;
+        new_pos.x = gcode_command.target.x;
         axisSelected = 1;
       }
 
-      if (next_target.seen_Y)
+      if (gcode_command.seen_Y)
       {
-        new_pos.y = next_target.target.y;
+        new_pos.y = gcode_command.target.y;
         axisSelected = 1;
       }
 
-      if (next_target.seen_Z)
+      if (gcode_command.seen_Z)
       {
-        new_pos.z = next_target.target.z;
+        new_pos.z = gcode_command.target.z;
         axisSelected = 1;
       }
 
-      if (next_target.seen_E)
+      if (gcode_command.seen_E)
       {
         new_pos.e = 0;
         axisSelected = 1;
@@ -595,13 +607,13 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
 
       // unknown gcode: spit an error
       default:
-        lw_fprintf (pGcodeInputMsg->out_file, "E: Bad G-code %d\r\n", next_target.G);
+        lw_fprintf (pGcodeInputMsg->out_file, "E: Bad G-code %d\r\n", gcode_command.G);
         result = PR_ERROR;
     }
   }
-  else if (next_target.seen_M)
+  else if (gcode_command.seen_M)
   {
-    switch (next_target.M)
+    switch (gcode_command.M)
     {
       // M0 - Stop? / pause-feedhold 
       case 0: 
@@ -655,12 +667,12 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
       {
         sd_printing = false;
         sd_close(&file);
-        if (sd_open(&file, next_target.str_param, FA_READ, pGcodeInputMsg->out_file)) 
+        if (sd_open(&file, gcode_command.str_param, FA_READ, pGcodeInputMsg->out_file)) 
         {
           file_input_msg.out_file = pGcodeInputMsg->out_file;
           filesize = sd_filesize(&file);
           sd_pos = 0;
-          lw_fprintf(pGcodeInputMsg->out_file, "File opened: %s Size: %d\r\n", next_target.str_param, filesize);
+          lw_fprintf(pGcodeInputMsg->out_file, "File opened: %s Size: %d\r\n", gcode_command.str_param, filesize);
           lw_fprintf(pGcodeInputMsg->out_file, "File selected\r\n");
         }
         else
@@ -685,9 +697,9 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
       break;
     
       case 26: //M26 - Set SD file pos
-      if(sd_active && next_target.seen_S)
+      if(sd_active && gcode_command.seen_S)
       {
-        sd_pos = next_target.S;  // 16 bit
+        sd_pos = gcode_command.S;  // 16 bit
         sd_seek(&file, sd_pos);
       }
       break;
@@ -712,19 +724,19 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
         sd_close(&file);
         sd_printing = false;
 
-        if (!sd_open(&file, next_target.str_param, FA_CREATE_ALWAYS | FA_WRITE, pGcodeInputMsg->out_file))
+        if (!sd_open(&file, gcode_command.str_param, FA_CREATE_ALWAYS | FA_WRITE, pGcodeInputMsg->out_file))
         {
-          lw_fprintf(pGcodeInputMsg->out_file, "E: open failed, File: %s.\r\n", next_target.str_param);
+          lw_fprintf(pGcodeInputMsg->out_file, "E: open failed, File: %s.\r\n", gcode_command.str_param);
         }
         else
         {
-          if (next_target.seen_S && (next_target.S == 1))
+          if (gcode_command.seen_S && (gcode_command.S == 1))
             file_mode = FM_HEX_BIN;
           else
             file_mode = FM_GCODE;
 
           sd_writing_file = true;
-          lw_fprintf(pGcodeInputMsg->out_file, "Writing to file: %s\r\n", next_target.str_param);
+          lw_fprintf(pGcodeInputMsg->out_file, "Writing to file: %s\r\n", gcode_command.str_param);
         }
       }
       break;
@@ -764,6 +776,7 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
       break;
 
       // M101- extruder on
+      // CAN BLOCK
       case 101:
       extruders_on = EXTRUDER_NUM_0;
       if (auto_prime_steps != 0)
@@ -776,6 +789,7 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
       // M102- extruder reverse
 
       // M103- extruder off
+      // CAN BLOCK
       case 103:
       extruders_on = 0;
       if (auto_reverse_steps != 0)
@@ -785,10 +799,11 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
       break;
 
       // M104- set temperature (fast)
+      // CAN BLOCK
       case 104:
       if (config.enable_extruder_0)
       {
-        temp_set(next_target.S, EXTRUDER_0);
+        temp_set(gcode_command.S, EXTRUDER_0);
       
         if (config.wait_on_temp)
           enqueue_wait_for_temperatures();
@@ -823,30 +838,34 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
       // M108 - set extruder speed
       // S = RPM * 10
       case 108:
-      if (next_target.seen_S)
+      if (gcode_command.seen_S)
       {
-        extruder_0_speed = (double)next_target.S / 10.0;
+        extruder_0_speed = (double)gcode_command.S / 10.0;
       }
       break;
 
       // M109- set temp and wait
+      // CAN BLOCK
       case 109:
       if (config.enable_extruder_0)
       {
-        temp_set(next_target.S, EXTRUDER_0);
+        temp_set(gcode_command.S, EXTRUDER_0);
         enqueue_wait_for_temperatures();
       }
       break;
 
       // M110- set line number
+      // G-Code spec [1] has parameter N, but that would be silly
       case 110:
-      next_target.N_expected = next_target.S - 1;
+        // set to S-1, 1 is added later to get correct value
+        // Note: if S not seen then N_expected = -1 (underflows unsigned)
+        pInterpreterState->N_expected = gcode_command.S - 1;
       break;
 
       // M111- set debug level
       case 111:
-        if (next_target.seen_S)
-          config.debug_flags = next_target.S;
+        if (gcode_command.seen_S)
+          config.debug_flags = gcode_command.S;
       break;
 
       // M112- emergency/immediate stop
@@ -864,7 +883,7 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
       case 114:
       // wait for queue to complete ???
 
-      if (next_target.option_inches)
+      if (pInterpreterState->option_inches)
       {
 
       }
@@ -936,26 +955,26 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
 
       // M130- heater P factor
       case 130:
-      //if (next_target.seen_S)
-        //p_factor = next_target.S;
+      //if (gcode_command.seen_S)
+        //p_factor = gcode_command.S;
       break;
       
       // M131- heater I factor
       case 131:
-        //if (next_target.seen_S)
-              //i_factor = next_target.S;
+        //if (gcode_command.seen_S)
+              //i_factor = gcode_command.S;
       break;
 
       // M132- heater D factor
       case 132:
-      //if (next_target.seen_S)
-              //d_factor = next_target.S;
+      //if (gcode_command.seen_S)
+              //d_factor = gcode_command.S;
       break;
 
       // M133- heater I limit
       case 133:
-      //if (next_target.seen_S)
-              //i_limit = next_target.S;
+      //if (gcode_command.seen_S)
+              //i_limit = gcode_command.S;
       break;
 
       // M134- save PID settings to eeprom
@@ -965,7 +984,7 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
 
       /* M140 - Bed Temperature (Fast) */
       case 140:
-      temp_set(next_target.S, HEATED_BED_0);
+      temp_set(gcode_command.S, HEATED_BED_0);
       break;
 
       /* M141 - Chamber Temperature (Fast) */
@@ -996,7 +1015,7 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
 
       // M200 - set steps per mm
       case 200:
-      if ((next_target.seen_X | next_target.seen_Y | next_target.seen_Z | next_target.seen_E) == 0)
+      if ((gcode_command.seen_X | gcode_command.seen_Y | gcode_command.seen_Z | gcode_command.seen_E) == 0)
       {
         reply_sent = true;
         lw_fprintf (pGcodeInputMsg->out_file, "ok X%g Y%g Z%g E%g\r\n", 
@@ -1008,14 +1027,14 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
       }
       else
       {
-        if (next_target.seen_X)
-          config.axis[X_AXIS].steps_per_mm = next_target.target.x;
-        if (next_target.seen_Y)
-          config.axis[Y_AXIS].steps_per_mm = next_target.target.y;
-        if (next_target.seen_Z)
-          config.axis[Z_AXIS].steps_per_mm = next_target.target.z;
-        if (next_target.seen_E)
-          config.axis[E_AXIS].steps_per_mm = next_target.target.e;
+        if (gcode_command.seen_X)
+          config.axis[X_AXIS].steps_per_mm = gcode_command.target.x;
+        if (gcode_command.seen_Y)
+          config.axis[Y_AXIS].steps_per_mm = gcode_command.target.y;
+        if (gcode_command.seen_Z)
+          config.axis[Z_AXIS].steps_per_mm = gcode_command.target.z;
+        if (gcode_command.seen_E)
+          config.axis[E_AXIS].steps_per_mm = gcode_command.target.e;
           
         gcode_parse_init();  
       }
@@ -1023,7 +1042,7 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
       
       // M202 - set max speed in mm/min
       case 202:
-      if ((next_target.seen_X | next_target.seen_Y | next_target.seen_Z | next_target.seen_E) == 0)
+      if ((gcode_command.seen_X | gcode_command.seen_Y | gcode_command.seen_Z | gcode_command.seen_E) == 0)
       {
         reply_sent = true;
         lw_fprintf (pGcodeInputMsg->out_file, "ok X%d Y%d Z%d E%d\r\n", 
@@ -1035,20 +1054,20 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
       }
       else
       {
-        if (next_target.seen_X)
-          config.axis[X_AXIS].maximum_feedrate = next_target.target.x;
-        if (next_target.seen_Y)
-          config.axis[Y_AXIS].maximum_feedrate = next_target.target.y;
-        if (next_target.seen_Z)
-          config.axis[Z_AXIS].maximum_feedrate = next_target.target.z;
-        if (next_target.seen_E)
-          config.axis[E_AXIS].maximum_feedrate = next_target.target.e;
+        if (gcode_command.seen_X)
+          config.axis[X_AXIS].maximum_feedrate = gcode_command.target.x;
+        if (gcode_command.seen_Y)
+          config.axis[Y_AXIS].maximum_feedrate = gcode_command.target.y;
+        if (gcode_command.seen_Z)
+          config.axis[Z_AXIS].maximum_feedrate = gcode_command.target.z;
+        if (gcode_command.seen_E)
+          config.axis[E_AXIS].maximum_feedrate = gcode_command.target.e;
       }
       break;
 
       // M206 - set accel in mm/sec^2
       case 206:
-      if ((next_target.seen_X | next_target.seen_Y | next_target.seen_Z | next_target.seen_E) == 0)
+      if ((gcode_command.seen_X | gcode_command.seen_Y | gcode_command.seen_Z | gcode_command.seen_E) == 0)
       {
         // TODO: per axis accel
         reply_sent = true;
@@ -1059,17 +1078,17 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
       else
       {
         // not sure this is the right way to used axis words
-        if (next_target.seen_X)
-          config.axis[X_AXIS].acceleration = next_target.target.x;
+        if (gcode_command.seen_X)
+          config.axis[X_AXIS].acceleration = gcode_command.target.x;
           
-        if (next_target.seen_Y)
-          config.axis[Y_AXIS].acceleration = next_target.target.y;
+        if (gcode_command.seen_Y)
+          config.axis[Y_AXIS].acceleration = gcode_command.target.y;
           
-        if (next_target.seen_Z)
-          config.axis[Z_AXIS].acceleration = next_target.target.z;
+        if (gcode_command.seen_Z)
+          config.axis[Z_AXIS].acceleration = gcode_command.target.z;
           
-        if (next_target.seen_E)
-          config.axis[E_AXIS].acceleration = next_target.target.e;
+        if (gcode_command.seen_E)
+          config.axis[E_AXIS].acceleration = gcode_command.target.e;
       }
       break;
       
@@ -1077,10 +1096,10 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
       // P: prime on start (steps)
       // S: reverse on stop (steps)
       case 227:
-      if (next_target.seen_S && next_target.seen_P)
+      if (gcode_command.seen_S && gcode_command.seen_P)
       {
-        auto_prime_steps = next_target.S;
-        auto_reverse_steps = next_target.P;
+        auto_prime_steps = gcode_command.S;
+        auto_reverse_steps = gcode_command.P;
       }
       break;
       
@@ -1094,25 +1113,26 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
       // P: prime on start (rotations)
       // S: reverse on stop (rotations)
       case 229:
-      if (next_target.seen_S && next_target.seen_P)
+      if (gcode_command.seen_S && gcode_command.seen_P)
       {
-        auto_prime_steps = next_target.S * config.steps_per_revolution_e;
-        auto_reverse_steps = next_target.P * config.steps_per_revolution_e;
+        auto_prime_steps = gcode_command.S * config.steps_per_revolution_e;
+        auto_reverse_steps = gcode_command.P * config.steps_per_revolution_e;
       }
       break;
       
       // M300 - beep
       // S: frequency
       // P: duration
+      // CAN BLOCK
       case 300:
       {
         float frequency = 1000;  // 1kHz
         float duration = 1000; // 1 second
         
-        if (next_target.seen_S)
-          frequency = next_target.S;
-        if (next_target.seen_P)
-          duration = next_target.P;
+        if (gcode_command.seen_S)
+          frequency = gcode_command.S;
+        if (gcode_command.seen_P)
+          duration = gcode_command.P;
 
         buzzer_wait ();          
         buzzer_play (frequency, duration);		
@@ -1134,10 +1154,10 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
       //
       case 302:
       {
-        if (next_target.seen_P) {
-          set_whole_note_time(next_target.P);
+        if (gcode_command.seen_P) {
+          set_whole_note_time(gcode_command.P);
         }
-        play_music_string(next_target.str_param);    
+        play_music_string(gcode_command.str_param);    
       }
       break;
     
@@ -1150,12 +1170,12 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
       // S: temperature (degrees C, 0-300)
       // P: ADC val
       case 500:
-      if (next_target.seen_S && next_target.seen_P)
-        temp_set_table_entry (EXTRUDER_0, next_target.S, next_target.P);
-      else if (next_target.seen_S)
+      if (gcode_command.seen_S && gcode_command.seen_P)
+        temp_set_table_entry (EXTRUDER_0, gcode_command.S, gcode_command.P);
+      else if (gcode_command.seen_S)
       {
         reply_sent = true;
-        lw_fprintf (pGcodeInputMsg->out_file, "ok [%d] = %d\r\n", next_target.S, temp_get_table_entry (EXTRUDER_0, next_target.S));
+        lw_fprintf (pGcodeInputMsg->out_file, "ok [%d] = %d\r\n", gcode_command.S, temp_get_table_entry (EXTRUDER_0, gcode_command.S));
       }
       else
         lw_fputs ("E: bad param\r\n", pGcodeInputMsg->out_file);
@@ -1165,18 +1185,19 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
       // S: temperature (degrees C, 0-300)
       // P: ADC val
       case 501:
-      if (next_target.seen_S && next_target.seen_P)
-        temp_set_table_entry (HEATED_BED_0, next_target.S, next_target.P);
-      else if (next_target.seen_S)
+      if (gcode_command.seen_S && gcode_command.seen_P)
+        temp_set_table_entry (HEATED_BED_0, gcode_command.S, gcode_command.P);
+      else if (gcode_command.seen_S)
       {
         reply_sent = true;
-        lw_fprintf (pGcodeInputMsg->out_file, "ok [%d] = %d\r\n", next_target.S, temp_get_table_entry (HEATED_BED_0, next_target.S));
+        lw_fprintf (pGcodeInputMsg->out_file, "ok [%d] = %d\r\n", gcode_command.S, temp_get_table_entry (HEATED_BED_0, gcode_command.S));
       }
       else
         lw_fputs ("E: bad param\r\n", pGcodeInputMsg->out_file);
       break;
 
       // M542 - nozzle wipe/move to rest location
+      // CAN BLOCK
       case 542:
       // TODO: this depends on current origin being same as home position
       if (config.have_rest_pos || config.have_wipe_pos)
@@ -1184,30 +1205,30 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
         // move above bed if ncessary
         if (startpoint.z < 2)
         {
-          next_targetd = startpoint;
-          next_targetd.z = 2;
-          next_targetd.feed_rate = config.axis[Z_AXIS].maximum_feedrate;
-          enqueue_move(&next_targetd);
+          next_target = startpoint;
+          next_target.z = 2;
+          next_target.feed_rate = config.axis[Z_AXIS].maximum_feedrate;
+          enqueue_move(&next_target);
         }
         
         if (config.have_wipe_pos)
         {
           // move to start of wipe area
-          next_targetd.x = config.wipe_entry_pos_x;
-          next_targetd.y = config.wipe_entry_pos_y;
-          next_targetd.z = startpoint.z;
-          next_targetd.feed_rate = config.axis[X_AXIS].maximum_feedrate;
+          next_target.x = config.wipe_entry_pos_x;
+          next_target.y = config.wipe_entry_pos_y;
+          next_target.z = startpoint.z;
+          next_target.feed_rate = config.axis[X_AXIS].maximum_feedrate;
         }
         else
         {
           // move to rest position
-          next_targetd.x = config.rest_pos_x;
-          next_targetd.y = config.rest_pos_y;
-          next_targetd.z = startpoint.z;
-          next_targetd.feed_rate = config.axis[X_AXIS].maximum_feedrate;
+          next_target.x = config.rest_pos_x;
+          next_target.y = config.rest_pos_y;
+          next_target.z = startpoint.z;
+          next_target.feed_rate = config.axis[X_AXIS].maximum_feedrate;
         }
         
-        enqueue_move(&next_targetd);
+        enqueue_move(&next_target);
       }
       break;
 
@@ -1216,17 +1237,17 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
         if (config.have_wipe_pos)
         {
           // move out of wipe area
-          next_targetd.x = config.wipe_exit_pos_x;
-          next_targetd.y = config.wipe_exit_pos_y;
-          next_targetd.z = startpoint.z;
-          next_targetd.feed_rate = config.axis[X_AXIS].maximum_feedrate;
-          enqueue_move(&next_targetd);
+          next_target.x = config.wipe_exit_pos_x;
+          next_target.y = config.wipe_exit_pos_y;
+          next_target.z = startpoint.z;
+          next_target.feed_rate = config.axis[X_AXIS].maximum_feedrate;
+          enqueue_move(&next_target);
           
-          next_targetd.x = config.wipe_entry_pos_x;
-          next_targetd.y = config.wipe_entry_pos_y;
-          next_targetd.z = startpoint.z;
-          next_targetd.feed_rate = config.axis[X_AXIS].maximum_feedrate;
-          enqueue_move(&next_targetd);
+          next_target.x = config.wipe_entry_pos_x;
+          next_target.y = config.wipe_entry_pos_y;
+          next_target.z = startpoint.z;
+          next_target.feed_rate = config.axis[X_AXIS].maximum_feedrate;
+          enqueue_move(&next_target);
           
         }
       break;
@@ -1234,17 +1255,19 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
       // M551 - Prime extruder 1
       // P : number of steps
       // S : RPM * 10
+      // CAN BLOCK
       case 551:
-      if (next_target.seen_S && next_target.seen_P)
+      if (gcode_command.seen_S && gcode_command.seen_P)
       {
         // calc E distance, use approximate conversion to get distance, not critical
         // TODO: how to derive magic number
         // S is RPM*10, but happens to give about the right speed in mm/min        
-        SpecialMoveE ((double)next_target.P / 256.0, next_target.S);
+        SpecialMoveE ((double)gcode_command.P / 256.0, gcode_command.S);
       }
       break;
                 
       // M600 print the values read from the config file                  
+      // CAN BLOCK?
       case 600:
       {
         app_config_print();
@@ -1253,7 +1276,7 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg)
       
       // unknown mcode: spit an error
       default:
-        lw_fprintf (pGcodeInputMsg->out_file, "E: Bad M-code %d\r\n", next_target.M);
+        lw_fprintf (pGcodeInputMsg->out_file, "E: Bad M-code %d\r\n", gcode_command.M);
         result = PR_ERROR;
     }
   }

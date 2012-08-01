@@ -36,12 +36,9 @@
 #include "gcode_task.h"
 #include "planner.h"
 
-// whether the asterisk (checksum-command) is included for checksum calculation
-// undefined for RepRap host software
-//#define ASTERISK_IN_CHECKSUM_INCLUDED
 
 // whether to insist on N line numbers
-// if not defined, N's are completely ignored
+// if not defined, line numbers are optional
 //#define	REQUIRE_LINENUMBER
 
 // whether to insist on a checksum
@@ -51,53 +48,92 @@
 #define ABS(v)          (((v) >= 0)?(v):(-(v)))
 #endif
 
-// this holds all the possible data from a received command
-typedef struct {
-	uint8_t					seen_G	:1;
-	uint8_t					seen_M	:1;
-	uint8_t					seen_X	:1;
-	uint8_t					seen_Y	:1;
-	uint8_t					seen_Z	:1;
-	uint8_t					seen_E	:1;
-	uint8_t					seen_F	:1;
-	uint8_t					seen_S	:1;
 
-	uint8_t					seen_P	:1;
-	uint8_t					seen_N	:1;
-	uint8_t					seen_checksum				:1;
-	uint8_t					seen_semi_comment		:1;
-	uint8_t					seen_parens_comment	:1;
-	uint8_t					getting_string			:1;
+/*
+	Internal representations of values for motion axes, feedrate, uses double.
+*/
+
+typedef struct {
+
+  // persistent states, retained between Gcode commands
+	int32_t				  N_expected;
 
 	uint8_t					option_relative			:1;
 	uint8_t					option_inches				:1;
 
-  // command words
-	uint8_t						G;
-	uint8_t						G_fraction;
-	uint16_t				  M;
-	
-  // parameters
-  tTarget						target; // info required for motion in planner/stepper X,Y,Z,E,F
-	int16_t						S;
-	uint16_t					P;
-	uint32_t					N;
+} tGcodeInterpreterState;
 
-	uint32_t					N_expected;
-	uint8_t						checksum_read;
-	uint8_t						checksum_calculated;
+// this holds all the possible data from a received command
+typedef struct {
+  // per command
+  union {
+    struct {
+      uint8_t					seen_A	:1;
+      uint8_t					seen_B	:1;
+      uint8_t					seen_C	:1;
+      uint8_t					seen_D	:1;
+      uint8_t					seen_E	:1;
+      uint8_t					seen_F	:1;
+      uint8_t					seen_G	:1;
+      uint8_t					seen_H	:1;
+      uint8_t					seen_I	:1;
+      uint8_t					seen_J	:1;
+      uint8_t					seen_K	:1;
+      uint8_t					seen_L	:1;
+      uint8_t					seen_M	:1;
+      uint8_t					seen_N	:1;
+      uint8_t					seen_O	:1;
+      uint8_t					seen_P	:1;
+      uint8_t					seen_Q	:1;
+      uint8_t					seen_R	:1;
+      uint8_t					seen_S	:1;
+      uint8_t					seen_T	:1;
+      uint8_t					seen_U	:1;
+      uint8_t					seen_V	:1;
+      uint8_t					seen_W	:1;
+      uint8_t					seen_X	:1;
+      uint8_t					seen_Y	:1;
+      uint8_t					seen_Z	:1;
+    };
+    uint32_t seen_words;
+  };
+  
+  // command words, parameters
+  double          A;
+  double          B;
+  double          C;
 
+	uint8_t         G;
+	uint8_t					G_fraction;
 
-  // for SD functions
-	uint8_t						str_pos;
-	char              str_param [121];
+	uint16_t				M;
+	uint16_t				T;
+  tTarget					target; // info required for motion in planner/stepper X,Y,Z,E,F
+	int32_t				  N;
+	uint16_t				P;
+	int16_t					S;
+
+  // for functions requiring a string parameter eg SD files
+	uint8_t					str_pos;
+	char            str_param [121];
+
+  tGcodeInterpreterState state;
+
 } GCODE_COMMAND;
+
+  
+typedef struct {
+  // per command line, only used during checksum verify
+	uint8_t					seen_checksum	: 1;
+	uint8_t					checksum_read;          // value passed by host
+	uint8_t					checksum_calculated;    // value calculated during parsing
+} tChecksumData;
 
 
 
   
 // the command that has been parsed
-extern GCODE_COMMAND next_target;
+extern GCODE_COMMAND gcode_command;
 
 
 void gcode_parse_init(void);

@@ -28,6 +28,9 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
+// --------------------------------------------------------------------------
+// Includes
+// --------------------------------------------------------------------------
 
 #include  <string.h>
 #include  <stdbool.h>
@@ -40,68 +43,54 @@
 #include  "machine.h"
 
 
+// --------------------------------------------------------------------------
+// Local defines
+// --------------------------------------------------------------------------
+
 #define crc(a, b)		(a ^ b)
 
-/*
-	Internal representations of values uses double for motion axes, feedrate.
-*/
+// --------------------------------------------------------------------------
+// Public Variables
+// --------------------------------------------------------------------------
 
 // This holds the parsed command used by gcode_process
-GCODE_COMMAND next_target;
+GCODE_COMMAND gcode_command;
+
+// tGcodeInterpreterState interpreter_state;
+
+// --------------------------------------------------------------------------
+// Private Variables
+// --------------------------------------------------------------------------
 
 // context variables used during parsing of a line
-static char last_field = 0; // letter code
-
 static struct {
-  uint8_t   sign; 
-  int       exponent;
+  char last_field; // letter code
+
+  struct {
+    uint8_t   sign; 
+    int       exponent;
   } read_digit;
 
-static double value;
+  double value;
+
+	uint8_t					seen_semi_comment		:1;
+	uint8_t					seen_parens_comment	:1;
+	uint8_t					getting_hack_string :1;
+	uint8_t					getting_string			:1;
+
+} parsing_context;
+
+// --------------------------------------------------------------------------
+// Function prototypes
+// --------------------------------------------------------------------------
+
+// parse next character
+static void gcode_parse_char(tLineBuffer *pLine, tGcodeInterpreterState *pInterpreterState);
 
 
-// accept the next character and process it
-static void gcode_parse_char(tLineBuffer *pLine, uint8_t c);
-
-// uses the global variable next_target.N
-static void request_resend(tGcodeInputMsg *pGcodeInputMsg);
-
-
-void gcode_parse_init(void)
-{
-#if 0
-  steps_per_m_x = ((uint32_t) (config.steps_per_mm_x * 1000.0));
-  steps_per_m_y = ((uint32_t) (config.steps_per_mm_y * 1000.0));
-  steps_per_m_z = ((uint32_t) (config.steps_per_mm_z * 1000.0));
-  steps_per_m_e = ((uint32_t) (config.steps_per_mm_e * 1000.0));
-
-  // same as above with 25.4 scale factor
-  steps_per_in_x = ((double) (25.4 * config.steps_per_mm_x));
-  steps_per_in_y = ((double) (25.4 * config.steps_per_mm_y));
-  steps_per_in_z = ((double) (25.4 * config.steps_per_mm_z));
-  steps_per_in_e = ((double) (25.4 * config.steps_per_mm_e));
-#endif  
-  next_target.target.feed_rate = config.axis[Z_AXIS].homing_feedrate;
-}
-
-
-/*
-	utility functions
-*/
-
-
-double power (double x, int exp)
-{  
-  double result = 1.0;
-  while (exp--)  
-    result = result * x;
-  return result;
-}
-
-double inch_to_mm (double inches)
-{  
-  return inches * 25.4;
-}
+// --------------------------------------------------------------------------
+// Private functions
+// --------------------------------------------------------------------------
 
 static uint8_t char_to_hex (char c)
 {
@@ -138,159 +127,281 @@ static int hex_to_bin (char *s, int len)
   return byte_pos;
 }
 
+/****************************************************************************
+*                                                                           *
+* Request a resend of the expected line - called by gcode_process_line()    *
+*                                                                           *
+* Relies on the global variable gcode_command.N_expected being valid.       *
+*                                                                           *
+****************************************************************************/
+
+static void request_resend (tGcodeInputMsg *pGcodeInputMsg, tGcodeInterpreterState *pState) 
+{
+	lw_fprintf(pGcodeInputMsg->out_file, "rs %lu\r\n", pState->N_expected);
+}
+
+static void calc_checksum (tLineBuffer *pLine, tChecksumData *pChecksumData, GCODE_COMMAND *pCommand) 
+{
+  uint8_t c;
+  int ch_pos;
+  int sign = 1;
+  bool skip = false;
+
+  pCommand->seen_N = 0;
+  pCommand->N = 0;
+
+  pChecksumData->seen_checksum = 0;
+  pChecksumData->checksum_calculated = 0;
+  pChecksumData->checksum_read = 0;
+
+  //TODO: what if '*' in comment?
+  // a checksum should be at end of line in form "*nnn", but impossible to tell if is part of comment or string
+  ch_pos = 0;
+  while (ch_pos < pLine->len)
+  {
+    c = pLine->data [ch_pos];
+
+    if ((c==10) || (c==13))
+      break;
+
+    if (pChecksumData->seen_checksum == 0)
+    {
+      if (c=='*')
+      {
+        pChecksumData->seen_checksum = 1;
+      }
+      else
+        pChecksumData->checksum_calculated = crc(pChecksumData->checksum_calculated, c);
+    }
+    else
+    {
+      pChecksumData->checksum_read = pChecksumData->checksum_read * 10 + (c - '0');
+    }
+    
+    //
+    if (!skip)
+    {
+      if ( (c == ' ') || (c=='\t') )
+        ;
+      else if ( (c == '/') || (c==';') )
+        skip = true;
+      else
+      {
+        if ((c == 'N') || (c=='n'))
+          pCommand->seen_N = 1;
+        else if (c=='-')
+          sign = -1;
+        else if ( (c >= '0') && (c<='9'))
+          pCommand->N = pCommand->N*10 + c-'0';
+        else
+          skip = true;
+          
+      }
+    }
+
+    ch_pos++;
+  }
+
+  pCommand->N = pCommand->N * sign;
+}
+
+// --------------------------------------------------------------------------
+// Public functions
+// --------------------------------------------------------------------------
+
+void gcode_parse_init(void)
+{
+#if 0
+  steps_per_m_x = ((uint32_t) (config.steps_per_mm_x * 1000.0));
+  steps_per_m_y = ((uint32_t) (config.steps_per_mm_y * 1000.0));
+  steps_per_m_z = ((uint32_t) (config.steps_per_mm_z * 1000.0));
+  steps_per_m_e = ((uint32_t) (config.steps_per_mm_e * 1000.0));
+
+  // same as above with 25.4 scale factor
+  steps_per_in_x = ((double) (25.4 * config.steps_per_mm_x));
+  steps_per_in_y = ((double) (25.4 * config.steps_per_mm_y));
+  steps_per_in_z = ((double) (25.4 * config.steps_per_mm_z));
+  steps_per_in_e = ((double) (25.4 * config.steps_per_mm_e));
+#endif  
+  gcode_command.target.feed_rate = config.axis[Z_AXIS].homing_feedrate;
+}
+
+
 /*
-	public functions
+	utility functions
 */
 
+double power (double x, int exp)
+{  
+  double result = 1.0;
+  while (exp--)  
+    result = result * x;
+  return result;
+}
+
+double inch_to_mm (double inches)
+{  
+  return inches * 25.4;
+}
 
 eParseResult gcode_parse_line (tGcodeInputMsg *pGcodeInputMsg) 
 {
   //int j;
+  int len;
   tLineBuffer *pLine;
   eParseResult result = PR_OK;
-  int len;
+  tChecksumData checksum_data;
+  
+  // Note: blank lines (zero length) should have been discarded already
+  // should blank lines get an "ok"?
+
+  // init
+  parsing_context.seen_semi_comment = 0;
+  parsing_context.seen_parens_comment = 0;
+
+  parsing_context.last_field = 0;
+  parsing_context.read_digit.sign = parsing_context.read_digit.exponent = 0;
+  parsing_context.value = 0;
 
   pLine = pGcodeInputMsg->pLineBuf;
 
+  // check checksum is valid before processing data!
+  calc_checksum (pLine, &checksum_data, &gcode_command);
+
+#ifdef	REQUIRE_CHECKSUM
+  if ( (checksum_data.checksum_calculated == checksum_data.checksum_read) && (checksum_data.seen_checksum == 1))
+#else
+  if ( (checksum_data.checksum_calculated == checksum_data.checksum_read) || (checksum_data.seen_checksum == 0))
+#endif
+  {
+    // checksum is valid or not present, or not required
+  }
+  else
+  {
+    lw_fprintf(pGcodeInputMsg->out_file, "Expected checksum %u\r\n", checksum_data.checksum_calculated);
+    request_resend(pGcodeInputMsg, &gcode_command.state);
+    result = PR_RESEND;
+    return result;
+  }
+  
+  // check line number
+
+  //Note: according to GCode standard strict sequencing of line numbers is not required, but GCode was not designed
+  //      to be a robust comms protocol...
+  //Note: pronterface will send "M-1 M110" to set line number to zero. Assume that valid N should be >= 0 and ignore <0.
+  if (
+    #ifdef  REQUIRE_LINENUMBER
+      (gcode_command.N == gcode_command.state.N_expected) && (gcode_command.seen_N == 1)
+    #else
+      (gcode_command.seen_N == 0) || (gcode_command.N <0) || (gcode_command.N == gcode_command.state.N_expected) 
+    #endif
+      ) 
+  {
+    // OK
+  }
+  else
+  {
+    lw_fprintf(pGcodeInputMsg->out_file, "Expected line number %lu\r\n", gcode_command.state.N_expected);
+    request_resend(pGcodeInputMsg, &gcode_command.state);
+    result = PR_RESEND;
+    return result;
+  }
+
+  // parse the line
   //TODO: parse_char never detects errors? there must be some surely
   pLine->ch_pos = 0;
   while (pLine->ch_pos < pLine->len)
   {
-    gcode_parse_char (pLine, pLine->data [pLine->ch_pos]);
+    gcode_parse_char (pLine, &gcode_command.state);
     pLine->ch_pos++;
   }
     
   //TODO: more than one command per line
   //TODO: gcode context for each interface
 
-	// end of line
-	//if ((c == 10) || (c == 13)) 
-	{
-		if (
-		#ifdef	REQUIRE_LINENUMBER
-			(next_target.N >= next_target.N_expected) && (next_target.seen_N == 1)
-		#else
-			1
-		#endif
-			) {
-			if (
-				#ifdef	REQUIRE_CHECKSUM
-				((next_target.checksum_calculated == next_target.checksum_read) && (next_target.seen_checksum == 1))
-				#else
-				((next_target.checksum_calculated == next_target.checksum_read) || (next_target.seen_checksum == 0))
-				#endif
-				) {
-            // --------------------------------------------------------------------------
-            //     SD
-            // --------------------------------------------------------------------------
-            if (sd_writing_file)
-            {
-              if (next_target.seen_M && (next_target.M >= 20) && (next_target.M <= 29) )
-              {
-                if (next_target.seen_M && (next_target.M == 29))
-                { 
-                  // M29 - stop writing
-                  sd_writing_file = false;
-                  sd_close (&file);
-                  lw_fputs("Done saving file\r\n", pGcodeInputMsg->out_file);
-                }
-                else
-                {
-                  // else - do not write SD M-codes to file
-                  lw_fputs("ok\r\n", pGcodeInputMsg->out_file);
-                }
-              }
-              else
-              {
-                // lines in files must be LF terminated for sd_read_file to work
-                if (pLine->data [pLine->len-1] == 13)
-                  pLine->data [pLine->len-1] = 10;
-                  
-                if (next_target.seen_M && (next_target.M == 30))
-                {
-                  if (file_mode == FM_HEX_BIN)
-                  {
-                    len = hex_to_bin (next_target.str_param, strlen(next_target.str_param));
-                  }
-                  else
-                  {
-                    strcat (next_target.str_param, "\n");
-                    len = strlen(next_target.str_param);
-                  }
-
-                  if (sd_write_to_file(next_target.str_param, len))
-                    lw_fputs("ok\r\n", pGcodeInputMsg->out_file);
-                  else
-                    lw_fputs("error writing to file\r\n", pGcodeInputMsg->out_file);
-
-                }
-                else
-                {
-                  if (sd_write_to_file(pLine->data, pLine->len))
-                    lw_fputs("ok\r\n", pGcodeInputMsg->out_file);
-                  else
-                    lw_fputs("error writing to file\r\n", pGcodeInputMsg->out_file);
-                }
-              }
-            }
-            // --------------------------------------------------------------------------
-            //     Not in SD write mode
-            // --------------------------------------------------------------------------
-            else
-            {
-              // process
-              result = process_gcode_command(pGcodeInputMsg);
-
-              // expect next line number
-              if (next_target.seen_N == 1)
-                  next_target.N_expected = next_target.N + 1;
-			      }
-			}
-			else 
-      {
-				lw_fprintf(pGcodeInputMsg->out_file, "Expected checksum %u\r\n", next_target.checksum_calculated);
-				request_resend(pGcodeInputMsg);
-        result = PR_RESEND;
-			}
-		}
-		else 
+  // --------------------------------------------------------------------------
+  //     SD
+  // --------------------------------------------------------------------------
+  if (sd_writing_file)
+  {
+    // parser can bail at first M code?
+    if (gcode_command.seen_M && (gcode_command.M >= 20) && (gcode_command.M <= 29) )
     {
-			lw_fprintf(pGcodeInputMsg->out_file, "Expected line number %ul\r\n", next_target.N_expected);
-			request_resend(pGcodeInputMsg);
-      result = PR_RESEND;
-		}
+      if (gcode_command.seen_M && (gcode_command.M == 29))
+      { 
+        // M29 - stop writing
+        sd_writing_file = false;
+        sd_close (&file);
+        lw_fputs("Done saving file\r\n", pGcodeInputMsg->out_file);
+      }
+      else
+      {
+        // else - do not write SD M-codes to file
+        lw_fputs("ok\r\n", pGcodeInputMsg->out_file);
+      }
+    }
+    else
+    {
+      // lines in files must be LF terminated for sd_read_file to work
+      if (pLine->data [pLine->len-1] == 13)
+        pLine->data [pLine->len-1] = 10;
+        
+      if (gcode_command.seen_M && (gcode_command.M == 30))
+      {
+        if (file_mode == FM_HEX_BIN)
+        {
+          len = hex_to_bin (gcode_command.str_param, strlen(gcode_command.str_param));
+        }
+        else
+        {
+          strcat (gcode_command.str_param, "\n");
+          len = strlen(gcode_command.str_param);
+        }
 
-		// reset variables
-		next_target.seen_X = next_target.seen_Y = next_target.seen_Z = \
-      next_target.seen_E = next_target.seen_F = next_target.seen_S = \
-      next_target.seen_P = next_target.seen_N = next_target.seen_M = 0;
+        if (sd_write_to_file(gcode_command.str_param, len))
+          lw_fputs("ok\r\n", pGcodeInputMsg->out_file);
+        else
+          lw_fputs("error writing to file\r\n", pGcodeInputMsg->out_file);
 
-    next_target.seen_checksum = next_target.seen_semi_comment = \
-                next_target.seen_parens_comment = next_target.checksum_read = \
-                next_target.checksum_calculated = 0;
+      }
+      else
+      {
+        if (sd_write_to_file(pLine->data, pLine->len))
+          lw_fputs("ok\r\n", pGcodeInputMsg->out_file);
+        else
+          lw_fputs("error writing to file\r\n", pGcodeInputMsg->out_file);
+      }
+    }
+  }
+  // --------------------------------------------------------------------------
+  //     Not in SD write mode
+  // --------------------------------------------------------------------------
+  else
+  {
+    // process
+    result = process_gcode_command(pGcodeInputMsg, &gcode_command.state);
 
-		next_target.str_pos = 0;
+    //TODO: only increment if command actioned?
+    // expect next line number
+    if (gcode_command.seen_N == 1)
+        gcode_command.state.N_expected = gcode_command.N + 1;
+  }
 
-		// dont assume a G1 by default
-		next_target.seen_G = 0;
-		next_target.G = 0;
+  // reset variables
+  gcode_command.seen_words = 0;
+  gcode_command.str_pos = 0;
+
+  // dont assume a G1 by default
+  gcode_command.G = 0;
 
   //TODO:
-		if (next_target.option_relative) 
-    {
-			next_target.target.x = next_target.target.y = next_target.target.z = 0.0;
-			next_target.target.e = 0.0;
-		}
+  if (gcode_command.state.option_relative) 
+  {
+    gcode_command.target.x = gcode_command.target.y = gcode_command.target.z = 0.0;
+    gcode_command.target.e = 0.0;
+  }
 
-    //
-  	last_field = 0;
-		read_digit.sign = read_digit.exponent = 0;
-		value = 0;
-	}
-
-
-	return result;
-    
+	return result;    
 }
 
 /****************************************************************************
@@ -299,117 +410,122 @@ eParseResult gcode_parse_line (tGcodeInputMsg *pGcodeInputMsg)
 *                                                                           *
 ****************************************************************************/
 
-void gcode_parse_char(tLineBuffer *pLine, uint8_t c) 
+void gcode_parse_char(tLineBuffer *pLine, tGcodeInterpreterState *pInterpreterState) 
 {
-  uint8_t save_ch;
+  char c;
+   
+  c = pLine->data[pLine->ch_pos];
 
-	#ifdef ASTERISK_IN_CHECKSUM_INCLUDED
-	if (next_target.seen_checksum == 0)
-		next_target.checksum_calculated = crc(next_target.checksum_calculated, c);
-	#endif
-
-  save_ch = c;
-	// uppercase
+	// uppercase version for case-insensitive comparisons of GCode letters
 	if (c >= 'a' && c <= 'z')
 		c &= ~32;
 
 	// process previous field
-	if (last_field) {
+	if (parsing_context.last_field) {
 		// check if we're seeing a new field or end of line
 		// any character will start a new field, even invalid/unknown ones
 		if ((c >= 'A' && c <= 'Z') || c == '*' || (c == 10) || (c == 13)) {
 		
 		  // before using value, apply the sign
-		  if (read_digit.sign)
-		    value = -value;
+		  if (parsing_context.read_digit.sign)
+		    parsing_context.value = -parsing_context.value;
 		    
-			switch (last_field) {
+			switch (parsing_context.last_field) {
 				case 'G':
-					next_target.G = value;
+					gcode_command.G = parsing_context.value;
 					break;
 				case 'M':
-					next_target.M = value;
-					// this is a bit hacky since string parameters don't fit in general G code syntax
+					gcode_command.M = parsing_context.value;
+					// this is a horrible hack since string parameters don't fit in general G code syntax
 					// NB: filename MUST start with a letter and MUST NOT contain spaces
 					// letters will also be converted to uppercase
-					if ( (next_target.M == 23) || (next_target.M == 28) || (next_target.M == 302) )
+					if ( (gcode_command.M == 23) || (gcode_command.M == 28) || (gcode_command.M == 302) )
 					{
-					    next_target.getting_string = 1;
+					    parsing_context.getting_string = 1;
+					    parsing_context.getting_hack_string = 1;
 					}
 					break;
+
+        // axis coords, feed rate, converted to mm
 				case 'X':
-					if (next_target.option_inches)
-						next_target.target.x = inch_to_mm(value);
+					if (pInterpreterState->option_inches)
+						gcode_command.target.x = inch_to_mm(parsing_context.value);
 					else
-						next_target.target.x = value;
+						gcode_command.target.x = parsing_context.value;
 					break;
 				case 'Y':
-					if (next_target.option_inches)
-						next_target.target.y = inch_to_mm(value);
+					if (pInterpreterState->option_inches)
+						gcode_command.target.y = inch_to_mm(parsing_context.value);
 					else
-						next_target.target.y = value;
+						gcode_command.target.y = parsing_context.value;
 					break;
 				case 'Z':
-					if (next_target.option_inches)
-						next_target.target.z = inch_to_mm(value);
+					if (pInterpreterState->option_inches)
+						gcode_command.target.z = inch_to_mm(parsing_context.value);
 					else
-						next_target.target.z = value;
+						gcode_command.target.z = parsing_context.value;
 					break;
 				case 'E':
-					if (next_target.option_inches)
-						next_target.target.e = inch_to_mm(value);
+					if (pInterpreterState->option_inches)
+						gcode_command.target.e = inch_to_mm(parsing_context.value);
 					else
-						next_target.target.e = value;
+						gcode_command.target.e = parsing_context.value;
 					break;
 				case 'F':
-					if (next_target.option_inches)
-						next_target.target.feed_rate = inch_to_mm(value);
+          // TODO : is this valid for inverse feed-rates?
+					if (pInterpreterState->option_inches)
+						gcode_command.target.feed_rate = inch_to_mm(parsing_context.value);
 					else
-						next_target.target.feed_rate = value;
+						gcode_command.target.feed_rate = parsing_context.value;
 					break;
+
+        // other integer parameters
 				case 'S':
-						next_target.S = value;
+						gcode_command.S = parsing_context.value;
 					break;
 				case 'P':
 					// if this is dwell, multiply by 1000 to convert seconds to milliseconds
-					if (next_target.G == 4)
-						next_target.P = value * 1000.0;
+					if (gcode_command.G == 4)
+						gcode_command.P = parsing_context.value * 1000.0;
 					else
-						next_target.P = value;
+						gcode_command.P = parsing_context.value;
 					break;
+
 				case 'N':
-					next_target.N = value;
-					break;
-				case '*':
-					next_target.checksum_read = value;
+					gcode_command.N = parsing_context.value;
 					break;
 			}
 			// reset for next field
-			last_field = 0;
-			read_digit.sign = read_digit.exponent = 0;
-			value = 0;
+			parsing_context.last_field = 0;
+			parsing_context.read_digit.sign = parsing_context.read_digit.exponent = 0;
+			parsing_context.value = 0;
 		}
 	}
 
-  if (next_target.getting_string)
+  if (parsing_context.getting_string)
   {
-    if ((c == 10) || (c == 13) || ( c == ' ')  || ( c == '*') || ( c == '\"'))
-      next_target.getting_string = 0;
+    if ( (c == 10) || (c == 13) || ( c == '\"') ||
+         ( parsing_context.getting_hack_string && (( c == ' ')  || ( c == '*')) )
+    )
+    {
+      parsing_context.getting_string = 0;
+      parsing_context.getting_hack_string = 0;
+    }
     else
     {
-      if (next_target.str_pos < sizeof(next_target.str_param))
+      if (gcode_command.str_pos < sizeof(gcode_command.str_param))
       {
-        next_target.str_param [next_target.str_pos++] = c;
-        next_target.str_param [next_target.str_pos] = 0;
+        gcode_command.str_param [gcode_command.str_pos++] = pLine->data[pLine->ch_pos];
+        gcode_command.str_param [gcode_command.str_pos] = 0;
       }
     }      
   }
 
-	// skip comments, filenames
-	if (next_target.seen_semi_comment == 0 && next_target.seen_parens_comment == 0 && next_target.getting_string == 0) {
+	// skip comments, strings, filenames
+	if (parsing_context.seen_semi_comment == 0 && parsing_context.seen_parens_comment == 0 && parsing_context.getting_string == 0) {
 		// new field?
 		if ((c >= 'A' && c <= 'Z') || c == '*') {
-			last_field = c;
+			parsing_context.last_field = c;
 		}
 
 		// process character
@@ -417,113 +533,91 @@ void gcode_parse_char(tLineBuffer *pLine, uint8_t c)
 			// each currently known command is either G or M, so preserve previous G/M unless a new one has appeared
 			// FIXME: same for T command
 			case 'G':
-				next_target.seen_G = 1;
-				next_target.seen_M = 0;
-				next_target.M = 0;
+				gcode_command.seen_G = 1;
 				break;
 			case 'M':
-				next_target.seen_M = 1;
-				next_target.seen_G = 0;
-				next_target.G = 0;
+				gcode_command.seen_M = 1;
 				break;
 			case 'X':
-				next_target.seen_X = 1;
+				gcode_command.seen_X = 1;
 				break;
 			case 'Y':
-				next_target.seen_Y = 1;
+				gcode_command.seen_Y = 1;
 				break;
 			case 'Z':
-				next_target.seen_Z = 1;
+				gcode_command.seen_Z = 1;
 				break;
 			case 'E':
-				next_target.seen_E = 1;
+				gcode_command.seen_E = 1;
 				break;
 			case 'F':
-				next_target.seen_F = 1;
+				gcode_command.seen_F = 1;
 				break;
 			case 'S':
-				next_target.seen_S = 1;
+				gcode_command.seen_S = 1;
 				break;
 			case 'P':
-				next_target.seen_P = 1;
+				gcode_command.seen_P = 1;
 				break;
 			case 'N':
-				next_target.seen_N = 1;
-				break;
-			case '*':
-				next_target.seen_checksum = 1;
+				gcode_command.seen_N = 1;
 				break;
 
 			// comments
 			case ';':
 			case '^':
-				next_target.seen_semi_comment = 1;
+				parsing_context.seen_semi_comment = 1;
 				break;
 			case '(':
-				next_target.seen_parens_comment = 1;
+				parsing_context.seen_parens_comment = 1;
+
+        // look for "meta-comment" e.g. (STR"some text")
+        // also (msg,...) etc
 
         if ((pLine->ch_pos < pLine->len-4) && (strncmp (&pLine->data[pLine->ch_pos+1], "STR\"", 4) == 0))
         {
-          next_target.str_pos = 0;
-          next_target.getting_string = 1;
+          gcode_command.str_pos = 0;
+          parsing_context.getting_string = 1;
           pLine->ch_pos += 4;
         }
 				break;
 
 			// now for some numeracy
 			case '-':
-				read_digit.sign = 1;
+				parsing_context.read_digit.sign = 1;
 				// force sign to be at start of number, so 1-2 = -2 instead of -12
-				read_digit.exponent = 0;
+				parsing_context.read_digit.exponent = 0;
 				break;
 			case '.':
-				if (read_digit.exponent == 0)
-					read_digit.exponent = 1;
+				if (parsing_context.read_digit.exponent == 0)
+					parsing_context.read_digit.exponent = 1;
 				break;
 
 
 			default:
 				// can't do ranges in switch..case, so process actual digits here
 				if (c >= '0' && c <= '9') {
-					if (read_digit.exponent == 0)
+					if (parsing_context.read_digit.exponent == 0)
 					{
-					  value = value * 10 + (c - '0');
+					  parsing_context.value = parsing_context.value * 10 + (c - '0');
 					}
 					else
-					  value += (double)(c - '0') / power(10, read_digit.exponent);
+					  parsing_context.value += (double)(c - '0') / power(10, parsing_context.read_digit.exponent);
 
-					if (read_digit.exponent)
-						read_digit.exponent++;
+					if (parsing_context.read_digit.exponent)
+						parsing_context.read_digit.exponent++;
 				}
 		}
-	} else if ( next_target.seen_parens_comment == 1)
+	} else if ( parsing_context.seen_parens_comment == 1)
   {
     if (c == ')')
-      next_target.seen_parens_comment = 0; // recognize stuff after a (comment)
-    else if (next_target.getting_string)
+      parsing_context.seen_parens_comment = 0; // recognize stuff after a (comment)
+    else if (parsing_context.getting_string)
     {
       if (c == '\"')
-        next_target.getting_string = 0;
+        parsing_context.getting_string = 0;
     }
   }
 
-	#ifndef ASTERISK_IN_CHECKSUM_INCLUDED
-	if (next_target.seen_checksum == 0)
-		next_target.checksum_calculated = crc(next_target.checksum_calculated, save_ch);
-	#endif
-
-	
 }
 
-/****************************************************************************
-*                                                                           *
-* Request a resend of the current line - used from various places.          *
-*                                                                           *
-* Relies on the global variable next_target.N being valid.                  *
-*                                                                           *
-****************************************************************************/
-
-static void request_resend (tGcodeInputMsg *pGcodeInputMsg) 
-{
-	lw_fprintf(pGcodeInputMsg->out_file, "rs %ul\r\n", next_target.N);
-}

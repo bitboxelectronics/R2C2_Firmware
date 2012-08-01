@@ -327,9 +327,11 @@ void create_key_hash_table (int num_tokens,  tConfigItem lookup[], tKeyHash hash
   }
 }
 
+
+static  FIL file;       /* file object */
+
 FRESULT read_config_file (char *filename, tConfigItem lookup[], int num_tokens, tKeyHash hashes[])
 {
-  FIL file;       /* file object */
   FRESULT res;
   char line [MAX_LINE_LEN];
   char *pLine;

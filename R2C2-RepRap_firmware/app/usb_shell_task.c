@@ -47,13 +47,13 @@ void USBShellTask( void *pvParameters )
 {
     (void) pvParameters; /* Just to prevent compiler warnings about the unused parameter. */
     uint8_t c;
-    eParseResult parse_result;
 
     // TASK INIT
     //task_params = *pvParameters;
 
     GcodeInputMsg.pLineBuf = &LineBuf;
     GcodeInputMsg.out_file = lw_fopen ("usbser", "w");
+    GcodeInputMsg.result = PR_OK;
 
     // say hi to host
     usb_serial_writestr("Start\r\nOK\r\n");
@@ -63,27 +63,38 @@ void USBShellTask( void *pvParameters )
     // process received data (USB stuff is done inside interrupt)
     for( ;; )
     {
-        // process characters from the serial port
-        while (!GcodeInputMsg.in_use && (usb_serial_rxchars() != 0) )
-        {
-          c = usb_serial_popchar();
-      
-          if (LineBuf.len < MAX_LINE)
-            LineBuf.data [LineBuf.len++] = c;
 
-          if ((c==10) || (c==13))
+        if (!GcodeInputMsg.in_use)
+        {
+          if (GcodeInputMsg.result == PR_BUSY)
           {
-            if (LineBuf.len > 1)
+            // try again
+            GcodeInputMsg.in_use = 1;
+            tGcodeInputMsg *p_message = &GcodeInputMsg; 
+            xQueueSend (GcodeRxQueue, &p_message, portMAX_DELAY);
+
+          }
+          else if (usb_serial_rxchars() != 0)
+          {
+            c = usb_serial_popchar();
+      
+            if (LineBuf.len < MAX_LINE)
+              LineBuf.data [LineBuf.len++] = c;
+
+            if ((c==10) || (c==13))
             {
-              GcodeInputMsg.in_use = 1;
-              tGcodeInputMsg *p_message = &GcodeInputMsg; 
-              xQueueSend (GcodeRxQueue, &p_message, portMAX_DELAY);
+              if (LineBuf.len > 1)
+              {
+                GcodeInputMsg.in_use = 1;
+                tGcodeInputMsg *p_message = &GcodeInputMsg; 
+                xQueueSend (GcodeRxQueue, &p_message, portMAX_DELAY);
+              }
+              else
+                LineBuf.len = 0;
             }
-            else
-              LineBuf.len = 0;
           }      
         }
 
-    }
+    } // for ever
 }
 

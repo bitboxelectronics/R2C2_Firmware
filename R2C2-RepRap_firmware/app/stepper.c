@@ -41,13 +41,6 @@
 #include "planner.h"
 #include "endstops.h"
 
-#if 0
-// Some useful constants
-#define STEP_MASK       ((1<<X_STEP_BIT)|(1<<Y_STEP_BIT)|(1<<Z_STEP_BIT)) // All step bits
-#define DIRECTION_MASK  ((1<<X_DIRECTION_BIT)|(1<<Y_DIRECTION_BIT)|(1<<Z_DIRECTION_BIT)) // All direction bits
-#define STEPPING_MASK   (STEP_MASK | DIRECTION_MASK) // All stepping-related bits (step/direction)
-#endif
-
 #define TICKS_PER_MICROSECOND (F_CPU/1000000)
 #define CYCLES_PER_ACCELERATION_TICK ((TICKS_PER_MICROSECOND*1000000)/ACCELERATION_TICKS_PER_SECOND)
 
@@ -65,6 +58,8 @@ static tTimer blinkTimer;
 
 
 // Locals
+
+// #define STEPPER_DEBUG
 
 // DAC scale is calculated as voltage range * 10 (3.3V=33/10) and seconds, steps per mm, and finally mm/s per volt divided by DAC range (10 bits)
 const uint32_t mm_per_sec_per_volt = 200;
@@ -491,13 +486,46 @@ void st_interrupt (void)
     }
     else if (current_block->action_type == AT_WAIT_TEMPERATURES) 
     {
+      bool reached_temps = true;
       step_bits = 0;
-      if (temp_achieved(EXTRUDER_0))
+      // TODO: multi_extruder
+
+      if ( (current_block->wait_param & _BV(WE_WAIT_TEMP_EXTRUDER_0)) && !temp_achieved(EXTRUDER_0))
+          reached_temps = false;
+//      if ( (current_block->wait_param & _BV(WE_WAIT_TEMP_EXTRUDER_1)) && !temp_achieved(EXTRUDER_1))
+//          reached_temps = false;
+      if ( (current_block->wait_param & _BV(WE_WAIT_TEMP_HEATED_BED)) && !temp_achieved(HEATED_BED_0))
+          reached_temps = false;
+
+      if (reached_temps)
       {
         current_block = NULL;
         plan_discard_current_block();
       }
     }  
+    else if (current_block->action_type == AT_WAIT_TIME) 
+    {
+      step_bits = 0;
+
+      if (current_block->wait_param <= 50)
+      {
+        current_block = NULL;
+        plan_discard_current_block();
+      }
+      else
+      {
+        current_block->wait_param -= 50; 
+      }
+    }  
+    else if (current_block->action_type == AT_WAIT_USER_INPUT) 
+    {
+      step_bits = 0;
+
+      //TODO: wait user input
+      current_block = NULL;
+      plan_discard_current_block();
+
+    }
     
   } 
   else 
@@ -544,7 +572,9 @@ void stepCallback (tHwTimer *pTimer, uint32_t int_mask)
 {
   (void)pTimer;
 
+#ifdef STEPPER_DEBUG
   digital_write (1, (1<<15), 1);
+#endif
 
 //  if (int_mask & _BIT(TIM_MR0_INT))
   {
@@ -552,7 +582,9 @@ void stepCallback (tHwTimer *pTimer, uint32_t int_mask)
     st_interrupt();
   }
   
+#ifdef STEPPER_DEBUG
   digital_write (1, (1<<15), 0);
+#endif
 }
 
 static void init_dac (void)
@@ -601,8 +633,12 @@ void st_init()
   TCCR2B = (1<<CS21); // Full speed, 1/8 prescaler
   TIMSK2 |= (1<<TOIE2);      
 #else
+
+#ifdef STEPPER_DEBUG
   init_dac();
-  
+  // setup debug pin
+  pin_mode(1, (1 << 15), OUTPUT);
+#endif  
   // set up timers
   // use hardware timer 0 and 1
   setupHwTimer(1, stepCallback);
@@ -620,8 +656,6 @@ void st_init()
   AddSlowTimer (&blinkTimer);
 #endif
 
-  // setup debug pin
-  pin_mode(1, (1 << 15), OUTPUT);
     
 #endif
   
@@ -696,7 +730,9 @@ static void set_step_events_per_minute(uint32_t steps_per_minute)
   }
   cycles_per_step_event = config_step_timer((TICKS_PER_MICROSECOND*1000000*6)/steps_per_minute*10);
   
+#ifdef STEPPER_DEBUG
   DAC_UpdateValue (LPC_DAC, steps_per_minute/dac_scale);
+#endif
 }
 
 #if 0

@@ -381,10 +381,12 @@ eParseResult gcode_parse_line (tGcodeInputMsg *pGcodeInputMsg)
     // process
     result = process_gcode_command(pGcodeInputMsg, &gcode_command.state);
 
-    //TODO: only increment if command actioned?
-    // expect next line number
-    if (gcode_command.seen_N == 1)
-        gcode_command.state.N_expected = gcode_command.N + 1;
+    if (result != PR_BUSY)
+    {
+      // expect next line number
+      if (gcode_command.seen_N == 1)
+          gcode_command.state.N_expected = gcode_command.N + 1;
+    }
   }
 
   // reset variables

@@ -28,16 +28,15 @@ typedef enum {
   AT_MOVE,
   AT_MOVE_ENDSTOP,
   AT_WAIT_TIME,
-  AT_WAIT_TEMPERATURES
+  AT_WAIT_TEMPERATURES,
+  AT_WAIT_USER_INPUT    // wait for "cycle start" / "ok" button
   } eActionType;
 
 typedef enum {
-  WE_WAIT_TIME,
   WE_WAIT_TEMP_EXTRUDER_0,
   WE_WAIT_TEMP_EXTRUDER_1,
-  WE_WAIT_TEMP_HEATED_BED,
-  WE_WAIT_USER_INPUT      // wait for "cycle start" / "ok" button
-  } eWaitEvents;
+  WE_WAIT_TEMP_HEATED_BED
+  } eWaitTempEvents;
         
 typedef  struct {
   double  x;
@@ -76,6 +75,7 @@ typedef struct {
   uint32_t decelerate_after;          // The index of the step event on which to start decelerating
   
   // extra
+  uint16_t wait_param;
   uint8_t check_endstops; // for homing moves
 } block_t;
 
@@ -88,6 +88,7 @@ typedef struct {
   // switch ActionType
   // WAIT_TIME: time in seconds
   // WAIT_TEMPERATURE: bit mask of WE_xxx flags
+  // WAIT_USER: event flags
   uint16_t    wait_param; 
   
 } tActionRequest;
@@ -104,7 +105,7 @@ extern tTarget startpoint;
 void plan_init();
 
 // Add a new linear movement to the buffer. x, y and z is the signed, absolute target position in 
-// millimaters. Feed rate specifies the speed of the motion. If feed rate is inverted, the feed
+// millimeters. Feed rate specifies the speed of the motion. If feed rate is inverted, the feed
 // rate is taken to mean "frequency" and would complete the operation in 1/feed_rate minutes.
 //void plan_buffer_line(double x, double y, double z, double feed_rate, uint8_t invert_feed_rate);
 void plan_buffer_line (tActionRequest *pAction);
@@ -137,5 +138,6 @@ uint8_t plan_queue_empty(void);
 
 uint8_t plan_queue_size(void);
 
+uint8_t plan_num_free_slots(void);
 
 #endif

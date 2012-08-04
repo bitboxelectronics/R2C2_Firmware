@@ -93,7 +93,8 @@ void GcodeTask( void *pvParameters )
                 parse_result = gcode_parse_line (pGcodeInputMsg);
 
                 pGcodeInputMsg->result = parse_result;
-                pGcodeInputMsg->pLineBuf->len = 0;
+                if (parse_result != PR_BUSY)
+                  pGcodeInputMsg->pLineBuf->len = 0;
                 pGcodeInputMsg->in_use = false;
             }
         }

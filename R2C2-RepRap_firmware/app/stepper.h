@@ -44,18 +44,6 @@
 
 // From grbl/config.h
 
-#if 0
-#define X_STEP_BIT    20           
-#define Y_STEP_BIT    25       
-#define Z_STEP_BIT    29       
-#define E_STEP_BIT    10       
-
-#define X_DIRECTION_BIT   23     
-#define Y_DIRECTION_BIT   26   
-#define Z_DIRECTION_BIT   0   
-#define E_DIRECTION_BIT   11   
-#endif
-
 // This parameter sets the delay time before disabling the steppers after the final block of movement.
 // A short delay ensures the steppers come to a complete stop and the residual inertial force in the 
 // CNC axes don't cause the axes to drift off position. This is particularly important when manually 
@@ -95,12 +83,6 @@
 
 // end
 
-#if 0
-#define LIMIT_MASK      ((1<<X_LIMIT_BIT)|(1<<Y_LIMIT_BIT)|(1<<Z_LIMIT_BIT)) // All limit bits
-#define STEP_MASK       ((1<<X_STEP_BIT)|(1<<Y_STEP_BIT)|(1<<Z_STEP_BIT)) // All step bits
-#define DIRECTION_MASK  ((1<<X_DIRECTION_BIT)|(1<<Y_DIRECTION_BIT)|(1<<Z_DIRECTION_BIT)) // All direction bits
-#define STEPPING_MASK   (STEP_MASK | DIRECTION_MASK) // All stepping-related bits (step/direction)
-#endif
 
 // Initialize and start the stepper motor subsystem
 void st_init();

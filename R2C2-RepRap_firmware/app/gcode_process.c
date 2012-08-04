@@ -92,7 +92,7 @@ static char tolower (char c)
 }
 #endif
 
-static void enqueue_move (tTarget *pTarget)
+static eParseResult enqueue_move (tTarget *pTarget)
 {
   tActionRequest request;
   
@@ -107,24 +107,55 @@ static void enqueue_move (tTarget *pTarget)
     if (config.enable_extruder_0 == 0)
       request.target.e = startpoint.e;
 
-    plan_buffer_action (&request);
+    if (plan_queue_full ())
+      return PR_BUSY;
+    else
+    {
+      plan_buffer_action (&request);
+      return PR_OK;
+    }
   }
   else
   {
     // no move, just set feed rate
     plan_set_feed_rate (pTarget);
+    return PR_OK;
   }
 }
 
-static void enqueue_wait_for_temperatures (void)
+static eParseResult enqueue_wait_for_temperatures (uint16_t param)
 {
   tActionRequest request;
   
   request.ActionType = AT_WAIT_TEMPERATURES;
   
-  request.wait_param = _BV(WE_WAIT_TEMP_EXTRUDER_0) | _BV(WE_WAIT_TEMP_HEATED_BED);
+  //request.wait_param = _BV(WE_WAIT_TEMP_EXTRUDER_0) | _BV(WE_WAIT_TEMP_HEATED_BED);
+  request.wait_param = param;
   
-  plan_buffer_action (&request);
+  if (plan_queue_full ())
+    return PR_BUSY;
+  else
+  {
+    plan_buffer_action (&request);
+    return PR_OK;
+  }
+}
+
+// wait time in milliseconds
+static eParseResult enqueue_wait_time (uint16_t param)
+{
+  tActionRequest request;
+  
+  request.ActionType = AT_WAIT_TIME;
+  request.wait_param = param;
+  
+  if (plan_queue_full ())
+    return PR_BUSY;
+  else
+  {
+    plan_buffer_action (&request);
+    return PR_OK;
+  }
 }
 
 // wait for move queue to be empty
@@ -161,7 +192,8 @@ static void SpecialMoveZ(double z, double f)
   plan_buffer_action (&request);
 }
 
-static void SpecialMoveE (double e, double feed_rate) 
+// CAN BLOCK
+static eParseResult RelativeMoveE (double e, double feed_rate) 
 {
   tTarget next_target;
   
@@ -170,11 +202,13 @@ static void SpecialMoveE (double e, double feed_rate)
     next_target = startpoint;
     next_target.e = startpoint.e + e;
     next_target.feed_rate = feed_rate;
-    enqueue_move(&next_target);
+    return enqueue_move(&next_target);
   }
+  else
+    return PR_OK;
 }
 
-static void zero_x(void)
+static void home_x(void)
 {
   int dir;
   int max_travel;
@@ -187,14 +221,14 @@ static void zero_x(void)
 
   // move to endstop
   SpecialMoveXY(startpoint.x + dir * max_travel, startpoint.y, config.axis[X_AXIS].homing_feedrate);
-  synch_queue();
+//  synch_queue();
   
   // move forward a bit
   SpecialMoveXY(startpoint.x - dir * 3, startpoint.y, config.axis[X_AXIS].search_feedrate);
   // move back in to endstop slowly
   SpecialMoveXY(startpoint.x + dir * 6, startpoint.y, config.axis[X_AXIS].search_feedrate);
 
-  synch_queue();
+//  synch_queue();
 
   // this is our home point
   tTarget new_pos = startpoint;
@@ -202,7 +236,7 @@ static void zero_x(void)
   plan_set_current_position (&new_pos);
 }
 
-static void zero_y(void)
+static void home_y(void)
 {
   int dir;
   int max_travel;
@@ -215,14 +249,14 @@ static void zero_y(void)
     
   // move to endstop
   SpecialMoveXY(startpoint.x, startpoint.y + dir * max_travel, config.axis[Y_AXIS].homing_feedrate);
-  synch_queue();
+//  synch_queue();
   
   // move forward a bit
   SpecialMoveXY(startpoint.x, startpoint.y - dir * 3, config.axis[Y_AXIS].search_feedrate);
   // move back in to endstop slowly
   SpecialMoveXY(startpoint.x, startpoint.y + dir * 6, config.axis[Y_AXIS].search_feedrate);
 
-  synch_queue();
+//  synch_queue();
 
   // this is our home point
   tTarget new_pos = startpoint;
@@ -230,7 +264,7 @@ static void zero_y(void)
   plan_set_current_position (&new_pos);
 }
 
-static void zero_z(void)
+static void home_z(void)
 {
   int dir;
   int max_travel;
@@ -243,27 +277,19 @@ static void zero_z(void)
 
   // move to endstop
   SpecialMoveZ(startpoint.z + dir * max_travel, config.axis[Z_AXIS].homing_feedrate);  
-  synch_queue();
+//  synch_queue();
   
   // move forward a bit
   SpecialMoveZ(startpoint.z - dir * 1, config.axis[Z_AXIS].search_feedrate);
-  synch_queue();
+//  synch_queue();
 
   // move back in to endstop slowly
   SpecialMoveZ(startpoint.z + dir * 6, config.axis[Z_AXIS].search_feedrate);
-  synch_queue();
+//  synch_queue();
 
   // this is our home point
   tTarget new_pos = startpoint;
   new_pos.z = config.axis[Z_AXIS].home_pos;
-  plan_set_current_position (&new_pos);
-}
-
-static void zero_e(void)
-{
-  // extruder only runs one way and we have no "endstop", just set this point as home
-  tTarget new_pos = startpoint;
-  new_pos.e = 0;
   plan_set_current_position (&new_pos);
 }
 
@@ -393,18 +419,20 @@ void sd_seek(FIL *pFile, unsigned pos)
   f_lseek (pFile, pos);
 }
 
-/****************************************************************************
-*                                                                           *
-* Command Received - process it                                             *
-*                                                                           *
-****************************************************************************/
+// --------------------------------------------------------------------------
+//! @brief       Command Received - process it
+//! @param[in]
+//! @param[out]
+//! @return      PR_OK, PR_ERROR or PR_BUSY
+// --------------------------------------------------------------------------
 
 eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg, tGcodeInterpreterState *pInterpreterState)
 {
   double backup_f;
+  int moves_required = 0;
+  bool reply_sent = false;
   uint8_t axisSelected = 0;
   eParseResult result = PR_OK;
-  bool reply_sent = false;
   
   tTarget next_target = startpoint;
 
@@ -446,24 +474,24 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg, tGcodeInterp
       // since it would be a major hassle to force the stepper to not synchronise, just provide a fast feedrate and hope it's close enough to what host expects
       // CAN BLOCK
       case 0:
-      backup_f = next_target.feed_rate;
-      next_target.feed_rate = config.axis[X_AXIS].maximum_feedrate * 2;
-      enqueue_move (&next_target);
-      next_target.feed_rate = backup_f;
+        backup_f = next_target.feed_rate;
+        next_target.feed_rate = config.axis[X_AXIS].maximum_feedrate * 2; // actual feedrate will be limited by planner
+        result = enqueue_move (&next_target);
+        next_target.feed_rate = backup_f;
       break;
 
       // G1 - synchronised motion
       // CAN BLOCK
       case 1:
-      if ( (extruders_on == EXTRUDER_NUM_0) && !gcode_command.seen_E)
-      {
-        // approximate translation for 3D code. distance to extrude is move distance times extruder speed factor
-        //TODO: extrude distance for Z moves
-        double d = calc_distance (ABS(next_target.x - startpoint.x), ABS(next_target.y - startpoint.y));
+        if ( (extruders_on == EXTRUDER_NUM_0) && !gcode_command.seen_E)
+        {
+          // approximate translation for 3D code. distance to extrude is move distance times extruder speed factor
+          //TODO: extrude distance for Z moves
+          double d = calc_distance (ABS(next_target.x - startpoint.x), ABS(next_target.y - startpoint.y));
         
-        next_target.e = startpoint.e + d * extruder_0_speed / next_target.feed_rate * 24.0;
-      }
-      enqueue_move(&next_target);
+          next_target.e = startpoint.e + d * extruder_0_speed / next_target.feed_rate * 24.0;
+        }
+        result = enqueue_move(&next_target);
       break;
 
       //	G2 - Arc Clockwise
@@ -472,14 +500,10 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg, tGcodeInterp
       //	G3 - Arc Counter-clockwise
       // unimplemented
 
-      //	G4 - Dwell
+      //	G4 - Dwell, P = milliseconds to pause
       // CAN BLOCK
       case 4:
-      // wait for all moves to complete
-      synch_queue();
-      
-      // delay
-      delay_ms(gcode_command.P);
+        result = enqueue_wait_time (gcode_command.P);
       break;
 
       //	G20 - inches as units
@@ -495,57 +519,81 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg, tGcodeInterp
       //	G30 - go home via point
       // CAN BLOCK
       case 30:
-      enqueue_move(&next_target);
-      // no break here, G30 is move and then go home
+        //TODO: this and following command generates several moves which could block
+
+//        result = enqueue_move(&next_target);
+        moves_required = 1;
+        // no break here, G30 is move and then go home
+        // *** fall through ***
 
       //	G28 - go home
       // CAN BLOCK
       case 28:
+      {
       
-      if (gcode_command.seen_X)
-      {
-        zero_x();
-        axisSelected = 1;
-      }
+        // work out number of moves required
+        if (gcode_command.seen_X)
+          moves_required += 3;
+        if (gcode_command.seen_Y)
+          moves_required += 3;
+        if (gcode_command.seen_Z)
+          moves_required += 3;
 
-      if (gcode_command.seen_Y)
-      {
-        zero_y();
-        axisSelected = 1;
-      }
-
-      if (gcode_command.seen_Z)
-      {
-        zero_z();
-        axisSelected = 1;
-      }
-
-      if (gcode_command.seen_E)
-      {
-        zero_e();
-        axisSelected = 1;
-      }
-
-      if(!axisSelected)
-      {
-        if (config.machine_model == MM_RAPMAN)
+        if (moves_required <= 1)
         {
-          // move stage down to clear Z endstop
-          // Rapman only?
-          next_target = startpoint;
-          next_target.z += 3;
-          next_target.feed_rate = config.axis[Z_AXIS].homing_feedrate;
-          enqueue_move(&next_target);
+          moves_required += 9;
+          if (config.machine_model == MM_RAPMAN)
+            moves_required ++;
         }
-                
-        zero_x();
-        zero_y();
-        zero_z();
-        zero_e();
-      }
 
-//!      startpoint.F = config.axis[X_AXIS].homing_feedrate;  //?
-      
+        if (plan_num_free_slots() < moves_required)
+        {
+          result = PR_BUSY;
+          break;
+        }
+
+        // now perform moves
+        if (gcode_command.M == 30)
+        {
+          result = enqueue_move(&next_target);
+        }
+
+        if (gcode_command.seen_X)
+        {
+          home_x();
+          axisSelected = 1;
+        }
+
+        if (gcode_command.seen_Y)
+        {
+          home_y();
+          axisSelected = 1;
+        }
+
+        if (gcode_command.seen_Z)
+        {
+          home_z();
+          axisSelected = 1;
+        }
+
+        if(!axisSelected)
+        {
+          if (config.machine_model == MM_RAPMAN)
+          {
+            // move stage down to clear Z endstop
+            // Rapman only?
+            next_target = startpoint;
+            next_target.z += 3;
+            next_target.feed_rate = config.axis[Z_AXIS].homing_feedrate;
+            enqueue_move(&next_target);
+          }
+                
+          home_x();
+          home_y();
+          home_z();
+        }
+
+      }
       break;
 
       // G90 - absolute positioning
@@ -559,49 +607,49 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg, tGcodeInterp
       break;
 
       //	G92 - set home
-      // CAN BLOCK
+      // !CAN BLOCK
       case 92:
       {
         tTarget new_pos;
         
-      // must have no moves pending if changing position
-      synch_queue();
+        // must have no moves pending if changing position??
+        // synch_queue();
 
-      new_pos = startpoint;
+        new_pos = startpoint;
       
-      if (gcode_command.seen_X)
-      {
-        new_pos.x = gcode_command.target.x;
-        axisSelected = 1;
-      }
+        if (gcode_command.seen_X)
+        {
+          new_pos.x = gcode_command.target.x;
+          axisSelected = 1;
+        }
 
-      if (gcode_command.seen_Y)
-      {
-        new_pos.y = gcode_command.target.y;
-        axisSelected = 1;
-      }
+        if (gcode_command.seen_Y)
+        {
+          new_pos.y = gcode_command.target.y;
+          axisSelected = 1;
+        }
 
-      if (gcode_command.seen_Z)
-      {
-        new_pos.z = gcode_command.target.z;
-        axisSelected = 1;
-      }
+        if (gcode_command.seen_Z)
+        {
+          new_pos.z = gcode_command.target.z;
+          axisSelected = 1;
+        }
 
-      if (gcode_command.seen_E)
-      {
-        new_pos.e = 0;
-        axisSelected = 1;
-      }
+        if (gcode_command.seen_E)
+        {
+          new_pos.e = gcode_command.target.e;
+          axisSelected = 1;
+        }
 
-      if(!axisSelected)
-      {
+        if(!axisSelected)
+        {
           new_pos.x = 0;
           new_pos.y = 0;
           new_pos.z = 0;
           new_pos.e = 0;
-      }
+        }
       
-      plan_set_current_position (&new_pos);
+        plan_set_current_position (&new_pos);
       }
       break;
 
@@ -619,7 +667,7 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg, tGcodeInterp
       case 0: 
       break;
 
-      // M1 - SLeep  /pause-feedhold
+      // M1 - SLeep  / pause-feedhold optional
       case 1: 
       break;
 
@@ -781,7 +829,7 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg, tGcodeInterp
       extruders_on = EXTRUDER_NUM_0;
       if (auto_prime_steps != 0)
       {      
-        SpecialMoveE ((double)auto_prime_steps / auto_prime_factor, auto_prime_feed_rate);
+        result = RelativeMoveE ((double)auto_prime_steps / auto_prime_factor, auto_prime_feed_rate);
       }
 
       break;
@@ -794,7 +842,7 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg, tGcodeInterp
       extruders_on = 0;
       if (auto_reverse_steps != 0)
       {      
-        SpecialMoveE (-(double)auto_reverse_steps / auto_reverse_factor, auto_reverse_feed_rate);
+        result = RelativeMoveE (-(double)auto_reverse_steps / auto_reverse_factor, auto_reverse_feed_rate);
       }
       break;
 
@@ -803,12 +851,23 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg, tGcodeInterp
       case 104:
       if (config.enable_extruder_0)
       {
-        temp_set(gcode_command.S, EXTRUDER_0);
-      
         if (config.wait_on_temp)
-          enqueue_wait_for_temperatures();
+        {
+          if (plan_queue_full())
+          {
+            result = PR_BUSY;
+          }
+          else
+          {
+            temp_set(gcode_command.S, EXTRUDER_0);
+            result = enqueue_wait_for_temperatures( _BV(WE_WAIT_TEMP_EXTRUDER_0) );
+          }
+        }
+        else
+        {
+          temp_set(gcode_command.S, EXTRUDER_0);
+        }
       }
-
       break;
 
       // M105- get temperature
@@ -850,7 +909,7 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg, tGcodeInterp
       if (config.enable_extruder_0)
       {
         temp_set(gcode_command.S, EXTRUDER_0);
-        enqueue_wait_for_temperatures();
+        result = enqueue_wait_for_temperatures(_BV(WE_WAIT_TEMP_EXTRUDER_0));
       }
       break;
 
@@ -902,6 +961,7 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg, tGcodeInterp
 
       // M116 - Wait for all temperatures and other slowly-changing variables to arrive at their set values
       case 116:
+          result = enqueue_wait_for_temperatures( _BV(WE_WAIT_TEMP_EXTRUDER_0) | _BV(WE_WAIT_TEMP_EXTRUDER_1) | _BV(WE_WAIT_TEMP_HEATED_BED));
 
       break;
 
@@ -984,7 +1044,7 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg, tGcodeInterp
 
       /* M140 - Bed Temperature (Fast) */
       case 140:
-      temp_set(gcode_command.S, HEATED_BED_0);
+        temp_set(gcode_command.S, HEATED_BED_0);
       break;
 
       /* M141 - Chamber Temperature (Fast) */
@@ -995,14 +1055,22 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg, tGcodeInterp
       case 142:
       break;
 
-      // M190- power on
+      // M190: Wait for bed temperature to reach target temp 
       case 190:
-      {
-        atx_power_on();
-        enable_all_axes();
-        steptimeout = 0;
-      }
+        temp_set(gcode_command.S, HEATED_BED_0);
+        result = enqueue_wait_for_temperatures(_BV(WE_WAIT_TEMP_HEATED_BED));
       break;
+
+
+      // very similar to M80, could be automatic
+      // M190- power on
+//      case 190:
+//      {
+//        atx_power_on();
+//        enable_all_axes();
+//        steptimeout = 0;
+//      }
+//      break;
 
       // M191- power off
       // same as M2?
@@ -1120,6 +1188,20 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg, tGcodeInterp
       }
       break;
       
+      // M230: Disable / Enable Wait for Temperature Change
+      // S0 Disable wait for temperature change, S1 Enable wait for temperature change 
+      case 230:
+      {
+        if (gcode_command.seen_S)
+        {
+          if (gcode_command.S == 0)
+            config.wait_on_temp = 0;
+          else if (gcode_command.S == 1)
+            config.wait_on_temp = 1;
+        }
+      }
+      break;
+
       // M300 - beep
       // S: frequency
       // P: duration
@@ -1202,7 +1284,15 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg, tGcodeInterp
       // TODO: this depends on current origin being same as home position
       if (config.have_rest_pos || config.have_wipe_pos)
       {
-        // move above bed if ncessary
+        moves_required = 2;
+
+        if (plan_num_free_slots() < moves_required)
+        {
+          result = PR_BUSY;
+          break;
+        }
+
+        // move above bed if necessary
         if (startpoint.z < 2)
         {
           next_target = startpoint;
@@ -1233,9 +1323,16 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg, tGcodeInterp
       break;
 
       // M543 - exit nozzle wipe/no op
+      // CAN BLOCK
       case 543:
         if (config.have_wipe_pos)
         {
+          if (plan_num_free_slots() < 2)
+          {
+            result = PR_BUSY;
+            break;
+          }
+
           // move out of wipe area
           next_target.x = config.wipe_exit_pos_x;
           next_target.y = config.wipe_exit_pos_y;
@@ -1262,7 +1359,7 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg, tGcodeInterp
         // calc E distance, use approximate conversion to get distance, not critical
         // TODO: how to derive magic number
         // S is RPM*10, but happens to give about the right speed in mm/min        
-        SpecialMoveE ((double)gcode_command.P / 256.0, gcode_command.S);
+        result = RelativeMoveE ((double)gcode_command.P / 256.0, gcode_command.S);
       }
       break;
                 
@@ -1281,9 +1378,10 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg, tGcodeInterp
     }
   }
 
-  if (!reply_sent)
+  if ( (result == PR_OK) || (result == PR_ERROR) )
   {
-    lw_fputs("ok\r\n", pGcodeInputMsg->out_file);
+    if (!reply_sent)
+      lw_fputs("ok\r\n", pGcodeInputMsg->out_file);
 
     //lw_fprintf(pGcodeInputMsg->out_file, "ok Q:%d\r\n", plan_queue_size());
   }

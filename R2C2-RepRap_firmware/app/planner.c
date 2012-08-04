@@ -430,6 +430,7 @@ void plan_buffer_line (tActionRequest *pAction)
   target[Z_AXIS] = lround(z*(double)config.axis[Z_AXIS].steps_per_mm);     
   target[E_AXIS] = lround(pAction->target.e*(double)config.axis[E_AXIS].steps_per_mm);     
   
+  // ----
   // Calculate the buffer tail after we push this block
   next_buffer_tail = next_block_index( block_buffer_tail );	
   
@@ -439,6 +440,7 @@ void plan_buffer_line (tActionRequest *pAction)
   
   // Prepare to set up new block
   block = &block_buffer[block_buffer_tail];
+  // ----
 
   block->action_type = AT_MOVE;
   
@@ -675,7 +677,8 @@ void plan_buffer_line (tActionRequest *pAction)
 void plan_buffer_wait (tActionRequest *pAction)
 {
   block_t *block;
-    
+  
+  // ----
   // Calculate the new buffer tail after we push this block
   uint8_t next_buffer_tail = next_block_index( block_buffer_tail );	
   
@@ -685,6 +688,7 @@ void plan_buffer_wait (tActionRequest *pAction)
   
   // Prepare to set up new block
   block = &block_buffer[block_buffer_tail];
+  // ----
   
   //TODO
   
@@ -705,11 +709,14 @@ void plan_buffer_wait (tActionRequest *pAction)
     block->decelerate_after = block->step_event_count;
     block->rate_delta = 0;
     
+  block->wait_param = pAction->wait_param;
+
   previous_nominal_speed = 0.0;
 
   // Move buffer tail
   block_buffer_tail = next_buffer_tail;     
 
+  // need to call recalc - should not affect path??
   if (acceleration_manager_enabled) { planner_recalculate(); }  
   st_wake_up();
     
@@ -717,6 +724,8 @@ void plan_buffer_wait (tActionRequest *pAction)
 
 void plan_buffer_action(tActionRequest *pAction)
 {
+  //TODO: check queue, wait
+
   switch (pAction->ActionType)
   {
   case AT_MOVE:
@@ -786,4 +795,9 @@ uint8_t plan_queue_size(void)
     return block_buffer_tail - block_buffer_head;
   else
     return block_buffer_tail - block_buffer_head + BLOCK_BUFFER_SIZE;
+}
+
+uint8_t plan_num_free_slots(void)
+{
+  return BLOCK_BUFFER_SIZE - plan_queue_size();
 }

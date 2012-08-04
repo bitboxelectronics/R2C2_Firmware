@@ -63,7 +63,7 @@ typedef struct {
 
 } tGcodeInterpreterState;
 
-// this holds all the possible data from a received command
+// this holds all the possible data for a received command
 typedef struct {
   // per command
   union {

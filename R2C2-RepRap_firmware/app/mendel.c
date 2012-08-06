@@ -53,6 +53,7 @@
 #include "usb_shell_task.h"
 #include "uart_shell_task.h"
 #include "gcode_task.h"
+#include "ui_task.h"
 
 FATFS   fs;       /* Work area (file system object) for logical drive */
 
@@ -195,11 +196,15 @@ void PrinterTask( void *pvParameters )
   xTaskCreate( EthShellTask, (signed char *)"EthSh", 128, ( void * ) NULL, tskIDLE_PRIORITY, NULL );
 
   // option
-  // Start a Gcode shell on a UART
-  shell_params.in_file = lw_fopen ("uart1", "r");
-  shell_params.out_file = lw_fopen ("uart1", "w");
+  // Start a Gcode shell on UART
+  shell_params.in_file = lw_fopen ("uart1", "rw");
+  shell_params.out_file = shell_params.in_file;
   xTaskCreate( uart_shell_task, (signed char *)"UartSh", 128, ( void * ) &shell_params, tskIDLE_PRIORITY, NULL );
 
+  // start up user interface
+  xTaskCreate( ui_task, (signed char *)"UiTask", 128, ( void * ) NULL, tskIDLE_PRIORITY, NULL );
+
+  // now to do GCode startup
   exec_gcode_file ("autoexec.g");
 
   // -- all startup done, signal readiness

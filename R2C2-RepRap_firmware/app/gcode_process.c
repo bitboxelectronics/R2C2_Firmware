@@ -1267,15 +1267,15 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg, tGcodeInterp
       // S: temperature (degrees C, 0-300)
       // P: ADC val
       case 501:
-      if (gcode_command.seen_S && gcode_command.seen_P)
-        temp_set_table_entry (HEATED_BED_0, gcode_command.S, gcode_command.P);
-      else if (gcode_command.seen_S)
-      {
-        reply_sent = true;
-        lw_fprintf (pGcodeInputMsg->out_file, "ok [%d] = %d\r\n", gcode_command.S, temp_get_table_entry (HEATED_BED_0, gcode_command.S));
-      }
-      else
-        lw_fputs ("E: bad param\r\n", pGcodeInputMsg->out_file);
+        if (gcode_command.seen_S && gcode_command.seen_P)
+          temp_set_table_entry (HEATED_BED_0, gcode_command.S, gcode_command.P);
+        else if (gcode_command.seen_S)
+        {
+          reply_sent = true;
+          lw_fprintf (pGcodeInputMsg->out_file, "ok [%d] = %d\r\n", gcode_command.S, temp_get_table_entry (HEATED_BED_0, gcode_command.S));
+        }
+        else
+          lw_fputs ("E: bad param\r\n", pGcodeInputMsg->out_file);
       break;
 
       // M542 - nozzle wipe/move to rest location
@@ -1289,36 +1289,37 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg, tGcodeInterp
         if (plan_num_free_slots() < moves_required)
         {
           result = PR_BUSY;
-          break;
-        }
-
-        // move above bed if necessary
-        if (startpoint.z < 2)
-        {
-          next_target = startpoint;
-          next_target.z = 2;
-          next_target.feed_rate = config.axis[Z_AXIS].maximum_feedrate;
-          enqueue_move(&next_target);
-        }
-        
-        if (config.have_wipe_pos)
-        {
-          // move to start of wipe area
-          next_target.x = config.wipe_entry_pos_x;
-          next_target.y = config.wipe_entry_pos_y;
-          next_target.z = startpoint.z;
-          next_target.feed_rate = config.axis[X_AXIS].maximum_feedrate;
         }
         else
         {
-          // move to rest position
-          next_target.x = config.rest_pos_x;
-          next_target.y = config.rest_pos_y;
-          next_target.z = startpoint.z;
-          next_target.feed_rate = config.axis[X_AXIS].maximum_feedrate;
-        }
+          // move above bed if necessary
+          if (startpoint.z < 2)
+          {
+            next_target = startpoint;
+            next_target.z = 2;
+            next_target.feed_rate = config.axis[Z_AXIS].maximum_feedrate;
+            enqueue_move(&next_target);
+          }
         
-        enqueue_move(&next_target);
+          if (config.have_wipe_pos)
+          {
+            // move to start of wipe area
+            next_target.x = config.wipe_entry_pos_x;
+            next_target.y = config.wipe_entry_pos_y;
+            next_target.z = startpoint.z;
+            next_target.feed_rate = config.axis[X_AXIS].maximum_feedrate;
+          }
+          else
+          {
+            // move to rest position
+            next_target.x = config.rest_pos_x;
+            next_target.y = config.rest_pos_y;
+            next_target.z = startpoint.z;
+            next_target.feed_rate = config.axis[X_AXIS].maximum_feedrate;
+          }
+        
+          enqueue_move(&next_target);
+        }
       }
       break;
 

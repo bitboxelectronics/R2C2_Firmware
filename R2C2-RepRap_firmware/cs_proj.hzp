@@ -68,6 +68,10 @@
       <file file_name="libraries/R2C2/str_buffer.c"/>
       <file file_name="libraries/R2C2/debug.c"/>
       <file file_name="libraries/R2C2/config.c"/>
+      <file file_name="libraries/R2C2/lw_rtos.c">
+        <configuration Name="THUMB Flash Debug" build_exclude_from_build="Yes"/>
+      </file>
+      <file file_name="libraries/R2C2/LiquidCrystal.c"/>
     </folder>
     <folder Name="app_reprap">
       <file file_name="app/alerter.c"/>
@@ -85,13 +89,24 @@
       <file file_name="app/temp.c"/>
       <file file_name="app/uart_shell_task.c"/>
       <file file_name="app/usb_shell_task.c"/>
+      <file file_name="app/ui_task.c"/>
     </folder>
     <folder Name="lib_FreeRTOS">
-      <file file_name="libraries/FreeRTOS/Source/list.c"/>
-      <file file_name="libraries/FreeRTOS/Source/queue.c"/>
-      <file file_name="libraries/FreeRTOS/Source/tasks.c"/>
-      <file file_name="libraries/FreeRTOS/Source/portable/MemMang/heap_2.c"/>
-      <file file_name="libraries/FreeRTOS/Source/portable/GCC/ARM_CM3/port.c"/>
+      <file file_name="libraries/FreeRTOS/Source/list.c">
+        <configuration Name="THUMB Flash Debug" build_exclude_from_build="No"/>
+      </file>
+      <file file_name="libraries/FreeRTOS/Source/queue.c">
+        <configuration Name="THUMB Flash Debug" build_exclude_from_build="No"/>
+      </file>
+      <file file_name="libraries/FreeRTOS/Source/tasks.c">
+        <configuration Name="THUMB Flash Debug" build_exclude_from_build="No"/>
+      </file>
+      <file file_name="libraries/FreeRTOS/Source/portable/MemMang/heap_2.c">
+        <configuration Name="THUMB Flash Debug" build_exclude_from_build="No"/>
+      </file>
+      <file file_name="libraries/FreeRTOS/Source/portable/GCC/ARM_CM3/port.c">
+        <configuration Name="THUMB Flash Debug" build_exclude_from_build="No"/>
+      </file>
     </folder>
     <folder Name="lib_lpcusb">
       <file file_name="libraries/LPCUSB/src/usbcontrol.c"/>

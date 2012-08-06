@@ -37,8 +37,8 @@
 
 #include "app_config.h"
 
-// The number of linear motions that can be in the plan at any give time
-
+// The number of linear motions that can be in the plan at any give time (+1)
+// NB: The actual maximum number of active entries is the size - 1
 #define BLOCK_BUFFER_SIZE 20
 
 tTarget startpoint;
@@ -799,5 +799,5 @@ uint8_t plan_queue_size(void)
 
 uint8_t plan_num_free_slots(void)
 {
-  return BLOCK_BUFFER_SIZE - plan_queue_size();
+  return BLOCK_BUFFER_SIZE -1 - plan_queue_size();
 }

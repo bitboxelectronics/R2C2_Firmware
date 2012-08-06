@@ -38,10 +38,11 @@
 #endif
 
 #include "uart.h"
-#include "usb_serial.h" //TODO: usb ***
+#include "usb_serial.h"
 
 #include "lw_syscalls.h"
 #include "lw_io.h"
+#include "lw_ioctl.h"
 
 extern LW_FILE file_table [];
 
@@ -57,6 +58,7 @@ typedef struct {
   void (*dev_putc) (char c);  
   char (*dev_getc) (void);
   int (*dev_rx_avail) (void);
+//  int (*dev_ioctl) (int cmd, argList args);
 } tDeviceDesc;
 
 // DEVICES TABLE
@@ -198,18 +200,40 @@ int _write(int file, char *ptr, int len)
   }
 }
 
-
-int _sys_rx_ready (int file)
+int _ioctl(int file, int cmd, va_list args) 
 {
   int dev_num;
-
+  int result;
+   
   if (file < MAX_FILES)
   {
     dev_num = file_table [file].dev_major;
-    return Devices[dev_num].dev_rx_avail();
+
+    switch (cmd)
+    {
+      case LW_FIONREAD:
+      {
+        int *pNum = va_arg (args, int *);
+
+        if (pNum != NULL)
+          *pNum = Devices[dev_num].dev_rx_avail();
+         
+        result = 0;
+        //errno = 0;
+      }
+      break;
+
+      default:
+        errno = EINVAL;
+        result = -1;
+    }
+  }
+  else
+  {
+    errno = EBADF;
+    result = -1;
   }
 
-  errno = EBADF;
-  return -1;
+  return result;
 
 }

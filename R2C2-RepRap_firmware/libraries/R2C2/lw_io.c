@@ -30,10 +30,9 @@
 */
 
 #include <string.h>
-//#include <fcntl.h>
 
 #include "lw_io.h"
-
+#include "lw_ioctl.h"
 #include "lw_syscalls.h"
 
 #include "sermsg.h"
@@ -227,6 +226,32 @@ int lw_vfprintf(LW_FILE *f, const char *format, va_list args)
 //  va_end(args);
 }
 
+
+
+// --------------------------------------------------------------------------
+//! @brief
+//! @param[in]
+//! @param[out]
+//! @return
+// --------------------------------------------------------------------------
+int lw_ioctl(LW_FILE *f, int request, ...)
+{
+  va_list args;
+
+  CHECK_PTR (f);
+
+  va_start(args, request);
+  
+  _ioctl (f->handle, request, args);
+
+  va_end(args);
+}
+
+int lw_ferror(LW_FILE *f)
+{
+
+}
+
 // ----------------------------------------------------------------
 // functions working on predefined streams: STDIN, STDOUT, STDERR
 // ----------------------------------------------------------------
@@ -249,12 +274,6 @@ int lw_printf (const char *format, ...)
 
   lw_vfprintf (stdout, format, args);
   va_end(args);
-}
-
-int lw_frxready (LW_FILE *f)
-{
-  CHECK_PTR (f);
-  return _sys_rx_ready (f->handle);
 }
 
 // ----------------------------------------------------------------

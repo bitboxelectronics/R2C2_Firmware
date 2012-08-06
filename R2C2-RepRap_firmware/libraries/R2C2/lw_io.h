@@ -32,6 +32,7 @@
 
 #include <stdarg.h>
 #include <stddef.h>
+
 #include "stdint.h"
 #include "stdbool.h"
 
@@ -68,6 +69,8 @@ typedef struct
   int flags;
   int mode;
 
+  int _errno;
+
   uint8_t in_use :1;
 } LW_FILE;
 
@@ -93,7 +96,22 @@ int lw_vfprintf(LW_FILE *, const char *, va_list);
 
 int lw_fgetc(LW_FILE *);
 
-int lw_frxready (LW_FILE *f);
+//int lw_frxready (LW_FILE *f);
+
+
+// POSIX compatible from fcntlh.h
+
+#define LW_F_GETFL  F_GETFL
+#define LW_F_SETFL  F_SETFL
+
+#define LW_O_NONBLOCK   O_NONBLOCK
+
+int lw_fcntl(LW_FILE *f, int cmd, ...);
+
+int lw_ferror(LW_FILE *f);
+
+// extra
+int lw_get_errno(LW_FILE *f);
 
 // ---------------------------
 

@@ -31,6 +31,8 @@
 #ifndef _LW_SYSCALLS_H
 #define _LW_SYSCALLS_H
 
+#include <stdarg.h>
+
 #if 0
 // NB these numbers must correspond to 'Devices' table
 #define DEV_UART0       0
@@ -60,7 +62,7 @@ int _close(int file);
 int _read(int file, char *ptr, int len);
 int _write(int file, char *ptr, int len) ;
 
+int _ioctl(int file, int vmd, va_list args) ;
 
 void _sys_init_devices(void);
-int _sys_rx_ready (int file);
 #endif

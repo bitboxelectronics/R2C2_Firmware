@@ -42,6 +42,7 @@ static uint8_t erxfcon;
 // portable target wrapper functions 
 /*****************************************************************************/
 
+#if 0
 // encode port and bit number in a byte
 // port 0-7
 // bit 0-31
@@ -57,6 +58,7 @@ static uint8_t erxfcon;
 #define digitalWrite(a,b) digital_write (DECODE_PORT_BITMASK(a), b)
 #define pinMode(a,b) pin_mode(DECODE_PORT_BITMASK(a), b)
 //#define _BV(b) (1<<(b))
+#endif
 
 //todo
 #define cli() 

@@ -39,6 +39,6 @@ typedef struct
 
 } tShellParams;
 
-void uart_shell_task ( tShellParams *pParameters );
+void uart_shell_task ( void *pvParameters );
 
 #endif

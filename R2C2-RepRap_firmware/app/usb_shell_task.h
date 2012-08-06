@@ -31,6 +31,8 @@
 #ifndef USB_SHELL_TASK_H
 #define USB_SHELL_TASK_H
 
+#include "uart_shell_task.h"
+
 void USBShellTask( void *pvParameters );
 
 #endif

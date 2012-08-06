@@ -27,59 +27,60 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "machine.h"
 #include "rtos_api.h"
 
 #include "r2c2.h"
-#include "lw_io.h"
 #include "gcode_parse.h"
 #include "gcode_task.h"
-#include "usb_serial.h"
+#include "lw_io.h"
+#include "lw_ioctl.h"
 #include "usb_shell_task.h"
+#include "uart_shell_task.h"
 
 
 static tLineBuffer LineBuf;
 static tGcodeInputMsg GcodeInputMsg;
-//static tShellParams *task_params;
+static tShellParams task_params;
 
-
-void USBShellTask( void *pvParameters )
+static void _task_init (tShellParams *pParameters)
 {
-    (void) pvParameters; /* Just to prevent compiler warnings about the unused parameter. */
-    uint8_t c;
-
-    // TASK INIT
-    //task_params = *pvParameters;
+    pParameters->in_file = lw_fopen ("usbser", "rw");
+    pParameters->out_file = pParameters->in_file;
 
     GcodeInputMsg.pLineBuf = &LineBuf;
-    GcodeInputMsg.out_file = lw_fopen ("usbser", "w");
+    GcodeInputMsg.out_file = pParameters->out_file;
     GcodeInputMsg.result = PR_OK;
+    GcodeInputMsg.in_use = 0;
 
     // say hi to host
-    usb_serial_writestr("Start\r\nOK\r\n");
+    lw_fprintf(pParameters->out_file, "Start\r\nOK\r\n");
+}
 
-    // TASK BODY
+static void _task_poll (tShellParams *pParameters)
+{
+    int num;
+    uint8_t c;
+    eParseResult parse_result;
 
-    // process received data (USB stuff is done inside interrupt)
-    for( ;; )
+    if (!GcodeInputMsg.in_use)
     {
+      if (GcodeInputMsg.result == PR_BUSY)
+      {
+        // try again
+        GcodeInputMsg.in_use = 1;
+        tGcodeInputMsg *p_message = &GcodeInputMsg; 
+        xQueueSend (GcodeRxQueue, &p_message, portMAX_DELAY);
+      }
+      else
+      {
+        lw_ioctl (pParameters->in_file, LW_FIONREAD, &num);
 
-        if (!GcodeInputMsg.in_use)
+        if (num > 0 )
         {
-          if (GcodeInputMsg.result == PR_BUSY)
-          {
-            // try again
-            GcodeInputMsg.in_use = 1;
-            tGcodeInputMsg *p_message = &GcodeInputMsg; 
-            xQueueSend (GcodeRxQueue, &p_message, portMAX_DELAY);
-
-          }
-          else if (usb_serial_rxchars() != 0)
-          {
-            c = usb_serial_popchar();
-      
-            if (LineBuf.len < MAX_LINE)
-              LineBuf.data [LineBuf.len++] = c;
+          c = lw_fgetc (pParameters->in_file);
+  
+          if (LineBuf.len < MAX_LINE)
+            LineBuf.data [LineBuf.len++] = c;
 
             if ((c==10) || (c==13))
             {
@@ -92,9 +93,26 @@ void USBShellTask( void *pvParameters )
               else
                 LineBuf.len = 0;
             }
-          }      
-        }
+        }      
+      }
+    }
+}
 
-    } // for ever
+void USBShellTask( void *pvParameters )
+{
+  // TASK INIT
+  
+  if (pvParameters != NULL)
+    task_params = *(tShellParams *)pvParameters;
+
+  _task_init(&task_params);
+
+  // TASK BODY
+
+  // process received data (USB stuff is done inside interrupt)
+  for( ;; )
+  {
+    _task_poll(&task_params);
+  }
 }
 

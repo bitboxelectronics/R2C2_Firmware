@@ -33,6 +33,7 @@
 #include "gcode_parse.h"
 #include "gcode_task.h"
 #include "lw_io.h"
+#include "lw_ioctl.h"
 #include "uart_shell_task.h"
 
 
@@ -44,6 +45,8 @@ static void _task_init (tShellParams *pParameters)
 {
     GcodeInputMsg.pLineBuf = &LineBuf;
     GcodeInputMsg.out_file = pParameters->out_file;
+    GcodeInputMsg.result = PR_OK;
+    GcodeInputMsg.in_use = 0;
 
     // say hi to host
     lw_fprintf(pParameters->out_file, "Start\r\nOK\r\n");
@@ -51,36 +54,51 @@ static void _task_init (tShellParams *pParameters)
 
 static void _task_poll (tShellParams *pParameters)
 {
+  int num;
   uint8_t c;
   eParseResult parse_result;
 
-  // process characters from the serial port
-  while (!GcodeInputMsg.in_use && (lw_frxready (pParameters->in_file) != 0) )
+  if (!GcodeInputMsg.in_use)
   {
-    c = lw_fgetc (pParameters->in_file);
-
-    if (LineBuf.len < MAX_LINE)
-      LineBuf.data [LineBuf.len++] = c;
-
-    if ((c==10) || (c==13))
-    {
-      if (LineBuf.len > 1)
+      if (GcodeInputMsg.result == PR_BUSY)
       {
+        // try again
         GcodeInputMsg.in_use = 1;
         tGcodeInputMsg *p_message = &GcodeInputMsg; 
-        xQueueSend (GcodeRxQueue, &p_message, portMAX_DELAY); // TODO
+        xQueueSend (GcodeRxQueue, &p_message, portMAX_DELAY);
+    }
+    else
+    {
+      lw_ioctl (pParameters->in_file, LW_FIONREAD, &num);
+
+      if (num > 0 )
+      {
+        c = lw_fgetc (pParameters->in_file);
+
+        if (LineBuf.len < MAX_LINE)
+          LineBuf.data [LineBuf.len++] = c;
+
+        if ((c==10) || (c==13))
+        {
+          if (LineBuf.len > 1)
+          {
+            GcodeInputMsg.in_use = 1;
+            tGcodeInputMsg *p_message = &GcodeInputMsg; 
+            xQueueSend (GcodeRxQueue, &p_message, portMAX_DELAY); // TODO
+          }
+          else
+            LineBuf.len = 0;
+        }
       }
-      else
-        LineBuf.len = 0;
-    }      
+    }
   }
 }
 
 
-void uart_shell_task ( tShellParams *pParameters )
+void uart_shell_task ( void *pvParameters )
 {
   // TASK INIT
-  task_params = *pParameters;
+  task_params = *(tShellParams *)pvParameters;
 
   _task_init(&task_params);
 

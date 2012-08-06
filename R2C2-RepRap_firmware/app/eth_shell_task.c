@@ -64,10 +64,7 @@ void EthShellTask( void *pvParameters )
     // process received data
     for( ;; )
     {
-      digital_write (1, (1<<15), 0);
-      delay (250);
-      digital_write (1, (1<<15), 1);
-      delay (250);
+      //no-op
     }
 }
 

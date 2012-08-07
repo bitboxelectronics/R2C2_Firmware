@@ -155,7 +155,8 @@ APPSRC = \
 	$(APPDIR)/eth_shell_task.c \
 	$(APPDIR)/gcode_task.c \
 	$(APPDIR)/planner.c \
-	$(APPDIR)/stepper.c
+	$(APPDIR)/stepper.c \
+	$(APPDIR)/ui_task.c
 
 # 
 #APPDIR = sample

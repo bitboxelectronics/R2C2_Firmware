@@ -438,11 +438,15 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg, tGcodeInterp
 
   // convert relative to absolute
   if (pInterpreterState->option_relative)
-  {  
-    next_target.x = startpoint.x + gcode_command.target.x;
-    next_target.y = startpoint.y + gcode_command.target.y;
-    next_target.z = startpoint.z + gcode_command.target.z;
-    next_target.e = startpoint.e + gcode_command.target.e;
+  { 
+    if (gcode_command.seen_X)
+      next_target.x = startpoint.x + gcode_command.target.x;
+    if (gcode_command.seen_Y)
+      next_target.y = startpoint.y + gcode_command.target.y;
+    if (gcode_command.seen_Z)
+      next_target.z = startpoint.z + gcode_command.target.z;
+    if (gcode_command.seen_E)
+      next_target.e = startpoint.e + gcode_command.target.e;
     if (gcode_command.seen_F)
       next_target.feed_rate = gcode_command.target.feed_rate;
   }

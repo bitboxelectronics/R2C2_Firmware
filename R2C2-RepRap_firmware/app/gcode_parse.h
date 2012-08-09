@@ -63,6 +63,17 @@ typedef struct {
 
 } tGcodeInterpreterState;
 
+typedef struct 
+{
+  eArgType arg_type;
+  union {
+    float   float_val;
+    int32_t int32_val;
+    uint32_t uint32_val;
+    char    *pStr;
+  };
+} tVariant;
+
 // this holds all the possible data for a received command
 typedef struct {
   // per command
@@ -106,11 +117,11 @@ typedef struct {
 	uint8_t         G;
 	uint8_t					G_fraction;
 
-	uint16_t				M;
-	uint16_t				T;
+	int16_t				  M;
+	int16_t				  T;
   tTarget					target; // info required for motion in planner/stepper X,Y,Z,E,F
 	int32_t				  N;
-	uint16_t				P;
+	int16_t			  	P;
 	int16_t					S;
 
   // for functions requiring a string parameter eg SD files

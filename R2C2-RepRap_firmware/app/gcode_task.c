@@ -27,6 +27,10 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <stdint.h>
+#include <string.h>
+#include <ctype.h>
+
 #include "rtos_api.h"
 
 #include "r2c2.h"
@@ -48,6 +52,139 @@ static tGcodeInputMsg *pGcodeInputMsg;
 
 // for input from local filesystem
 tGcodeInputMsg file_input_msg;
+
+
+// --------------------------------------------------------------------------
+//
+// --------------------------------------------------------------------------
+
+static inline void push_byte (tLineBuffer *pBuf, uint8_t byte_val)
+{
+  if (pBuf->len < MAX_LINE)
+    pBuf->data [pBuf->len++] = byte_val;
+}
+
+void gcode_add_packed_command(tLineBuffer *pBuf, uint8_t cmd)
+{
+  push_byte (pBuf, cmd);
+}
+
+void gcode_add_packed_command_val (tLineBuffer *pBuf, uint8_t cmd, eArgType arg_type, uint8_t *pData)
+{
+}
+
+// code should be a-z, A-Z or *
+void gcode_add_packed_command_int (tLineBuffer *pBuf, uint8_t cmd, int32_t data)
+{
+  eArgType arg_type;
+
+  if (data < 0)
+  {
+    // signed
+    if ( (data < INT16_MIN))
+      arg_type = arg_int32;
+    else if ( (data < INT8_MIN))
+      arg_type = arg_int16;
+    else
+      arg_type = arg_int8;
+
+  }
+  else
+  {
+    if ( (data > UINT16_MAX))
+      arg_type = arg_int32;
+    else if ( data > UINT8_MAX)
+      arg_type = arg_uint16;
+    else
+      arg_type = arg_uint8;
+  }
+
+  cmd = toupper (cmd);
+
+  if ( (cmd >= 'A') && (cmd <= 'Z'))
+    cmd = ((cmd-64) << 3) | arg_type;
+  else
+    cmd = CODE_STAR;
+
+  push_byte (pBuf,cmd);
+
+  // must be at least one byte
+  push_byte (pBuf, data & 0xff);
+  data >>= 8;
+
+  if (arg_type >= arg_uint16)
+  {
+    push_byte (pBuf, data & 0xff);
+    data >>= 8;
+  }
+
+  if (arg_type >= arg_int32)
+  {
+    push_byte (pBuf, data & 0xff);
+    data >>= 8;
+    push_byte (pBuf, data & 0xff);
+    data >>= 8;
+  }
+}
+
+// code should be a-z, A-Z
+void gcode_add_packed_command_float (tLineBuffer *pBuf, uint8_t cmd, float val)
+{
+  eArgType arg_type;
+  tVariant data;
+
+  arg_type = arg_float;
+
+  cmd = toupper (cmd);
+  if ( (cmd >= 'A') && (cmd <= 'Z'))
+    cmd = ((cmd-64) << 3) | arg_type;
+  else
+    return;
+
+  push_byte (pBuf,cmd);
+
+  data.float_val = val;
+
+  push_byte (pBuf, data.uint32_val & 0xff);
+  data.uint32_val >>= 8;
+  push_byte (pBuf, data.uint32_val & 0xff);
+  data.uint32_val >>= 8;
+
+  push_byte (pBuf, data.uint32_val & 0xff);
+  data.uint32_val >>= 8;
+  push_byte (pBuf, data.uint32_val & 0xff);
+  data.uint32_val >>= 8;
+}
+
+// code should be a-z, A-Z, CODE_COMMENT, CODE_RAW
+void gcode_add_packed_command_str (tLineBuffer *pBuf, uint8_t cmd, char *pData)
+{
+  eArgType arg_type;
+
+  arg_type = arg_string;
+
+  cmd = toupper (cmd);
+  if ( (cmd >= 'A') && (cmd <= 'Z'))
+    cmd = ((cmd-64) << 3) | arg_type;
+  else
+    return;
+
+  push_byte (pBuf, cmd);
+
+  int len = strlen (pData);
+
+  while (len)
+  {
+    push_byte (pBuf, *pData++);
+    len--;
+  }
+  push_byte (pBuf, 0);
+}
+
+
+// --------------------------------------------------------------------------
+//
+// --------------------------------------------------------------------------
 
 void GcodeTask( void *pvParameters )
 {

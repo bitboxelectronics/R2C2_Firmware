@@ -40,7 +40,6 @@
 #include "buzzer.h"
 #include "ios.h"
 #include "sdcard.h"
-#include "sermsg.h"
 #include "spi.h"
 #include "timer.h"
 

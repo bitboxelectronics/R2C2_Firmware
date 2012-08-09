@@ -75,6 +75,8 @@
 // decode to bit mask
 #define DECODE_BITMASK(port_bit) (_BV((port_bit) & 0x1F))
 
+#define PACKED_PORT_BIT(pindef) ((pindef.port)<<5)|(pindef.pin_number)
+
 
 #define pinMode(pin,mode)       pin_mode (DECODE_PORTNUM(pin), DECODE_BITMASK(pin), mode)
 #define digitalWrite(pin,value) digital_write (DECODE_PORTNUM(pin), DECODE_BITMASK(pin), value)

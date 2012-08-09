@@ -68,15 +68,21 @@ void      set_pin_mode (tPinDef pin, uint8_t dir)
 
 uint32_t  read_pin (tPinDef pin)
 {
-  return ((FIO_ReadValue(pin.port) & _BV(pin.pin_number)) ? 1 : 0 ) ^ pin.active_low;
+  if (pin.port == UNDEFINED_PORT)
+    return 0;
+  else
+    return ((FIO_ReadValue(pin.port) & _BV(pin.pin_number)) ? 1 : 0 ) ^ pin.active_low;
 }
 
 void  write_pin (tPinDef pin, uint8_t state)
 {
-  if (state ^ pin.active_low)
-    FIO_SetValue (pin.port, _BV(pin.pin_number));
-  else
-    FIO_ClearValue (pin.port, _BV(pin.pin_number));
+  if (pin.port != UNDEFINED_PORT)
+  {
+    if (state ^ pin.active_low)
+      FIO_SetValue (pin.port, _BV(pin.pin_number));
+    else
+      FIO_ClearValue (pin.port, _BV(pin.pin_number));
+  }
 }
 
 

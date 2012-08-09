@@ -240,7 +240,7 @@ static bool parse_parameter_value (uint8_t type, tParamVal *param_val)
 }
 
 // The output of this goes to Gcode interface
-void print_config_table (tConfigItem lookup[], int num_tokens)
+void print_config_table (const tConfigItem lookup[], int num_tokens)
 {
   unsigned j;
   
@@ -281,7 +281,7 @@ static unsigned long str_hash(char *str)
     return hash;
 }
 
-static int find_key (char *key, int num_tokens, tConfigItem lookup[], tKeyHash hashes[])
+static int find_key (char *key, int num_tokens, const tConfigItem lookup[], tKeyHash hashes[])
 {
   unsigned j;
   uint32_t hash;
@@ -317,7 +317,7 @@ static int find_key (char *key, int num_tokens, tConfigItem lookup[], tKeyHash h
 }
 
 
-void create_key_hash_table (int num_tokens,  tConfigItem lookup[], tKeyHash hashes[])
+void create_key_hash_table (int num_tokens, const tConfigItem lookup[], tKeyHash hashes[])
 {
   int j;
   for (j = 0; j < num_tokens; j++)
@@ -330,7 +330,7 @@ void create_key_hash_table (int num_tokens,  tConfigItem lookup[], tKeyHash hash
 
 static  FIL file;       /* file object */
 
-FRESULT read_config_file (char *filename, tConfigItem lookup[], int num_tokens, tKeyHash hashes[])
+FRESULT read_config_file (char *filename, const tConfigItem lookup[], int num_tokens, tKeyHash hashes[])
 {
   FRESULT res;
   char line [MAX_LINE_LEN];
@@ -409,7 +409,7 @@ FRESULT read_config_file (char *filename, tConfigItem lookup[], int num_tokens, 
 }
 
 
-void set_defaults (tConfigItem lookup[], int num_tokens)
+void set_defaults (const tConfigItem lookup[], int num_tokens)
 {
   unsigned j;
 

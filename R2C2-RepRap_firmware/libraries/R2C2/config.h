@@ -56,12 +56,12 @@ typedef struct {
   uint32_t hash;
   } tKeyHash ;
 
-void set_defaults (tConfigItem lookup[], int num_tokens);
+void set_defaults (const tConfigItem lookup[], int num_tokens);
 
-FRESULT read_config_file (char *filename, tConfigItem lookup[], int num_tokens, tKeyHash hashes[]);
+FRESULT read_config_file (char *filename, const tConfigItem lookup[], int num_tokens, tKeyHash hashes[]);
 
-void print_config_table (tConfigItem lookup[], int num_token);
+void print_config_table (const tConfigItem lookup[], int num_token);
 
-void create_key_hash_table (int num_tokens,  tConfigItem lookup[], tKeyHash hashes[]);
+void create_key_hash_table (int num_tokens,  const tConfigItem lookup[], tKeyHash hashes[]);
 
 #endif /* CONFIG_H */

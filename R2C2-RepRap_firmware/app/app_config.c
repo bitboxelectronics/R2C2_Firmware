@@ -49,7 +49,7 @@ tApplicationConfiguration config;
 
 // lookup table for general/application level configuration
 // the lookup table associates keywords with config items in RAM
-static tConfigItem config_lookup [] = 
+static const tConfigItem config_lookup [] = 
 {
   //  
   // general config
@@ -70,6 +70,10 @@ static tConfigItem config_lookup [] =
 
   { "control_panel",        &config.interface_control_panel_enabled, TYPE_INT, {.val_i = 0}},
   
+  { "cp_lcd_type",        &config.interface_cp_lcd_type, TYPE_INT, {.val_i = 1}},
+  { "cp_lcd_rows",        &config.interface_cp_lcd_rows, TYPE_INT, {.val_i = 4}},
+  { "cp_lcd_cols",        &config.interface_cp_lcd_cols, TYPE_INT, {.val_i = 20}},
+
   { "tcp_ip_enabled",       &config.interface_tcp_ip_enabled, TYPE_INT, {.val_i = 0}},
   { "network_interface",    &config.interface_tcp_ip_phy_type, TYPE_INT, {.val_i = 0}},
 
@@ -157,7 +161,7 @@ static tConfigItem config_lookup [] =
 // lookup table for pin mapping
 // this allows some portability to different setups without affecting application config
 // This has default values for the R2C2 v1.2 electronics board
-static tConfigItem config_lookup_pindef [] = 
+static const tConfigItem config_lookup_pindef [] = 
 {
 
   // X Axis (axis 0)
@@ -215,6 +219,35 @@ static tConfigItem config_lookup_pindef [] =
   { "extruder_1.temp_sensor",         &config.extruder_ctc[1].pin_temp_sensor,  TYPE_PIN_DEF, {.val_pin_def = UNDEFINED_PIN_DEF}},
   { "extruder_1.cooler",              &config.extruder_ctc[1].pin_cooler,  TYPE_PIN_DEF, {.val_pin_def = UNDEFINED_PIN_DEF}},
   { "extruder_1.sensor_adc_channel",  &config.extruder_ctc[1].sensor_adc_channel,  TYPE_INT, {.val_i = 0}},
+
+
+  { "cp_lcd_data_0",   &config.interface_cp_lcd_pin_data[0],   TYPE_PIN_DEF, {.val_pin_def = UNDEFINED_PIN_DEF   }},
+  { "cp_lcd_data_1",   &config.interface_cp_lcd_pin_data[1],   TYPE_PIN_DEF, {.val_pin_def = UNDEFINED_PIN_DEF   }},
+  { "cp_lcd_data_2",   &config.interface_cp_lcd_pin_data[2],   TYPE_PIN_DEF, {.val_pin_def = UNDEFINED_PIN_DEF   }},
+  { "cp_lcd_data_3",   &config.interface_cp_lcd_pin_data[3],   TYPE_PIN_DEF, {.val_pin_def = UNDEFINED_PIN_DEF   }},
+  { "cp_lcd_data_4",   &config.interface_cp_lcd_pin_data[4],   TYPE_PIN_DEF, {.val_pin_def = UNDEFINED_PIN_DEF   }},
+  { "cp_lcd_data_5",   &config.interface_cp_lcd_pin_data[5],   TYPE_PIN_DEF, {.val_pin_def = UNDEFINED_PIN_DEF   }},
+  { "cp_lcd_data_6",   &config.interface_cp_lcd_pin_data[6],   TYPE_PIN_DEF, {.val_pin_def = UNDEFINED_PIN_DEF   }},
+  { "cp_lcd_data_7",   &config.interface_cp_lcd_pin_data[7],   TYPE_PIN_DEF, {.val_pin_def = UNDEFINED_PIN_DEF   }},
+  { "cp_lcd_rw",   &config.interface_cp_lcd_pin_rw,   TYPE_PIN_DEF, {.val_pin_def = UNDEFINED_PIN_DEF   }},
+  { "cp_lcd_rs",   &config.interface_cp_lcd_pin_rs,   TYPE_PIN_DEF, {.val_pin_def = UNDEFINED_PIN_DEF   }},
+  { "cp_lcd_en",   &config.interface_cp_lcd_pin_en,   TYPE_PIN_DEF, {.val_pin_def = UNDEFINED_PIN_DEF   }},
+
+  { "cp_led_0",   &config.interface_cp_led_pin[0],   TYPE_PIN_DEF, {.val_pin_def = UNDEFINED_PIN_DEF   }},
+  { "cp_led_1",   &config.interface_cp_led_pin[1],   TYPE_PIN_DEF, {.val_pin_def = UNDEFINED_PIN_DEF   }},
+  { "cp_led_2",   &config.interface_cp_led_pin[2],   TYPE_PIN_DEF, {.val_pin_def = UNDEFINED_PIN_DEF   }},
+
+  { "cp_btn_0",   &config.interface_cp_btn_pin[0],   TYPE_PIN_DEF, {.val_pin_def = PIN_DEF(1,22,1)   }},
+  { "cp_btn_1",   &config.interface_cp_btn_pin[1],   TYPE_PIN_DEF, {.val_pin_def = PIN_DEF(1,4,1)   }},
+  { "cp_btn_2",   &config.interface_cp_btn_pin[2],   TYPE_PIN_DEF, {.val_pin_def = PIN_DEF(1,8,1)   }},
+  { "cp_btn_3",   &config.interface_cp_btn_pin[3],   TYPE_PIN_DEF, {.val_pin_def = PIN_DEF(0,26,1)   }},
+  { "cp_btn_4",   &config.interface_cp_btn_pin[4],   TYPE_PIN_DEF, {.val_pin_def = PIN_DEF(2,1,1)   }},
+  { "cp_btn_5",   &config.interface_cp_btn_pin[5],   TYPE_PIN_DEF, {.val_pin_def = PIN_DEF(2,0,1)   }},
+  { "cp_btn_6",   &config.interface_cp_btn_pin[6],   TYPE_PIN_DEF, {.val_pin_def = PIN_DEF(1,1,1)   }},
+  { "cp_btn_7",   &config.interface_cp_btn_pin[7],   TYPE_PIN_DEF, {.val_pin_def = PIN_DEF(1,10,1)    }},
+  { "cp_btn_8",   &config.interface_cp_btn_pin[8],   TYPE_PIN_DEF, {.val_pin_def = PIN_DEF(0,9,1)    }},
+  { "cp_btn_9",   &config.interface_cp_btn_pin[9],   TYPE_PIN_DEF, {.val_pin_def = UNDEFINED_PIN_DEF   }},
+
 
 };
 

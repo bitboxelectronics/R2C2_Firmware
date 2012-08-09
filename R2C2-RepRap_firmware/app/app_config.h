@@ -149,12 +149,14 @@ typedef struct
   tPinDef interface_cp_lcd_pin_en;
 
   // switched outputs (LED etc)
-  tPinDef interface_cp_led_0;   // red
-  tPinDef interface_cp_led_1;   // orange
-  tPinDef interface_cp_led_2;   // green
+  tPinDef interface_cp_led_pin[3];    // OK (green)
+                                  // Attention (yellow)
+                                  // Fault (Red)
 
   // input buttons
-  tPinDef interface_cp_btn [MAX_BUTTONS];
+  // buttons - direct, active low
+  // on shift reg etc
+  tPinDef interface_cp_btn_pin [MAX_BUTTONS];
 
   // TCP/IP - ethernet
   int32_t interface_tcp_ip_enabled;

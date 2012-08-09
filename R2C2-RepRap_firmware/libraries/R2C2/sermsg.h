@@ -70,6 +70,8 @@ void fserwrite_hex32(LW_FILE *f, uint32_t v);
 void fserwrite_uint32(LW_FILE *f, uint32_t v);
 void fserwrite_int32(LW_FILE *f, int32_t v);
 
+void fserwrite_int32_wz (LW_FILE *f, int32_t v, uint8_t width, uint8_t zero);
+
 void fserwrite_double(LW_FILE *f, double v);
 
 //

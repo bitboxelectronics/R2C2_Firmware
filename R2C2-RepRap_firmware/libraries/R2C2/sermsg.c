@@ -180,6 +180,58 @@ void fserwrite_int32(LW_FILE *f, int32_t v) {
 	fserwrite_uint32(f, v);
 }
 
+void fserwrite_int32_wz (LW_FILE *f, int32_t v, uint8_t width, uint8_t zero) 
+{
+  char buf [12];
+  uint16_t pos;
+  int16_t sign = 0;
+
+  buf [11] = 0;
+  pos = 11;
+
+	if (v < 0) 
+  {
+    sign = 1;
+		v = -v;
+	}
+
+  if (v== 0)
+  {
+    pos--;
+    buf[pos]= '0';
+    sign = 0;
+    if (width > 0)
+      width--;
+  }
+  else
+    while (v > 0)
+    {
+      pos--;
+      buf[pos]= (v % 10) + '0';
+      v = v / 10;
+      if (width > 0)
+        width--;
+    }
+
+  while(width && (pos>sign))
+  {
+    pos--;
+    if (zero)
+      buf[pos] = '0';
+    else
+      buf[pos] = ' ';
+    width--;
+  }
+
+  if (sign)
+  {
+    pos--;
+    buf[pos] = '-';
+  }
+
+	lw_fputs (&buf[pos], f);
+}
+
 void fserwrite_double(LW_FILE *f, double v)
 {
   if (v < 0)

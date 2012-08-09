@@ -30,19 +30,33 @@
 
 //#include "WProgram.h"
 
-  uint8_t _rs_pin;          // LOW: command.  HIGH: character.
-  uint8_t _rw_pin;          // LOW: write to LCD.  HIGH: read from LCD.
-  uint8_t _enable_pin;      // activated by a HIGH pulse.
-  uint8_t _data_pins[8];
+static  uint8_t _rs_pin;          // LOW: command.  HIGH: character.
+static  uint8_t _rw_pin;          // LOW: write to LCD.  HIGH: read from LCD.
+static  uint8_t _enable_pin;      // activated by a HIGH pulse.
+static  uint8_t _data_pins[8];
 
-  uint8_t _displayfunction; // function set 0x20
-  uint8_t _displaycontrol;  // Display Control 0x08
-  uint8_t _displaymode;     // Entry Mode Set 0x04
+static  uint8_t _displayfunction; // function set 0x20
+static  uint8_t _displaycontrol;  // Display Control 0x08
+static  uint8_t _displaymode;     // Entry Mode Set 0x04
 
-  uint8_t _initialized;
+static  uint8_t _initialized;
 
-  uint8_t _numlines;
-  uint8_t _currline;
+static  uint8_t _numlines;
+static  uint8_t _currline;
+
+
+
+//private:
+static void lcd_init(uint8_t fourbitmode, uint8_t rs, uint8_t rw, uint8_t enable,
+	    uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3,
+	    uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7);
+
+static  void lcd_send(uint8_t value, uint8_t mode);
+static  void lcd_write4bits(uint8_t value);
+static  void lcd_write8bits(uint8_t value);
+static  void lcd_pulseEnable();
+
+
 
 // LPC1343 @ 72 MHz = 5
 // LPC1758 @ 100 MHz = 5
@@ -84,29 +98,29 @@ void LiquidCrystal_8bit_rw(uint8_t rs, uint8_t rw, uint8_t enable,
 			     uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3,
 			     uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7)
 {
-  init(0, rs, rw, enable, d0, d1, d2, d3, d4, d5, d6, d7);
+  lcd_init(0, rs, rw, enable, d0, d1, d2, d3, d4, d5, d6, d7);
 }
 
 void LiquidCrystal_8bit (uint8_t rs, uint8_t enable,
 			     uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3,
 			     uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7)
 {
-  init(0, rs, 255, enable, d0, d1, d2, d3, d4, d5, d6, d7);
+  lcd_init(0, rs, 255, enable, d0, d1, d2, d3, d4, d5, d6, d7);
 }
 
 void LiquidCrystal_4bit_rw(uint8_t rs, uint8_t rw, uint8_t enable,
 			     uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3)
 {
-  init(1, rs, rw, enable, d0, d1, d2, d3, 0, 0, 0, 0);
+  lcd_init(1, rs, rw, enable, d0, d1, d2, d3, 0, 0, 0, 0);
 }
 
 void LiquidCrystal_4bit(uint8_t rs,  uint8_t enable,
 			     uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3)
 {
-  init(1, rs, 255, enable, d0, d1, d2, d3, 0, 0, 0, 0);
+  lcd_init(1, rs, 255, enable, d0, d1, d2, d3, 0, 0, 0, 0);
 }
 
-static void init(uint8_t fourbitmode, uint8_t rs, uint8_t rw, uint8_t enable,
+static void lcd_init(uint8_t fourbitmode, uint8_t rs, uint8_t rw, uint8_t enable,
 			 uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3,
 			 uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7)
 {
@@ -138,7 +152,7 @@ static void init(uint8_t fourbitmode, uint8_t rs, uint8_t rw, uint8_t enable,
   //begin(16, 1);  
 }
 
-void begin(uint8_t cols, uint8_t rows) 
+void lcd_begin(uint8_t cols, uint8_t rows) 
 {
   uint8_t dotsize = LCD_5x8DOTS;
 
@@ -171,170 +185,184 @@ void begin(uint8_t cols, uint8_t rows)
     // page 46, figure 24
 
     // we may not start in 8bit mode, try to set 8 bit mode
-    write4bits(0x03);
+    lcd_write4bits(0x03);
     delayMicroseconds(4500); // wait min 4.1ms
 
     // second try
-    write4bits(0x03);
+    lcd_write4bits(0x03);
     delayMicroseconds(4500); // wait min 4.1ms
     
     // third go!
-    write4bits(0x03); 
+    lcd_write4bits(0x03); 
     delayMicroseconds(150);
 
     // finally, set to 4-bit interface
-    write4bits(0x02); 
+    lcd_write4bits(0x02); 
 
   } else {
     // this is according to the hitachi HD44780 datasheet
     // page 45 figure 23
 
     // Send function set command sequence
-    command(LCD_FUNCTIONSET | _displayfunction);
+    lcd_command(LCD_FUNCTIONSET | _displayfunction);
     delayMicroseconds(4500);  // wait more than 4.1ms
 
     // second try
-    //command(LCD_FUNCTIONSET | _displayfunction);
+    //lcd_command(LCD_FUNCTIONSET | _displayfunction);
     delayMicroseconds(150);
 
     // third go
-    command(LCD_FUNCTIONSET | _displayfunction);
+    lcd_command(LCD_FUNCTIONSET | _displayfunction);
   }
 
 //return;
 
   // finally, set # lines, font size, etc.
-  command(LCD_FUNCTIONSET | _displayfunction);  
+  lcd_command(LCD_FUNCTIONSET | _displayfunction);  
 
   // turn the display on with no cursor or blinking default
   _displaycontrol = LCD_DISPLAYON | LCD_CURSOROFF | LCD_BLINKOFF;  
-  display();
+  lcd_display();
 
   // Initialize to default text direction (for romance languages)
   _displaymode = LCD_ENTRYLEFT | LCD_ENTRYSHIFTDECREMENT;
   // set the entry mode
-  command(LCD_ENTRYMODESET | _displaymode);
+  lcd_command(LCD_ENTRYMODESET | _displaymode);
 
   // clear it off
-  clear();
+  lcd_clear();
 
 }
 
 /********** high level commands, for the user! */
-void clear()
+
+
+void lcd_initialise (void)
 {
-  command(LCD_CLEARDISPLAY);  // clear display, set cursor position to zero
+
+}
+
+void lcd_writechar (char c)
+{
+  lcd_write (c);
+}
+
+
+
+void lcd_clear()
+{
+  lcd_command(LCD_CLEARDISPLAY);  // clear display, set cursor position to zero
+  delayMicroseconds(2000);  // this lcd_command takes a long time!
+}
+
+void lcd_home()
+{
+  lcd_command(LCD_RETURNHOME);  // set cursor position to zero
   delayMicroseconds(2000);  // this command takes a long time!
 }
 
-void home()
-{
-  command(LCD_RETURNHOME);  // set cursor position to zero
-  delayMicroseconds(2000);  // this command takes a long time!
-}
-
-void setCursor(uint8_t col, uint8_t row)
+void lcd_setCursor(uint8_t col, uint8_t row)
 {
   int row_offsets[] = { 0x00, 0x40, 0x14, 0x54 };
   if ( row > _numlines ) {
     row = _numlines-1;    // we count rows starting w/0
   }
   
-  command(LCD_SETDDRAMADDR | (col + row_offsets[row]));
+  lcd_command(LCD_SETDDRAMADDR | (col + row_offsets[row]));
 }
 
 // Turn the display on/off (quickly)
-void noDisplay() {
+void lcd_noDisplay() {
   _displaycontrol &= ~LCD_DISPLAYON;
-  command(LCD_DISPLAYCONTROL | _displaycontrol);
+  lcd_command(LCD_DISPLAYCONTROL | _displaycontrol);
 }
-void display() {
+void lcd_display() {
   _displaycontrol |= LCD_DISPLAYON;
-  command(LCD_DISPLAYCONTROL | _displaycontrol);
+  lcd_command(LCD_DISPLAYCONTROL | _displaycontrol);
 }
 
 // Turns the underline cursor on/off
-void noCursor() {
+void lcd_noCursor() {
   _displaycontrol &= ~LCD_CURSORON;
-  command(LCD_DISPLAYCONTROL | _displaycontrol);
+  lcd_command(LCD_DISPLAYCONTROL | _displaycontrol);
 }
-void cursor() {
+void lcd_cursor() {
   _displaycontrol |= LCD_CURSORON;
-  command(LCD_DISPLAYCONTROL | _displaycontrol);
+  lcd_command(LCD_DISPLAYCONTROL | _displaycontrol);
 }
 
 // Turn on and off the blinking cursor
-void noBlink() {
+void lcd_noBlink() {
   _displaycontrol &= ~LCD_BLINKON;
-  command(LCD_DISPLAYCONTROL | _displaycontrol);
+  lcd_command(LCD_DISPLAYCONTROL | _displaycontrol);
 }
-void blink() {
+void lcd_blink() {
   _displaycontrol |= LCD_BLINKON;
-  command(LCD_DISPLAYCONTROL | _displaycontrol);
+  lcd_command(LCD_DISPLAYCONTROL | _displaycontrol);
 }
 
 // These commands scroll the display without changing the RAM
-void scrollDisplayLeft(void) {
-  command(LCD_CURSORSHIFT | LCD_DISPLAYMOVE | LCD_MOVELEFT);
+void lcd_scrollDisplayLeft(void) {
+  lcd_command(LCD_CURSORSHIFT | LCD_DISPLAYMOVE | LCD_MOVELEFT);
 }
-void scrollDisplayRight(void) {
-  command(LCD_CURSORSHIFT | LCD_DISPLAYMOVE | LCD_MOVERIGHT);
+void lcd_scrollDisplayRight(void) {
+  lcd_command(LCD_CURSORSHIFT | LCD_DISPLAYMOVE | LCD_MOVERIGHT);
 }
 
 // This is for text that flows Left to Right
-void leftToRight(void) {
+void lcd_leftToRight(void) {
   _displaymode |= LCD_ENTRYLEFT;
-  command(LCD_ENTRYMODESET | _displaymode);
+  lcd_command(LCD_ENTRYMODESET | _displaymode);
 }
 
 // This is for text that flows Right to Left
-void rightToLeft(void) {
+void lcd_rightToLeft(void) {
   _displaymode &= ~LCD_ENTRYLEFT;
-  command(LCD_ENTRYMODESET | _displaymode);
+  lcd_command(LCD_ENTRYMODESET | _displaymode);
 }
 
 // This will 'right justify' text from the cursor
-void autoscroll(void) {
+void lcd_autoscroll(void) {
   _displaymode |= LCD_ENTRYSHIFTINCREMENT;
-  command(LCD_ENTRYMODESET | _displaymode);
+  lcd_command(LCD_ENTRYMODESET | _displaymode);
 }
 
 // This will 'left justify' text from the cursor
-void noAutoscroll(void) {
+void lcd_noAutoscroll(void) {
   _displaymode &= ~LCD_ENTRYSHIFTINCREMENT;
-  command(LCD_ENTRYMODESET | _displaymode);
+  lcd_command(LCD_ENTRYMODESET | _displaymode);
 }
 
 // Allows us to fill the first 8 CGRAM locations
 // with custom characters
-void createChar(uint8_t location, uint8_t charmap[]) {
+void lcd_createChar(uint8_t location, uint8_t charmap[]) {
   location &= 0x7; // we only have 8 locations 0-7
-  command(LCD_SETCGRAMADDR | (location << 3));
+  lcd_command(LCD_SETCGRAMADDR | (location << 3));
   for (int i=0; i<8; i++) {
-    write(charmap[i]);
+    lcd_write(charmap[i]);
   }
 }
 
-void print(const char *str)
+void lcd_print(const char *str)
 {
   while (*str)
-    write(*str++);
+    lcd_write(*str++);
 }
 
 /*********** mid level commands, for sending data/cmds */
 
-inline void command(uint8_t value) {
-  send(value, LOW);
+inline void lcd_command(uint8_t value) {
+  lcd_send(value, LOW);
 }
 
-inline void write(uint8_t value) {
-  send(value, HIGH);
+inline void lcd_write(uint8_t value) {
+  lcd_send(value, HIGH);
 }
 
 /************ low level data pushing commands **********/
 
 // write either command or data, with automatic 4/8-bit selection
-void send(uint8_t value, uint8_t mode) 
+void lcd_send(uint8_t value, uint8_t mode) 
 {
   digitalWrite(_rs_pin, mode);
 
@@ -344,14 +372,14 @@ void send(uint8_t value, uint8_t mode)
   }
   
   if (_displayfunction & LCD_8BITMODE) {
-    write8bits(value); 
+    lcd_write8bits(value); 
   } else {
-    write4bits(value>>4);
-    write4bits(value & 0x0F);
+    lcd_write4bits(value>>4);
+    lcd_write4bits(value & 0x0F);
   }
 }
 
-void pulseEnable(void) 
+void lcd_pulseEnable(void) 
 {
   digitalWrite(_enable_pin, LOW);
   delayMicroseconds(1);    
@@ -363,7 +391,7 @@ void pulseEnable(void)
   delayMicroseconds(100);   // commands need > 37us to settle
 }
 
-void write4bits(uint8_t value) 
+void lcd_write4bits(uint8_t value) 
 {
   for (int i = 0; i < 4; i++) 
   {
@@ -371,15 +399,15 @@ void write4bits(uint8_t value)
     digitalWrite(_data_pins[i], (value >> i) & 0x01);
   }
 
-  pulseEnable();
+  lcd_pulseEnable();
 }
 
-void write8bits(uint8_t value) 
+void lcd_write8bits(uint8_t value) 
 {
   for (int i = 0; i < 8; i++) {
     pinMode(_data_pins[i], OUTPUT);
     digitalWrite(_data_pins[i], (value >> i) & 0x01);
   }
   
-  pulseEnable();
+  lcd_pulseEnable();
 }

@@ -67,6 +67,8 @@
 #define LCD_5x8DOTS       0x00
 
 // public
+
+// configure pins
 void  LiquidCrystal_8bit(uint8_t rs, uint8_t enable,
 		uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3,
 		uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7);
@@ -81,40 +83,36 @@ void   LiquidCrystal_4bit_rw(uint8_t rs, uint8_t rw, uint8_t enable,
 void   LiquidCrystal_4bit(uint8_t rs, uint8_t enable,
 		uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3);
 
-  static void init(uint8_t fourbitmode, uint8_t rs, uint8_t rw, uint8_t enable,
-	    uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3,
-	    uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7);
     
-  void begin(uint8_t cols, uint8_t rows); //, uint8_t charsize = LCD_5x8DOTS);
+  void lcd_begin(uint8_t cols, uint8_t rows); //, uint8_t charsize = LCD_5x8DOTS);
 
-  void clear();
-  void home();
+  void lcd_clear();
+  void lcd_home();
 
-  void noDisplay();
-  void display();
-  void noBlink();
-  void blink();
-  void noCursor();
-  void cursor();
-  void scrollDisplayLeft();
-  void scrollDisplayRight();
-  void leftToRight();
-  void rightToLeft();
-  void autoscroll();
-  void noAutoscroll();
+  void lcd_noDisplay();
+  void lcd_display();
+  void lcd_noBlink();
+  void lcd_blink();
+  void lcd_noCursor();
+  void lcd_cursor();
+  void lcd_scrollDisplayLeft();
+  void lcd_scrollDisplayRight();
+  void lcd_leftToRight();
+  void lcd_rightToLeft();
+  void lcd_autoscroll();
+  void lcd_noAutoscroll();
 
-  void createChar(uint8_t location, uint8_t charmap[]);
-  void setCursor(uint8_t row, uint8_t col); 
-  /*virtual*/ void write(uint8_t value);
-  void command(uint8_t value);
+  void lcd_createChar(uint8_t location, uint8_t charmap[]);
+  void lcd_setCursor(uint8_t row, uint8_t col); 
+  /*virtual*/ void lcd_write(uint8_t value);
+  void lcd_command(uint8_t value);
 
-  void print(const char *str);
+  void lcd_print(const char *str);
 
-//private:
-  void send(uint8_t value, uint8_t mode);
-  void write4bits(uint8_t value);
-  void write8bits(uint8_t value);
-  void pulseEnable();
+// for lwio
+
+void lcd_initialise (void);
+void lcd_writechar (char c);
 
 typedef struct {
 } tLiquidCrystal;

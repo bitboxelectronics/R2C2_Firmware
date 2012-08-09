@@ -27,6 +27,27 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
+/* --------------------------------------------------------------------------
+
+  Adding a new device, e.g. "mydev"
+
+  1. write functions mydev_init, mydev_putchar, mydev_getchar as needed
+  2. include "mydev.h" in this file
+  3. put device entry into Devices table (below)
+
+  That's it!
+
+  open the device with :
+
+    LW_FILE *my_file = lw_fopen ("mydev", "rw");
+
+  then use LW_IO
+
+    lw_fprintf (my_file, "Hello mydev world\n");
+
+---------------------------------------------------------------------------*/
+
+
 
 #include <inttypes.h>
 #include <errno.h>
@@ -39,6 +60,7 @@
 
 #include "uart.h"
 #include "usb_serial.h"
+#include "LiquidCrystal.h"
 
 #include "lw_syscalls.h"
 #include "lw_io.h"
@@ -63,18 +85,19 @@ typedef struct {
 
 // DEVICES TABLE
 // index by device number, not file number
-static tDeviceDesc Devices[5] = {
+static tDeviceDesc Devices[] = {
   
   {"uart0", uart0_init, uart0_send, uart0_receive, uart0_data_available}, 
   {"uart1",  uart1_init, uart1_send, uart1_receive, uart1_data_available}, 
-  {"uart2",  uart2_init, uart2_send, uart2_receive, uart2_data_available}, 
+//TODO:  {"uart2",  uart2_init, uart2_send, uart2_receive, uart2_data_available}, 
   {"uart3",  uart3_init, uart3_send, uart3_receive, uart3_data_available}, 
-  {"usbser", usb_serial_init, usb_serial_writechar, usb_serial_popchar, usb_serial_rxchars} // USB serial
+  {"usbser", usb_serial_init, usb_serial_writechar, usb_serial_popchar, usb_serial_rxchars}, // USB serial
+  {"lcd", lcd_initialise, lcd_writechar, NULL, NULL} 
 };
 
 #define NUM_DEVICES sizeof(Devices) / sizeof(tDeviceDesc)
 
-static void dev_write_block (tDeviceDesc *pDevice, char *ptr, int len)
+static void dev_write_block (tDeviceDesc *pDevice, const char *ptr, int len)
 {
   int j;
   for (j=0; j < len; j++)
@@ -182,7 +205,7 @@ int _read(int file, char *ptr, int len)
  Write characters to a file. `libc' subroutines will use this system routine for output to all files, including stdout
  Returns -1 on error or number of bytes sent
  */
-int _write(int file, char *ptr, int len) 
+int _write(int file, const char *ptr, int len) 
 {
   // write to a file
   int dev_num;

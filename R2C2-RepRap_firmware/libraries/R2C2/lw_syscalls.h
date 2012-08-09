@@ -60,7 +60,7 @@
 int _open (const char *name, int flags, int mode);
 int _close(int file);
 int _read(int file, char *ptr, int len);
-int _write(int file, char *ptr, int len) ;
+int _write(int file, const char *ptr, int len) ;
 
 int _ioctl(int file, int vmd, va_list args) ;
 

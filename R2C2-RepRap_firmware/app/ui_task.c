@@ -32,80 +32,83 @@
 #include "rtos_api.h"
 
 #include "r2c2.h"
-#include "gcode_parse.h"
-#include "gcode_task.h"
-#include "lw_io.h"
-#include "lw_ioctl.h"
+#include "app_config.h"
 #include "ui_task.h"
+#include "keypad_gen4_mb.h"
+#include "ui_menu.h"
 
-#include "LiquidCrystal.h"
+// --------------------------------------------------------------------------
+// Local defines
+// --------------------------------------------------------------------------
+
+// leds
+#define LED_OK        0   // green
+#define LED_ATTENTION 1   // yellow
+#define LED_FAULT     2   // red
+
+// menu refresh rate
+#define UPDATE_TIME   200   // ms
+
+// keys
+#define KEY_POLL_TIME 20   // ms
+
+// --------------------------------------------------------------------------
+// Types
+// --------------------------------------------------------------------------
 
 
-#define PIN_LCD_ENABLE  ENCODE_PORT_BIT(1,14)
-#define PIN_LCD_RW      0xff
-#define PIN_LCD_RS      ENCODE_PORT_BIT(0,25)
-
-#define PIN_LCD_D0      ENCODE_PORT_BIT(1,9)
-#define PIN_LCD_D1      ENCODE_PORT_BIT(0,7)
-#define PIN_LCD_D2      ENCODE_PORT_BIT(1,0)
-#define PIN_LCD_D3      ENCODE_PORT_BIT(0,6)
+// --------------------------------------------------------------------------
+// Private Variables
+// --------------------------------------------------------------------------
 
 
-#define NUM_LEDS 3
+static int32_t start_time;
+static int32_t led_ticks;
 
 
-static uint8_t led_pins [NUM_LEDS] = {
-  ENCODE_PORT_BIT(0,8),
-  ENCODE_PORT_BIT(1,31),
-  ENCODE_PORT_BIT(1,15)
-};
+// keys
+static uint16_t key_last_state;
+static uint16_t key_state;
+
+static uint8_t key_timer [MAX_BUTTONS];
+static uint8_t key_event [MAX_BUTTONS];
 
 
-static tLineBuffer LineBuf;
-static tGcodeInputMsg GcodeInputMsg;
-
-static  uint32_t currentSecond, lastSecond;
-
+// --------------------------------------------------------------------------
+// Private functions
+// --------------------------------------------------------------------------
 
 static void _task_init (void *pvParameters)
 {
-    GcodeInputMsg.pLineBuf = &LineBuf;
-    GcodeInputMsg.out_file = NULL;
-    GcodeInputMsg.result = PR_OK;
-    GcodeInputMsg.in_use = 0;
-
-    LineBuf.len = 0;
 
     //
     // Set LED pins as outputs and turn LEDs off
     for (int j=0; j < NUM_LEDS; j++)
     {
-      pinMode(led_pins[j], OUTPUT);
-      digitalWrite (led_pins[j], 0);
+      set_pin_mode (config.interface_cp_led_pin[j], OUTPUT);
+      write_pin (config.interface_cp_led_pin[j], 0);
     }
 
-    
-    LiquidCrystal_4bit (PIN_LCD_RS, PIN_LCD_ENABLE, 
-      PIN_LCD_D0, PIN_LCD_D1, PIN_LCD_D2, PIN_LCD_D3); 
+    led_ticks = 0;
+    attention_status = oa_system_requested_hold;
+    host_state = hs_ready;
 
-    /*LiquidCrystal_8bit_rw (PIN_LCD_RS, PIN_LCD_RW, PIN_LCD_ENABLE, 
-      PIN_LCD_D0, PIN_LCD_D1, PIN_LCD_D2, PIN_LCD_D3,
-      PIN_LCD_D4, PIN_LCD_D5, PIN_LCD_D6, PIN_LCD_D7); 
-    */
+    start_time = millis();
 
-    begin (20, 4);
-    print ("RepRap Control Panel");
-    setCursor (0,2); print ("Ready");
+    keypad_init();
 
+    menu_init();
 }
 
 static void _task_poll (void *pvParameters)
 {
+    uint8_t j;
+
+#if 0
     int num;
     uint8_t c;
     eParseResult parse_result;
 
-#if 0
     if (!GcodeInputMsg.in_use)
     {
       if (GcodeInputMsg.result == PR_BUSY)
@@ -128,22 +131,111 @@ static void _task_poll (void *pvParameters)
     }
 #endif
 
-    // Toggle LED once per second
-    currentSecond = millis() / 1000;
 
-    if (currentSecond != lastSecond)
+    int now = millis();
+
+    if (now - start_time > KEY_POLL_TIME)
     {
-      int val = lastSecond % 3;
+      // poll keys
+  
+      // get current states
+      key_state = keypad_get_key_state ();
 
-      digitalWrite (led_pins[val], 0);
+      // compare to previous
+      for (int j=0; j < MAX_BUTTONS; j++)
+      {
+        if ( (key_last_state & _BV(j)) == 0)
+        {
+          if ( key_state & _BV(j) )
+          {
+            // key down, start timer
+            key_timer [j] = 100 / KEY_POLL_TIME;
+          }
+        }
+        else // was down
+        {
+          if ( key_state & _BV(j) )
+          { 
+             // still down
+             if (key_timer [j] > 0)
+             {
+                key_timer [j] --;
+                if (key_timer [j] == 0)
+                {
+                  key_event[j] = 1;
 
-      lastSecond = currentSecond;
+                  menu_keyhandler (j);
+                }
+             }
+             else
+             {
+                // already signalled
+             }
+          }
+          else
+          {
+             // key released
+          }
+        }
+      }
 
-      val = lastSecond % 3;
-      digitalWrite (led_pins[val], 1);
-
+      key_last_state = key_state;
     }
 
+
+    if (now - start_time > UPDATE_TIME)
+    {
+// --------------------------------------------------------------------------
+      // update display
+      menu_poll();
+
+// --------------------------------------------------------------------------
+      // update status leds
+      led_ticks++;
+      if (led_ticks == 10)
+        led_ticks = 0;
+
+      if (menu != menu_splash)
+      {
+        switch (host_state)
+        {
+          case hs_ready:
+            write_pin (config.interface_cp_led_pin[LED_OK], 1);
+            write_pin (config.interface_cp_led_pin[LED_FAULT], 0);
+            break;
+
+          case hs_running:
+            //
+            break;
+
+          case hs_error:
+            write_pin (config.interface_cp_led_pin[LED_OK], 0);
+            write_pin (config.interface_cp_led_pin[LED_FAULT], 1);
+            break;
+        }
+
+        switch (attention_status)
+        {
+          case oa_ok:
+            write_pin (config.interface_cp_led_pin[LED_ATTENTION], 0);
+          break;
+
+          case oa_user_requested_hold:
+            write_pin (config.interface_cp_led_pin[LED_ATTENTION], 1);
+          break;
+
+          case oa_system_requested_hold:
+            if (led_ticks < 5)
+              write_pin (config.interface_cp_led_pin[LED_ATTENTION], 0);
+            else
+              write_pin (config.interface_cp_led_pin[LED_ATTENTION], 1);
+          break;
+        }
+      }
+// --------------------------------------------------------------------------
+
+      start_time = now;
+    }
 }
 
 void ui_task ( void *pvParameters )

@@ -39,6 +39,7 @@
 #include  "app_config.h"
 #include	"gcode_parse.h"
 #include	"gcode_process.h"
+#include	"packed_gcode.h"
 #include	"lw_io.h"
 #include  "machine.h"
 
@@ -209,6 +210,24 @@ static void calc_checksum (tLineBuffer *pLine, tChecksumData *pChecksumData, GCO
 // Public functions
 // --------------------------------------------------------------------------
 
+/*
+	utility functions
+*/
+
+double power (double x, int exp)
+{  
+  double result = 1.0;
+  while (exp--)  
+    result = result * x;
+  return result;
+}
+
+double inch_to_mm (double inches)
+{  
+  return inches * 25.4;
+}
+
+
 void gcode_parse_init(void)
 {
 #if 0
@@ -227,204 +246,6 @@ void gcode_parse_init(void)
 }
 
 
-/*
-	utility functions
-*/
-
-double power (double x, int exp)
-{  
-  double result = 1.0;
-  while (exp--)  
-    result = result * x;
-  return result;
-}
-
-double inch_to_mm (double inches)
-{  
-  return inches * 25.4;
-}
-
-uint8_t get_byte ( tLineBuffer *pLine)
-{
-  return pLine->data [pLine->ch_pos++];
-}
-
-
-
-int32_t get_int (tVariant *pVariant)
-{
-  switch (pVariant->arg_type)
-  {
-    case arg_int32:
-      return pVariant->int32_val;
-    break;
-
-    case arg_bcd:
-      return 0;
-    break;
-
-    case arg_float:
-      return pVariant->float_val;
-    break;
-
-    case arg_string:
-      return 0;
-    break;
-  }
-} 
-
-float get_float (tVariant *pVariant)
-{
-  switch (pVariant->arg_type)
-  {
-    case arg_int32:
-      return pVariant->int32_val;
-    break;
-
-    case arg_bcd:
-      return 0;
-    break;
-
-    case arg_float:
-      return pVariant->float_val;
-    break;
-
-    case arg_string:
-      return 0;
-    break;
-  }
-} 
-
-bool parse_packed_gcode (tGcodeInputMsg *pGcodeInputMsg)
-{
-  bool result = false;
-  tLineBuffer *pLine;
-  uint8_t   cmd;
-  uint8_t   type;
-  int32_t   param;
-  tVariant variant;
-
-  pLine = pGcodeInputMsg->pLineBuf;
-
-  while (pLine->ch_pos < pLine->len)
-  {
-    cmd = get_byte (pLine); 
-
-    gcode_command.seen_words = 0;
-
-    while (cmd != CODE_END_COMMAND)
-    {
-      type = cmd & 7;
-      cmd = cmd >> 3;
-
-
-      switch (type)
-      {
-        case arg_uint8:
-        {
-          param = get_byte (pLine);
-
-          variant.arg_type = arg_int32;
-          variant.int32_val = param;
-        }
-        break;
-
-        case arg_uint16:
-        {
-          param = get_byte (pLine);
-          param = param | get_byte (pLine) << 8;
-
-          variant.arg_type = arg_int32;
-          variant.int32_val = param;
-        }
-        break;
-
-        case arg_int8:
-        {
-          param = get_byte (pLine);
-          if (param >= 0x80)
-            param = param | 0xffffff00;
-
-          variant.arg_type = arg_int32;
-          variant.int32_val = param;
-        }
-        break;
-
-        case arg_int16:
-        {
-          param = get_byte (pLine);
-          param = param | get_byte (pLine) << 8;
-          if (param >= 0x8000)
-            param = param | 0xffff0000;
-
-          variant.arg_type = arg_int32;
-          variant.int32_val = param;
-        }
-        break;
-
-        case arg_int32:
-          param = get_byte (pLine);
-          param = param | get_byte (pLine) << 8;
-          param = param | get_byte (pLine) << 16;
-          param = param | get_byte (pLine) << 24;
-
-          variant.arg_type = arg_int32;
-          variant.int32_val = param;
-        break;
-
-        case arg_bcd:
-        break;
-
-        case arg_float:
-          param = get_byte (pLine);
-          param = param | get_byte (pLine) << 8;
-          param = param | get_byte (pLine) << 16;
-          param = param | get_byte (pLine) << 24;
-
-          variant.arg_type = arg_float;
-          variant.uint32_val = param;
-        break;
-
-        case arg_string:
-        break;
-      }
-
-      //gcode_command.seen_words |= (1 << (cmd-1));
-      cmd = cmd + 64;
-      switch (cmd)
-      {
-        case 'G':
-          gcode_command.seen_G = 1;
-          gcode_command.G = get_int (&variant);
-          break;
-        case 'X':
-          gcode_command.seen_X = 1;
-          gcode_command.target.x = get_float (&variant);
-          break;
-        case 'Y':
-          gcode_command.seen_Y = 1;
-          gcode_command.target.y = get_float (&variant);
-          break;
-        case 'Z':
-          gcode_command.seen_Z = 1;
-          gcode_command.target.z = get_float (&variant);
-          break;
-      }
-
-      cmd = get_byte (pLine); 
-    }
-
-    result = true;
-
-    if (cmd == CODE_END_COMMAND)
-      return true;
-    
-  }
-
-  return result;
-}
-
-
 eParseResult gcode_parse_line (tGcodeInputMsg *pGcodeInputMsg) 
 {
   //int j;
@@ -439,7 +260,7 @@ eParseResult gcode_parse_line (tGcodeInputMsg *pGcodeInputMsg)
     pLine = pGcodeInputMsg->pLineBuf;
     pLine->ch_pos = 0;
 
-    while (parse_packed_gcode(pGcodeInputMsg))
+    while (parse_packed_gcode(pGcodeInputMsg, &gcode_command))
     {
       // process
       result = process_gcode_command(pGcodeInputMsg, &gcode_command.state);

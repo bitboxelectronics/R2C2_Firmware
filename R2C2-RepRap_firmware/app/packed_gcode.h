@@ -1,5 +1,4 @@
-/* Copyright (C) 2009-2010 Michael Moon aka Triffid_Hunter   */
-/* Copyright (c) 2011 Jorge Pinto - casainho@gmail.com       */
+/* Copyright (c) 2012 Bob Cousins bobcousins42@googlemail.com       */
 /* All rights reserved.
 
    Redistribution and use in source and binary forms, with or without
@@ -28,31 +27,17 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef	_GCODE_PARSE_H
-#define	_GCODE_PARSE_H
-
-#include	<stdint.h>
+#ifndef	_PACKED_GCODE_H
+#define	_PACKED_GCODE_H
 
 #include "gcode_defs.h"
 
-// whether to insist on N line numbers
-// if not defined, line numbers are optional
-//#define	REQUIRE_LINENUMBER
+void gcode_add_packed_command (tLineBuffer *pBuf, uint8_t cmd);
+void gcode_add_packed_command_int (tLineBuffer *pBuf, uint8_t cmd, int32_t arg);
+void gcode_add_packed_command_float (tLineBuffer *pBuf, uint8_t cmd, float val);
+void gcode_add_packed_command_str (tLineBuffer *pBuf, uint8_t cmd, char *pData);
 
-// whether to insist on a checksum
-//#define	REQUIRE_CHECKSUM
-
-#ifndef ABS
-#define ABS(v)          (((v) >= 0)?(v):(-(v)))
-#endif
-  
-// the command that has been parsed
-extern GCODE_COMMAND gcode_command;
+bool parse_packed_gcode (tGcodeInputMsg *pGcodeInputMsg, GCODE_COMMAND *pCommand);
 
 
-void gcode_parse_init(void);
-
-eParseResult gcode_parse_line (tGcodeInputMsg *pGcodeInputMsg);
-
-
-#endif	/* GCODE_PARSE_H */
+#endif	/* _PACKED_GCODE_H */

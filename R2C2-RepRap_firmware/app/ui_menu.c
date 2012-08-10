@@ -33,6 +33,7 @@
 #include "lw_io.h"
 #include "gcode_parse.h"
 #include "gcode_task.h"
+#include "packed_gcode.h"
 #include "sermsg.h"
 #include "temp.h"
 #include "LiquidCrystal.h"

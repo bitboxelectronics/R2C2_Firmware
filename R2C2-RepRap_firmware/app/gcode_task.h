@@ -31,73 +31,8 @@
 
 #include "rtos_api.h"
 //#include "gcode_parse.h"
-#include "lw_io.h"
+//#include "lw_io.h"
 
-#define MAX_LINE 120
-
-typedef struct
-{
-  char    data [MAX_LINE];
-  int     len;
-	int     ch_pos;
-} tLineBuffer;
-
-typedef enum {
-  PR_RESEND,    // bad checksum     (rs ... response )
-  PR_ERROR,     // invalid command  (E: ... response)
-  PR_OK,        // valid, done      (ok ...)
-  PR_OK_QUEUED, // valid, queued    (ok ...)
-  PR_BUSY,      // valid, queue full (would block)  (busy)
-
-  PR_READY      // queue no longer full
-  } eParseResult;
-
-typedef enum {GC_ASCII, GC_PACKED} eGcodeMsgType;
-
-// packed info
-typedef enum {
-  arg_uint8,
-  arg_int8,
-  arg_uint16,
-  arg_int16,
-  arg_int32,
-  arg_bcd,
-  arg_float,
-  arg_string
-  } eArgType;
-
-#define CODE_STAR     0x00  // 0 = '*'
-
-#define CODE_COMMENT  0xE0  // 28
-#define CODE_RAW      0xE8  // 29
-
-#define CODE_END_COMMAND 0xF8
-#define CODE_END_LINE    0xF9
-
-void gcode_add_packed_command (tLineBuffer *pBuf, uint8_t cmd);
-void gcode_add_packed_command_int (tLineBuffer *pBuf, uint8_t cmd, int32_t arg);
-void gcode_add_packed_command_float (tLineBuffer *pBuf, uint8_t cmd, float val);
-void gcode_add_packed_command_str (tLineBuffer *pBuf, uint8_t cmd, char *pData);
-
-// ----
-
-// GCode input message
-// This message is sent to gcode_task to process a line of GCode
-typedef volatile struct 
-{
-    // The GCode line
-    tLineBuffer *pLineBuf;
-
-    // the file handle of the source control interface
-    // gcode_task will write output to this file via lw_io
-    // if NULL, no output generated
-    LW_FILE *out_file;
-
-    eGcodeMsgType type;
-    eParseResult result;
-    bool in_use;
-
-} tGcodeInputMsg;
 
 extern xQueueHandle GcodeRxQueue;
 

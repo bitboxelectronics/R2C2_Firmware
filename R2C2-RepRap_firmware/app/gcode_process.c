@@ -38,8 +38,9 @@
 #include   <string.h>
 #include   <ctype.h>  // for tolower
 
+#include "gcode_defs.h"
 #include "gcode_process.h"
-#include "gcode_parse.h"
+//#include "gcode_parse.h"
 #include "lw_io.h"
 #include "temp.h"
 #include "timer.h"

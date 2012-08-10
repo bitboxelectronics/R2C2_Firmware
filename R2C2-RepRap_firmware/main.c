@@ -29,6 +29,8 @@
 
 #include "rtos_api.h"
 
+#include "lpc17xx_nvic.h"
+
 /* Application includes */
 #include "lw_io.h"
 #include "r2c2.h"

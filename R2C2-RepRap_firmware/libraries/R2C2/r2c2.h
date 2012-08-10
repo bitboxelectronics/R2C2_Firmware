@@ -30,12 +30,6 @@
 #ifndef _R2C2_H
 #define _R2C2_H
 
-#include "LPC17xx.h"
-#include "lpc17xx_nvic.h"
-#include "lpc17xx_pinsel.h"
-#include "lpc17xx_gpio.h"
-#include "lpc17xx_pwm.h"
-
 #include "adc.h"
 #include "buzzer.h"
 #include "ios.h"

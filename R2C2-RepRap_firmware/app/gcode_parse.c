@@ -250,7 +250,6 @@ uint8_t get_byte ( tLineBuffer *pLine)
 }
 
 
-tVariant variant;
 
 int32_t get_int (tVariant *pVariant)
 {
@@ -303,6 +302,7 @@ bool parse_packed_gcode (tGcodeInputMsg *pGcodeInputMsg)
   uint8_t   cmd;
   uint8_t   type;
   int32_t   param;
+  tVariant variant;
 
   pLine = pGcodeInputMsg->pLineBuf;
 

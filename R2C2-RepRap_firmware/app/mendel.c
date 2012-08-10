@@ -33,6 +33,7 @@
 
 #include "rtos_api.h"
 
+#include "lpc17xx_pinsel.h"
 #include "lpc17xx_timer.h"
 #include "lpc17xx_wdt.h"
 #include "lpc17xx_adc.h"

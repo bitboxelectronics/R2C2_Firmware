@@ -38,7 +38,7 @@
  // 274
  // 10k
  /* {ADC value Extruder0, ADC value HeatedBed0, temperature} */
-uint16_t temptable[NUMTEMPS][3] = {
+/* uint16_t temptable[NUMTEMPS][3] = {
  { 1156,   44, 300 },
  { 1276,   50, 290 },
  { 1406,   58, 280 },
@@ -70,7 +70,72 @@ uint16_t temptable[NUMTEMPS][3] = {
  { 4087, 3794,  20 },
  { 4090, 3902,  10 },
  { 4093, 3977,   0 }
+}; */
+
+uint16_t temptable[NUMTEMPS][3] = {
+    {       1156    ,       44      ,       300     }       ,
+    {       1214    ,       47      ,       295     }       ,
+    {       1276    ,       50      ,       290     }       ,
+    {       1340    ,       54      ,       285     }       ,
+    {       1406    ,       58      ,       280     }       ,
+    {       1475    ,       62      ,       275     }       ,
+    {       1547    ,       67      ,       270     }       ,
+    {       1621    ,       72      ,       265     }       ,
+    {       1698    ,       78      ,       260     }       ,
+    {       1777    ,       84      ,       255     }       ,
+    {       1859    ,       91      ,       250     }       ,
+    {       1943    ,       99      ,       245     }       ,
+    {       2029    ,       107     ,       240     }       ,
+    {       2116    ,       117     ,       235     }       ,
+    {       2204    ,       127     ,       230     }       ,
+    {       2294    ,       138     ,       225     }       ,
+    {       2385    ,       151     ,       220     }       ,
+    {       2475    ,       165     ,       215     }       ,
+    {       2566    ,       180     ,       210     }       ,
+    {       2656    ,       197     ,       205     }       ,
+    {       2746    ,       216     ,       200     }       ,
+    {       2834    ,       238     ,       195     }       ,
+    {       2920    ,       261     ,       190     }       ,
+    {       3005    ,       288     ,       185     }       ,
+    {       3087    ,       317     ,       180     }       ,
+    {       3167    ,       350     ,       175     }       ,
+    {       3243    ,       387     ,       170     }       ,
+    {       3316    ,       428     ,       165     }       ,
+    {       3385    ,       473     ,       160     }       ,
+    {       3451    ,       525     ,       155     }       ,
+    {       3513    ,       581     ,       150     }       ,
+    {       3571    ,       645     ,       145     }       ,
+    {       3626    ,       715     ,       140     }       ,
+    {       3676    ,       794     ,       135     }       ,
+    {       3722    ,       880     ,       130     }       ,
+    {       3765    ,       975     ,       125     }       ,
+    {       3804    ,       1080    ,       120     }       ,
+    {       3839    ,       1194    ,       115     }       ,
+    {       3871    ,       1318    ,       110     }       ,
+    {       3900    ,       1451    ,       105     }       ,
+    {       3926    ,       1593    ,       100     }       ,
+    {       3949    ,       1744    ,       95      }       ,
+    {       3970    ,       1902    ,       90      }       ,
+    {       3988    ,       2066    ,       85      }       ,
+    {       4004    ,       2233    ,       80      }       ,
+    {       4017    ,       2403    ,       75      }       ,
+    {       4030    ,       2571    ,       70      }       ,
+    {       4040    ,       2737    ,       65      }       ,
+    {       4049    ,       2896    ,       60      }       ,
+    {       4057    ,       3048    ,       55      }       ,
+    {       4063    ,       3190    ,       50      }       ,
+    {       4069    ,       3322    ,       45      }       ,
+    {       4074    ,       3441    ,       40      }       ,
+    {       4078    ,       3547    ,       35      }       ,
+    {       4081    ,       3641    ,       30      }       ,
+    {       4084    ,       3723    ,       25      }       ,
+    {       4086    ,       3793    ,       20      }       ,
+    {       4088    ,       3852    ,       15      }       ,
+    {       4089    ,       3902    ,       10      }       ,
+    {       4091    ,       3942    ,       5       }       ,
+    {       4092    ,       3976    ,       0       }
 };
+
 
 static uint16_t current_temp [NUMBER_OF_SENSORS] = {0};
 static uint16_t target_temp  [NUMBER_OF_SENSORS] = {0};
@@ -95,7 +160,7 @@ void temp_set(uint16_t t, uint8_t sensor_number)
   if (t)
   {
     steptimeout = 0;
-//?    power_on();
+//?    power_on();E: 243 -- B: 0
   }
 
   target_temp[sensor_number] = t;
@@ -150,6 +215,16 @@ void temp_tick(void)
   {
     heated_bed_off();
   }
+
+  static uint8_t counter = 0;
+  if (counter == 100)
+  {
+    counter = 0;
+    sersendf("E: %u -- ", current_temp[EXTRUDER_0]);
+    sersendf("B: %u\r\n", current_temp[HEATED_BED_0]);
+  }
+  counter++;
+
 }
 
 /* Read and average the ADC input signal */
@@ -172,10 +247,6 @@ static uint16_t read_temp(uint8_t sensor_number)
   adc_filtered[sensor_number] = ((adc_filtered[sensor_number] * 15) + raw) / 16;
   
   raw = adc_filtered[sensor_number];
-  
-  sersendf("E: %u -- ", adc_filtered[EXTRUDER_0]);
-  sersendf("B: %u\r\n", adc_filtered[HEATED_BED_0]);
-
 
   /* Go and use the temperature table to math the temperature value... */
   if (raw < temptable[0][sensor_number]) /* Limit the smaller value... */

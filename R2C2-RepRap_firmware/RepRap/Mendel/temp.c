@@ -216,6 +216,7 @@ void temp_tick(void)
     heated_bed_off();
   }
 
+#if 0
   static uint8_t counter = 0;
   if (counter == 100)
   {
@@ -224,7 +225,7 @@ void temp_tick(void)
     sersendf("B: %u\r\n", current_temp[HEATED_BED_0]);
   }
   counter++;
-
+#endif
 }
 
 /* Read and average the ADC input signal */
@@ -237,10 +238,26 @@ static uint16_t read_temp(uint8_t sensor_number)
   if (sensor_number == EXTRUDER_0)
   {
     raw = analog_read(EXTRUDER_0_SENSOR_ADC_CHANNEL);
+
+  static uint8_t counter = 0;
+  if (counter == 100)
+  {
+    counter = 0;
+    sersendf("E: %u -- ", raw);
+  }
+  counter++;
   }
   else if (sensor_number == HEATED_BED_0)
   {
     raw = analog_read(HEATED_BED_0_SENSOR_ADC_CHANNEL);
+
+    static uint8_t counter1 = 0;
+    if (counter1 == 100)
+    {
+      counter1 = 0;
+      sersendf("B: %u\r\n", raw);
+    }
+    counter1++;
   }
   
   // filter the ADC values with simple IIR
@@ -248,7 +265,13 @@ static uint16_t read_temp(uint8_t sensor_number)
   
   raw = adc_filtered[sensor_number];
 
-  /* Go and use the temperature table to math the temperature value... */
+  /* Go and use the temperature table to  static uint8_t counter = 0;
+  if (counter == 100)
+  {
+    counter = 0;
+    sersendf("E: %u -- ", raw);
+  }
+  counter++;   math the temperature value... */
   if (raw < temptable[0][sensor_number]) /* Limit the smaller value... */
   {
     celsius = temptable[0][2];

@@ -57,7 +57,7 @@ void temp_print(void);
 // periodically read temperature and update heater with PID
 void temp_tick(void);
 
-#define NUMTEMPS 16//31
+#define NUMTEMPS 17//31
 extern uint16_t temptable[NUMTEMPS][3];
 
 bool      temp_set_table_entry (uint8_t sensor_number, uint16_t temp, uint16_t adc_val);

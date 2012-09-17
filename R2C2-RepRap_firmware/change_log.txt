@@ -1,0 +1,5 @@
+V1.0.2
+Bug fixes:
+- Improve nozzle wipe (M542/M543)
+- issue #9: Homing direction of +1 doesn't work for X and Z
+- issue #6: Some movements are done very slow

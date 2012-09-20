@@ -154,7 +154,6 @@ APPSRC = \
 	$(APPDIR)/uart_shell_task.c \
 	$(APPDIR)/usb_shell_task.c \
 	$(APPDIR)/eth_shell_task.c \
-	$(APPDIR)/ui_task.c \
 	$(APPDIR)/ui_menu.c \
 	$(APPDIR)/keypad_gen4_mb.c \
 	$(APPDIR)/gcode_task.c \

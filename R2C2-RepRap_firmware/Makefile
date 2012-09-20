@@ -159,7 +159,8 @@ APPSRC = \
 	$(APPDIR)/keypad_gen4_mb.c \
 	$(APPDIR)/gcode_task.c \
 	$(APPDIR)/planner.c \
-	$(APPDIR)/stepper.c
+	$(APPDIR)/stepper.c \
+	$(APPDIR)/ui_task.c
 
 # 
 #APPDIR = sample

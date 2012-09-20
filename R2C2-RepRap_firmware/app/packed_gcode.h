@@ -32,10 +32,10 @@
 
 #include "gcode_defs.h"
 
-void gcode_add_packed_command (tLineBuffer *pBuf, uint8_t cmd);
-void gcode_add_packed_command_int (tLineBuffer *pBuf, uint8_t cmd, int32_t arg);
-void gcode_add_packed_command_float (tLineBuffer *pBuf, uint8_t cmd, float val);
-void gcode_add_packed_command_str (tLineBuffer *pBuf, uint8_t cmd, char *pData);
+void gcode_add_code (tLineBuffer *pBuf, uint8_t code);
+void gcode_add_word_int   (tLineBuffer *pBuf, uint8_t code, int32_t arg);
+void gcode_add_word_float (tLineBuffer *pBuf, uint8_t code, float val);
+void gcode_add_word_str   (tLineBuffer *pBuf, uint8_t code, char *pData);
 
 bool parse_packed_gcode (tGcodeInputMsg *pGcodeInputMsg, GCODE_COMMAND *pCommand);
 

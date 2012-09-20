@@ -203,7 +203,7 @@ void PrinterTask( void *pvParameters )
   xTaskCreate( uart_shell_task, (signed char *)"UartSh", 128, ( void * ) &shell_params, tskIDLE_PRIORITY, NULL );
 
   // start up user interface
-  xTaskCreate( ui_task, (signed char *)"UiTask", 128, ( void * ) NULL, tskIDLE_PRIORITY, NULL );
+  xTaskCreate( ui_task, (signed char *)"UiTask", 256, ( void * ) NULL, tskIDLE_PRIORITY, NULL );
 
   // now to do GCode startup
   exec_gcode_file ("autoexec.g");

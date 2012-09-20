@@ -68,6 +68,7 @@ FIL       file;
 uint8_t   file_mode;
 uint32_t  filesize = 0;
 uint32_t  sd_pos = 0;
+char      sd_file_name [21];
 
 #define EXTRUDER_NUM_0  1
 #define EXTRUDER_NUM_1  2
@@ -88,6 +89,14 @@ static char tolower (char c)
 {
   if ((c >= 'A') && (c <= 'Z'))
     return 'a' + c-'A';
+  else
+    return c;
+}
+
+static char toupper (char c)
+{
+  if ((c >= 'a') && (c <= 'z'))
+    return 'A' + c-'a';
   else
     return c;
 }
@@ -359,6 +368,11 @@ void sd_list_dir (LW_FILE *out_file)
   sd_list_dir_sub(path, out_file);
 }
 
+
+// --------------------------------------------------------------------------
+// SD file functions
+// --------------------------------------------------------------------------
+
 unsigned sd_open(FIL *pFile, char *path, uint8_t flags, LW_FILE *out_file)
 {
   FRESULT res;
@@ -419,6 +433,9 @@ void sd_seek(FIL *pFile, unsigned pos)
 {
   f_lseek (pFile, pos);
 }
+// --------------------------------------------------------------------------
+// 
+// --------------------------------------------------------------------------
 
 // --------------------------------------------------------------------------
 //! @brief       Command Received - process it
@@ -725,6 +742,7 @@ eParseResult process_gcode_command (tGcodeInputMsg *pGcodeInputMsg, tGcodeInterp
           file_input_msg.out_file = pGcodeInputMsg->out_file;
           filesize = sd_filesize(&file);
           sd_pos = 0;
+          strncpy (sd_file_name, gcode_command.str_param, sizeof(sd_file_name)-1);
           lw_fprintf(pGcodeInputMsg->out_file, "File opened: %s Size: %d\r\n", gcode_command.str_param, filesize);
           lw_fprintf(pGcodeInputMsg->out_file, "File selected\r\n");
         }

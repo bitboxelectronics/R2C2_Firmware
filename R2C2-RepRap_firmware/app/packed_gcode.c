@@ -106,13 +106,13 @@ static float get_float (tVariant *pVariant)
 // Public functions
 // --------------------------------------------------------------------------
 
-void gcode_add_packed_command(tLineBuffer *pBuf, uint8_t cmd)
+void gcode_add_code (tLineBuffer *pBuf, uint8_t code)
 {
-  push_byte (pBuf, cmd);
+  push_byte (pBuf, code);
 }
 
 // code should be a-z, A-Z or *
-void gcode_add_packed_command_int (tLineBuffer *pBuf, uint8_t cmd, int32_t data)
+void gcode_add_word_int (tLineBuffer *pBuf, uint8_t code, int32_t data)
 {
   eArgType arg_type;
 
@@ -137,14 +137,14 @@ void gcode_add_packed_command_int (tLineBuffer *pBuf, uint8_t cmd, int32_t data)
       arg_type = arg_uint8;
   }
 
-  cmd = toupper (cmd);
+  code = toupper (code);
 
-  if ( (cmd >= 'A') && (cmd <= 'Z'))
-    cmd = ((cmd-64) << 3) | arg_type;
+  if ( (code >= 'A') && (code <= 'Z'))
+    code = ((code-64) << 3) | arg_type;
   else
-    cmd = CODE_STAR;
+    code = CODE_STAR;
 
-  push_byte (pBuf,cmd);
+  push_byte (pBuf,code);
 
   // must be at least one byte
   push_byte (pBuf, data & 0xff);
@@ -166,20 +166,20 @@ void gcode_add_packed_command_int (tLineBuffer *pBuf, uint8_t cmd, int32_t data)
 }
 
 // code should be a-z, A-Z
-void gcode_add_packed_command_float (tLineBuffer *pBuf, uint8_t cmd, float val)
+void gcode_add_word_float (tLineBuffer *pBuf, uint8_t code, float val)
 {
   eArgType arg_type;
   tVariant data;
 
   arg_type = arg_float;
 
-  cmd = toupper (cmd);
-  if ( (cmd >= 'A') && (cmd <= 'Z'))
-    cmd = ((cmd-64) << 3) | arg_type;
+  code = toupper (code);
+  if ( (code >= 'A') && (code <= 'Z'))
+    code = ((code-64) << 3) | arg_type;
   else
     return;
 
-  push_byte (pBuf,cmd);
+  push_byte (pBuf,code);
 
   data.float_val = val;
 
@@ -195,19 +195,22 @@ void gcode_add_packed_command_float (tLineBuffer *pBuf, uint8_t cmd, float val)
 }
 
 // code should be a-z, A-Z, CODE_COMMENT, CODE_RAW
-void gcode_add_packed_command_str (tLineBuffer *pBuf, uint8_t cmd, char *pData)
+void gcode_add_word_str (tLineBuffer *pBuf, uint8_t code, char *pData)
 {
   eArgType arg_type;
 
   arg_type = arg_string;
 
-  cmd = toupper (cmd);
-  if ( (cmd >= 'A') && (cmd <= 'Z'))
-    cmd = ((cmd-64) << 3) | arg_type;
+#if 0
+  code = toupper (code);
+  if ( (code >= 'A') && (code <= 'Z'))
+    code = ((code-64) << 3) | arg_type;
   else
     return;
 
-  push_byte (pBuf, cmd);
+#endif
+
+  push_byte (pBuf, code);
 
   int len = strlen (pData);
 
@@ -225,124 +228,178 @@ bool parse_packed_gcode (tGcodeInputMsg *pGcodeInputMsg, GCODE_COMMAND *pCommand
 {
   bool result = false;
   tLineBuffer *pLine;
-  uint8_t   cmd;
+  uint8_t   code;
   uint8_t   type;
   int32_t   param;
+  char      ch;
   tVariant variant;
 
   pLine = pGcodeInputMsg->pLineBuf;
 
   while (pLine->ch_pos < pLine->len)
   {
-    cmd = get_byte (pLine); 
+    code = get_byte (pLine); 
 
     pCommand->seen_words = 0;
 
-    while (cmd != CODE_END_COMMAND)
+    while (code != CODE_END_COMMAND)
     {
-      type = cmd & 7;
-      cmd = cmd >> 3;
+      type = code & 7;
+      code = code >> 3;
 
-
-      switch (type)
+      if (code < 31)
       {
-        case arg_uint8:
+        switch (type)
         {
-          param = get_byte (pLine);
+          case arg_uint8:
+          {
+            param = get_byte (pLine);
 
-          variant.arg_type = arg_int32;
-          variant.int32_val = param;
+            variant.arg_type = arg_int32;
+            variant.int32_val = param;
+          }
+          break;
+
+          case arg_uint16:
+          {
+            param = get_byte (pLine);
+            param = param | get_byte (pLine) << 8;
+
+            variant.arg_type = arg_int32;
+            variant.int32_val = param;
+          }
+          break;
+
+          case arg_int8:
+          {
+            param = get_byte (pLine);
+            if (param >= 0x80)
+              param = param | 0xffffff00;
+
+            variant.arg_type = arg_int32;
+            variant.int32_val = param;
+          }
+          break;
+
+          case arg_int16:
+          {
+            param = get_byte (pLine);
+            param = param | get_byte (pLine) << 8;
+            if (param >= 0x8000)
+              param = param | 0xffff0000;
+
+            variant.arg_type = arg_int32;
+            variant.int32_val = param;
+          }
+          break;
+
+          case arg_int32:
+            param = get_byte (pLine);
+            param = param | get_byte (pLine) << 8;
+            param = param | get_byte (pLine) << 16;
+            param = param | get_byte (pLine) << 24;
+
+            variant.arg_type = arg_int32;
+            variant.int32_val = param;
+          break;
+
+          case arg_bcd:
+          break;
+
+          case arg_float:
+            param = get_byte (pLine);
+            param = param | get_byte (pLine) << 8;
+            param = param | get_byte (pLine) << 16;
+            param = param | get_byte (pLine) << 24;
+
+            variant.arg_type = arg_float;
+            variant.uint32_val = param;
+          break;
+
+          case arg_string:
+            // copy to str_param, no code letter
+            param = 0;
+            do 
+            {
+              ch = get_byte (pLine);
+              if (code == 30) // str param
+              {
+                pCommand->str_param [param] = ch;
+                param++;
+              }
+            }
+            while ( (ch != 0) && (param < sizeof (pCommand->str_param)) );
+          break;
         }
-        break;
-
-        case arg_uint16:
-        {
-          param = get_byte (pLine);
-          param = param | get_byte (pLine) << 8;
-
-          variant.arg_type = arg_int32;
-          variant.int32_val = param;
-        }
-        break;
-
-        case arg_int8:
-        {
-          param = get_byte (pLine);
-          if (param >= 0x80)
-            param = param | 0xffffff00;
-
-          variant.arg_type = arg_int32;
-          variant.int32_val = param;
-        }
-        break;
-
-        case arg_int16:
-        {
-          param = get_byte (pLine);
-          param = param | get_byte (pLine) << 8;
-          if (param >= 0x8000)
-            param = param | 0xffff0000;
-
-          variant.arg_type = arg_int32;
-          variant.int32_val = param;
-        }
-        break;
-
-        case arg_int32:
-          param = get_byte (pLine);
-          param = param | get_byte (pLine) << 8;
-          param = param | get_byte (pLine) << 16;
-          param = param | get_byte (pLine) << 24;
-
-          variant.arg_type = arg_int32;
-          variant.int32_val = param;
-        break;
-
-        case arg_bcd:
-        break;
-
-        case arg_float:
-          param = get_byte (pLine);
-          param = param | get_byte (pLine) << 8;
-          param = param | get_byte (pLine) << 16;
-          param = param | get_byte (pLine) << 24;
-
-          variant.arg_type = arg_float;
-          variant.uint32_val = param;
-        break;
-
-        case arg_string:
-        break;
       }
 
-      //pCommand->seen_words |= (1 << (cmd-1));
-      cmd = cmd + 64;
-      switch (cmd)
+      if (code < 28)
       {
-        case 'G':
-          pCommand->seen_G = 1;
-          pCommand->G = get_int (&variant);
-          break;
-        case 'X':
-          pCommand->seen_X = 1;
-          pCommand->target.x = get_float (&variant);
-          break;
-        case 'Y':
-          pCommand->seen_Y = 1;
-          pCommand->target.y = get_float (&variant);
-          break;
-        case 'Z':
-          pCommand->seen_Z = 1;
-          pCommand->target.z = get_float (&variant);
-          break;
+          //pCommand->seen_words |= (1 << (code-1));
+          code = code + 64;
+          switch (code)
+          {
+#if 0
+            case '@':
+              pCommand->seen_checksum = 1;
+              pCommand->checksum = get_int (&variant);
+              break;
+#endif
+            case 'E':
+              pCommand->seen_E = 1;
+              pCommand->target.e = get_float (&variant);
+              break;
+            case 'F':
+              pCommand->seen_F = 1;
+              pCommand->target.feed_rate = get_float (&variant);
+              break;
+
+            case 'G':
+              pCommand->seen_G = 1;
+              pCommand->G = get_int (&variant);
+              break;
+            case 'M':
+              pCommand->seen_M = 1;
+              pCommand->M = get_int (&variant);
+              break;
+            case 'N':
+              pCommand->seen_N = 1;
+              pCommand->N = get_int (&variant);
+              break;
+            case 'P':
+              pCommand->seen_P = 1;
+              pCommand->P = get_int (&variant);
+              break;
+            case 'S':
+              pCommand->seen_S = 1;
+              pCommand->S = get_int (&variant);
+              break;
+            case 'T':
+              pCommand->seen_T = 1;
+              pCommand->T = get_int (&variant);
+              break;
+
+            case 'X':
+              pCommand->seen_X = 1;
+              pCommand->target.x = get_float (&variant);
+              break;
+            case 'Y':
+              pCommand->seen_Y = 1;
+              pCommand->target.y = get_float (&variant);
+              break;
+            case 'Z':
+              pCommand->seen_Z = 1;
+              pCommand->target.z = get_float (&variant);
+              break;
+          }
       }
 
-      cmd = get_byte (pLine); 
+      code = get_byte (pLine); 
     }
 
     result = true;
 
-    if (cmd == CODE_END_COMMAND)
+    if (code == CODE_END_COMMAND)
       return true;
     
   }

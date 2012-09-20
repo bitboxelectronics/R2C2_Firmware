@@ -65,6 +65,7 @@
 static int32_t start_time;
 static int32_t led_ticks;
 
+static eLedState led_state [NUM_LEDS];
 
 // keys
 static uint16_t key_last_state;
@@ -82,16 +83,22 @@ static void _task_init (void *pvParameters)
 {
 
     //
-    // Set LED pins as outputs and turn LEDs off
+    // Set LED pins as outputs
     for (int j=0; j < NUM_LEDS; j++)
     {
       set_pin_mode (config.interface_cp_led_pin[j], OUTPUT);
-      write_pin (config.interface_cp_led_pin[j], 0);
     }
 
     led_ticks = 0;
-    attention_status = oa_system_requested_hold;
+
+    attention_status = oa_system_requested_hold; // todo
     host_state = hs_ready;
+
+    // all leds on
+    for (int j=0; j < NUM_LEDS; j++)
+    {
+      led_state [j] = led_on;
+    }
 
     start_time = millis();
 
@@ -134,6 +141,9 @@ static void _task_poll (void *pvParameters)
 
     int now = millis();
 
+    //
+    // keypad scan
+    //
     if (now - start_time > KEY_POLL_TIME)
     {
       // poll keys
@@ -182,7 +192,9 @@ static void _task_poll (void *pvParameters)
       key_last_state = key_state;
     }
 
-
+    //
+    // timer update polling
+    // 
     if (now - start_time > UPDATE_TIME)
     {
 // --------------------------------------------------------------------------
@@ -195,43 +207,65 @@ static void _task_poll (void *pvParameters)
       if (led_ticks == 10)
         led_ticks = 0;
 
+      //
       if (menu != menu_splash)
       {
         switch (host_state)
         {
           case hs_ready:
-            write_pin (config.interface_cp_led_pin[LED_OK], 1);
-            write_pin (config.interface_cp_led_pin[LED_FAULT], 0);
+            led_state [LED_OK] = led_on;
+            led_state [LED_FAULT] = led_off;
             break;
 
           case hs_running:
-            //
+            led_state [LED_OK] = led_on;
+            led_state [LED_FAULT] = led_off;
             break;
 
           case hs_error:
-            write_pin (config.interface_cp_led_pin[LED_OK], 0);
-            write_pin (config.interface_cp_led_pin[LED_FAULT], 1);
+            led_state [LED_OK] = led_off;
+            led_state [LED_FAULT] = led_on;
             break;
         }
 
         switch (attention_status)
         {
           case oa_ok:
-            write_pin (config.interface_cp_led_pin[LED_ATTENTION], 0);
+            led_state [LED_ATTENTION] = led_off;
           break;
 
           case oa_user_requested_hold:
-            write_pin (config.interface_cp_led_pin[LED_ATTENTION], 1);
+            led_state [LED_ATTENTION] = led_on;
           break;
 
           case oa_system_requested_hold:
-            if (led_ticks < 5)
-              write_pin (config.interface_cp_led_pin[LED_ATTENTION], 0);
-            else
-              write_pin (config.interface_cp_led_pin[LED_ATTENTION], 1);
+            led_state [LED_ATTENTION] = led_flash;
           break;
         }
       }
+
+
+      // ---------------
+      // 
+      for (int j=0; j < NUM_LEDS; j++)
+      {
+        switch (led_state[j])
+        {
+          case led_off:
+            write_pin (config.interface_cp_led_pin[j], 0);
+            break;
+          case led_on:
+            write_pin (config.interface_cp_led_pin[j], 1);
+            break;
+          case led_flash:
+            if (led_ticks < 5)
+              write_pin (config.interface_cp_led_pin[j], 0);
+            else
+              write_pin (config.interface_cp_led_pin[j], 1);
+            break;
+        }
+      }
+
 // --------------------------------------------------------------------------
 
       start_time = now;

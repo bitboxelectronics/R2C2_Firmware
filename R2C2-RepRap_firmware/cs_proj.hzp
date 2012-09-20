@@ -20,34 +20,34 @@
         <configuration Name="Common" file_type="Reset Script"/>
       </file>
     </folder>
-    <folder Name="CMSIS Files">
-      <file file_name="libraries/CMSISv1p30_LPC17xx/src/system_LPC17xx.c"/>
+    <folder Name="arch_lpc17xx_cmsis">
+      <file file_name="arch/lpc17xx/CMSISv1p30/src/system_LPC17xx.c"/>
     </folder>
-    <folder Name="lib_NXP">
-      <file file_name="libraries/NXP/Drivers/source/lpc17xx_adc.c"/>
-      <file file_name="libraries/NXP/Drivers/source/lpc17xx_can.c"/>
-      <file file_name="libraries/NXP/Drivers/source/lpc17xx_clkpwr.c"/>
-      <file file_name="libraries/NXP/Drivers/source/lpc17xx_dac.c"/>
-      <file file_name="libraries/NXP/Drivers/source/lpc17xx_emac.c"/>
-      <file file_name="libraries/NXP/Drivers/source/lpc17xx_exti.c"/>
-      <file file_name="libraries/NXP/Drivers/source/lpc17xx_gpdma.c"/>
-      <file file_name="libraries/NXP/Drivers/source/lpc17xx_gpio.c"/>
-      <file file_name="libraries/NXP/Drivers/source/lpc17xx_i2c.c"/>
-      <file file_name="libraries/NXP/Drivers/source/lpc17xx_i2s.c"/>
-      <file file_name="libraries/NXP/Drivers/source/lpc17xx_libcfg_default.c"/>
-      <file file_name="libraries/NXP/Drivers/source/lpc17xx_mcpwm.c"/>
-      <file file_name="libraries/NXP/Drivers/source/lpc17xx_nvic.c"/>
-      <file file_name="libraries/NXP/Drivers/source/lpc17xx_pinsel.c"/>
-      <file file_name="libraries/NXP/Drivers/source/lpc17xx_pwm.c"/>
-      <file file_name="libraries/NXP/Drivers/source/lpc17xx_qei.c"/>
-      <file file_name="libraries/NXP/Drivers/source/lpc17xx_rit.c"/>
-      <file file_name="libraries/NXP/Drivers/source/lpc17xx_rtc.c"/>
-      <file file_name="libraries/NXP/Drivers/source/lpc17xx_spi.c"/>
-      <file file_name="libraries/NXP/Drivers/source/lpc17xx_ssp.c"/>
-      <file file_name="libraries/NXP/Drivers/source/lpc17xx_systick.c"/>
-      <file file_name="libraries/NXP/Drivers/source/lpc17xx_timer.c"/>
-      <file file_name="libraries/NXP/Drivers/source/lpc17xx_uart.c"/>
-      <file file_name="libraries/NXP/Drivers/source/lpc17xx_wdt.c"/>
+    <folder Name="arch_lpc17xx_drivers">
+      <file file_name="arch/lpc17xx/Drivers/source/lpc17xx_adc.c"/>
+      <file file_name="arch/lpc17xx/Drivers/source/lpc17xx_can.c"/>
+      <file file_name="arch/lpc17xx/Drivers/source/lpc17xx_clkpwr.c"/>
+      <file file_name="arch/lpc17xx/Drivers/source/lpc17xx_dac.c"/>
+      <file file_name="arch/lpc17xx/Drivers/source/lpc17xx_emac.c"/>
+      <file file_name="arch/lpc17xx/Drivers/source/lpc17xx_exti.c"/>
+      <file file_name="arch/lpc17xx/Drivers/source/lpc17xx_gpdma.c"/>
+      <file file_name="arch/lpc17xx/Drivers/source/lpc17xx_gpio.c"/>
+      <file file_name="arch/lpc17xx/Drivers/source/lpc17xx_i2c.c"/>
+      <file file_name="arch/lpc17xx/Drivers/source/lpc17xx_i2s.c"/>
+      <file file_name="arch/lpc17xx/Drivers/source/lpc17xx_libcfg_default.c"/>
+      <file file_name="arch/lpc17xx/Drivers/source/lpc17xx_mcpwm.c"/>
+      <file file_name="arch/lpc17xx/Drivers/source/lpc17xx_nvic.c"/>
+      <file file_name="arch/lpc17xx/Drivers/source/lpc17xx_pinsel.c"/>
+      <file file_name="arch/lpc17xx/Drivers/source/lpc17xx_pwm.c"/>
+      <file file_name="arch/lpc17xx/Drivers/source/lpc17xx_qei.c"/>
+      <file file_name="arch/lpc17xx/Drivers/source/lpc17xx_rit.c"/>
+      <file file_name="arch/lpc17xx/Drivers/source/lpc17xx_rtc.c"/>
+      <file file_name="arch/lpc17xx/Drivers/source/lpc17xx_spi.c"/>
+      <file file_name="arch/lpc17xx/Drivers/source/lpc17xx_ssp.c"/>
+      <file file_name="arch/lpc17xx/Drivers/source/lpc17xx_systick.c"/>
+      <file file_name="arch/lpc17xx/Drivers/source/lpc17xx_timer.c"/>
+      <file file_name="arch/lpc17xx/Drivers/source/lpc17xx_uart.c"/>
+      <file file_name="arch/lpc17xx/Drivers/source/lpc17xx_wdt.c"/>
     </folder>
     <folder Name="lib_R2C2" file_name="">
       <file file_name="libraries/R2C2/adc.c"/>
@@ -90,6 +90,9 @@
       <file file_name="app/uart_shell_task.c"/>
       <file file_name="app/usb_shell_task.c"/>
       <file file_name="app/ui_task.c"/>
+      <file file_name="app/keypad_gen4_mb.c"/>
+      <file file_name="app/ui_menu.c"/>
+      <file file_name="app/packed_gcode.c"/>
     </folder>
     <folder Name="lib_FreeRTOS">
       <file file_name="libraries/FreeRTOS/Source/list.c">
@@ -151,5 +154,5 @@
   <configuration Name="THUMB Flash Debug" inherited_configurations="THUMB;Flash;Debug"/>
   <configuration Name="Flash" c_preprocessor_definitions="__FLASH_BUILD" hidden="Yes"/>
   <configuration Name="THUMB Flash Release" inherited_configurations="THUMB;Flash;Release"/>
-  <configuration Name="Common" c_preprocessor_definitions="_CROSSWORKS" c_user_include_directories=".;libraries/FreeRTOS/Source/include;libraries/FreeRTOS/Source/portable/GCC/ARM_CM3;libraries//CMSISv1p30_LPC17xx/inc;libraries/NXP/Drivers/include;libraries/LPCUSB/inc;libraries/FatFs/src;libraries/R2C2;libraries/ethernet;libraries/lwip/src/include;libraries/lwip/src/include/ipv4;libraries/lwip/ports/r2c2/include;app/grbl;RepRap/Mendel" gcc_entry_point="__cs3_reset_cortex_m"/>
+  <configuration Name="Common" c_preprocessor_definitions="_CROSSWORKS" c_user_include_directories=".;arch/lpc17xx/CMSISv1p30/inc;arch/lpc17xx/Drivers/include;libraries/FreeRTOS/Source/include;libraries/FreeRTOS/Source/portable/GCC/ARM_CM3;libraries/LPCUSB/inc;libraries/FatFs/src;libraries/R2C2;libraries/ethernet;libraries/lwip/src/include;libraries/lwip/src/include/ipv4;libraries/lwip/ports/r2c2/include;app" gcc_entry_point="__cs3_reset_cortex_m"/>
 </solution>

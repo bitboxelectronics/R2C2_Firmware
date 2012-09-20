@@ -44,13 +44,14 @@
 // Packed Gcode
 // --------------------------------------------------------------------------
 
-#define CODE_STAR     0x00  // 0 = '*'
+#define CODE_STAR        0x00  // code 0 = '*' (checksum)
 
-#define CODE_COMMENT  0xE0  // 28
-#define CODE_RAW      0xE8  // 29
+#define CODE_COMMENT     0xE7  // code 28, type=str
+#define CODE_RAW         0xEF  // code 29, type=str
+#define CODE_STR_PARAM   0xF7  // code 30, type=str
 
-#define CODE_END_COMMAND 0xF8
-#define CODE_END_LINE    0xF9
+#define CODE_END_COMMAND 0xF8 // code 31, subcode 0
+#define CODE_END_LINE    0xF9 // code 31, subcode 1
 
 // packed info
 typedef enum {

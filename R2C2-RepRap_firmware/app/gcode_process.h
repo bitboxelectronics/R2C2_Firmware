@@ -47,6 +47,7 @@ extern FIL       file;
 extern uint8_t   file_mode;
 extern uint32_t  filesize;
 extern uint32_t  sd_pos;
+extern char      sd_file_name [21];
 
 extern void sd_close (FIL *pFile);
 extern bool sd_write_to_file(char *pStr, unsigned bytes_to_write);

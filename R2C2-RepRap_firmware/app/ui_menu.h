@@ -42,19 +42,32 @@ typedef enum {
   menu_splash,
   menu_monitor,
   menu_jog,
+  menu_homing,
   menu_sd_select
   } eMenu;
 
 // 
 typedef enum {
-  hs_ready,       // idle
-  hs_wait_user,   // paused
+// idle/standby states
+  hs_ready,
+   
+// running states
+  hs_wait_user,   // paused/feed hold
+                  // tool change/gcode
   hs_wait_temp,   // running - wait
   hs_wait_time,
   hs_running,
-//  hs_run_from_sd,   // ??
+//  hs_run_from_sd, ??
+
+// stopped states
   hs_error
   } eHostState;
+
+typedef enum {
+  led_off, 
+  led_flash,
+  led_on 
+  } eLedState;
 
 typedef enum {
   oa_ok,
@@ -62,8 +75,13 @@ typedef enum {
   oa_system_requested_hold
   } eOperatorAttention;
 
+// home required
+// tool change
+// feed hold
+// gcode pause?
 
 extern eMenu menu;
+
 extern eHostState host_state;
 extern eOperatorAttention attention_status;
 

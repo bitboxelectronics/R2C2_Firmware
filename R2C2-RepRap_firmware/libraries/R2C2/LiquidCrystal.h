@@ -103,11 +103,13 @@ void   LiquidCrystal_4bit(uint8_t rs, uint8_t enable,
   void lcd_noAutoscroll();
 
   void lcd_createChar(uint8_t location, uint8_t charmap[]);
-  void lcd_setCursor(uint8_t row, uint8_t col); 
+  void lcd_setCursor(uint8_t col, uint8_t row); 
   /*virtual*/ void lcd_write(uint8_t value);
   void lcd_command(uint8_t value);
 
   void lcd_print(const char *str);
+
+#define lcd_goto_xy(x,y) lcd_setCursor(x,y)
 
 // for lwio
 

@@ -118,27 +118,27 @@ void GcodeTask( void *pvParameters )
         // process SD file
         if (sd_printing)
         {
-
-          if (!file_input_msg.in_use)
-          {
-            if (sd_read_file (&sd_line_buf))
+            if (file_input_msg.result == PR_BUSY)
             {
-                file_input_msg.in_use = true;
-
-                parse_result = gcode_parse_line (&file_input_msg);
-
-                file_input_msg.result = parse_result;
-                file_input_msg.pLineBuf->len = 0;
-                file_input_msg.in_use = false;
-            } 
+              // try again
+              parse_result = gcode_parse_line (&file_input_msg);
+              file_input_msg.result = parse_result;
+            }
             else
             {
-              // end of file reached, stop printing
-              sd_printing = false;
-              lw_fputs ("Done printing file\r\n", file_input_msg.out_file);
+              if (sd_read_file (&sd_line_buf))
+              {
+                  parse_result = gcode_parse_line (&file_input_msg);
+                  file_input_msg.result = parse_result;
+                  // regardless of result, let the task continue and read message queue
+              } 
+              else
+              {
+                // end of file reached, stop printing
+                sd_printing = false;
+                lw_fputs ("Done printing file\r\n", file_input_msg.out_file);
+              }
             }
-          }
-
         }
 
     } // for ()

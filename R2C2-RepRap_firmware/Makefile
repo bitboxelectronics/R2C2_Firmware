@@ -143,6 +143,7 @@ APPDIR = app
 APPSRC = \
 	$(APPDIR)/gcode_parse.c \
 	$(APPDIR)/gcode_process.c \
+	$(APPDIR)/packed_gcode.c \
 	$(APPDIR)/mendel.c \
 	$(APPDIR)/temp.c \
 	$(APPDIR)/app_config.c \
@@ -153,6 +154,9 @@ APPSRC = \
 	$(APPDIR)/uart_shell_task.c \
 	$(APPDIR)/usb_shell_task.c \
 	$(APPDIR)/eth_shell_task.c \
+	$(APPDIR)/ui_task.c \
+	$(APPDIR)/ui_menu.c \
+	$(APPDIR)/keypad_gen4_mb.c \
 	$(APPDIR)/gcode_task.c \
 	$(APPDIR)/planner.c \
 	$(APPDIR)/stepper.c
@@ -163,9 +167,9 @@ APPSRC = \
 
 # 
 APPLIBDIR    = libraries
-INCLUDES = $(APPLIBDIR)/CMSISv1p30_LPC17xx/inc \
+INCLUDES = arch/lpc17xx/CMSISv1p30/inc \
+	arch/lpc17xx/drivers/include \
 	 $(APPLIBDIR)/LPCUSB/inc \
-	 $(APPLIBDIR)/NXP/Drivers/include \
 	 $(APPLIBDIR)/FatFs/src \
 	 $(APPLIBDIR)/R2C2/ \
 	 $(APPLIBDIR)/ethernet/ \
@@ -187,8 +191,8 @@ FREERTOS_SRC = $(FREERTOS_SOURCE_DIR)/list.c \
 # use file-extension c for "c-only"-files
 SRC = \
 	$(wildcard $(APPLIBDIR)/LPCUSB/src/*.c) \
-	$(APPLIBDIR)/CMSISv1p30_LPC17xx/src/system_LPC17xx.c \
-	$(wildcard $(APPLIBDIR)/NXP/Drivers/source/lpc17xx_*.c) \
+	arch/lpc17xx//CMSISv1p30/src/system_LPC17xx.c \
+	$(wildcard arch/lpc17xx/Drivers/source/lpc17xx_*.c) \
 	$(wildcard $(APPLIBDIR)/FatFs/src/*.c) \
 	$(filter-out $(APPLIBDIR)/R2C2/lw_rtos.c, $(wildcard $(APPLIBDIR)/R2C2/*.c)) \
 	$(wildcard $(APPLIBDIR)/ethernet/*.c) \

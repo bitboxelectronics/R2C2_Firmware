@@ -34,81 +34,33 @@
 #include "sersendf.h"
 #include "stepper.h"
 
-
- // 274
- // 10k
- /* {ADC value Extruder0, ADC value HeatedBed0, temperature} */
-/* uint16_t temptable[NUMTEMPS][3] = {
- { 1156,   44, 300 },
- { 1276,   50, 290 },
- { 1406,   58, 280 },
- { 1547,   67, 270 },
- { 1698,   78, 260 },
- { 1859,   91, 250 },
- { 2029,   107, 240 },
- { 2205,  127, 230 },
- { 2385,  151, 220 },
- { 2567,  180, 210 },
- { 2746,  216, 200 },
- { 2921,  261, 190 },
- { 3088,  317, 180 },
- { 3244,  387, 170 },
- { 3386,  473, 160 },
- { 3514,  582, 150 },
- { 3627,  716, 140 },
- { 3723,  880, 130 },
- { 3805, 1080, 120 },
- { 3872, 1318, 110 },
- { 3927, 1594, 100 },
- { 3971, 1903,  90 },
- { 4005, 2234,  80 },
- { 4031, 2572,  70 },
- { 4050, 2897,  60 },
- { 4064, 3191,  50 },
- { 4075, 3442,  40 },
- { 4082, 3642,  30 },
- { 4087, 3794,  20 },
- { 4090, 3902,  10 },
- { 4093, 3977,   0 }
-}; */
-
+/* {ADC value Extruder0, ADC value HeatedBed0, temperature} */
 uint16_t temptable[NUMTEMPS][3] = {
-    {       860     ,       60      ,       300     }       ,
-    {       860     ,       60      ,       299     }       ,
-    {       1849    ,       95      ,       248     }       ,
-    {       2208    ,       119     ,       226     }       ,
-    {       2711    ,       215     ,       198     }       ,
-    {       2960    ,       293     ,       183     }       ,
-    {       3332    ,       447     ,       163     }       ,
-    {       3568    ,       641     ,       145     }       ,
-    {       3711    ,       865     ,       131     }       ,
-    {       3870    ,       1408    ,       105     }       ,
-    {       3960    ,       1906    ,       86      }       ,
-    {       4032    ,       2732    ,       64      }       ,
-    {       4062    ,       3352    ,       42      }       ,
-    {       4070    ,       3755    ,       22      }       ,
-    {       4080    ,       4085    ,       1       }       ,
-    {       4080    ,       4085    ,       0       }
+  {860, 60, 300},
+  {1849, 95, 248},
+  {2208, 119, 226},
+  {2711, 215, 198},
+  {2960, 293, 183},
+  {3332, 447, 163},
+  {3568, 641, 145},
+  {3711, 865, 131},
+  {3870, 1408, 105},
+  {3960, 1906, 86},
+  {4032, 2732, 64},
+  {4062, 3352, 42},
+  {4070, 3755, 22},
+  {4080, 4085, 0}
 };
-
 
 static uint16_t current_temp [NUMBER_OF_SENSORS] = {0};
 static uint16_t target_temp  [NUMBER_OF_SENSORS] = {0};
-static uint32_t adc_filtered [NUMBER_OF_SENSORS] = {4096, 4096}; // variable must have the higher value of ADC for filter start at the lowest temperature
+static uint32_t adc_filtered [NUMBER_OF_SENSORS] = {4095, 4095}; // variable must have the higher value of ADC for filter start at the lowest temperature
 
 #ifndef	ABSDELTA
 #define	ABSDELTA(a, b)	(((a) >= (b))?((a) - (b)):((b) - (a)))
 #endif
 
 static uint16_t read_temp(uint8_t sensor_number);
-
-#if 0
-static uint16_t temp_read(uint8_t sensor_number)
-{
-  return current_temp[sensor_number];
-}
-#endif
-
 
 void temp_set(uint16_t t, uint8_t sensor_number)
 {
@@ -146,7 +98,6 @@ void temp_print()
 
 void temp_tick(void)
 {
-
   /* Read and average temperatures */
   current_temp[EXTRUDER_0] = read_temp(EXTRUDER_0);
   current_temp[HEATED_BED_0] = read_temp(HEATED_BED_0);
@@ -170,17 +121,6 @@ void temp_tick(void)
   {
     heated_bed_off();
   }
-
-//#if 0
-  static uint8_t counter = 0;
-  if (counter == 100)
-  {
-    counter = 0;
-    sersendf("E: %u -- ", current_temp[EXTRUDER_0]);
-    sersendf("B: %u\r\n", current_temp[HEATED_BED_0]);
-  }
-  counter++;
-//#endif
 }
 
 /* Read and average the ADC input signal */
@@ -193,28 +133,10 @@ static uint16_t read_temp(uint8_t sensor_number)
   if (sensor_number == EXTRUDER_0)
   {
     raw = analog_read(EXTRUDER_0_SENSOR_ADC_CHANNEL);
-#if 0
-    static uint8_t counter = 0;
-    if (counter == 100)
-    {
-      counter = 0;
-      sersendf("E: %u -- ", raw);
-    }
-    counter++;
-#endif
   }
   else if (sensor_number == HEATED_BED_0)
   {
     raw = analog_read(HEATED_BED_0_SENSOR_ADC_CHANNEL);
-#if 0
-    static uint8_t counter1 = 0;
-    if (counter1 == 100)
-    {
-      counter1 = 0;
-      sersendf("B: %u\r\n", raw);
-    }
-    counter1++;
-#endif
   }
   
   // filter the ADC values with simple IIR

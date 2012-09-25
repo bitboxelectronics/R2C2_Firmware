@@ -99,6 +99,14 @@ static void enqueue_wait_temp (void)
   plan_buffer_action (&request);
 }
 
+static void enqueue_wait (void)
+{
+  tActionRequest request;
+
+  request.ActionType = AT_WAIT;
+  plan_buffer_action (&request);
+}
+
 // wait for move queue to be empty
 static void synch_queue (void)
 {
@@ -810,6 +818,14 @@ eParseResult process_gcode_command()
       // M115- report firmware version
       case 115:
       sersendf("FIRMWARE_NAME:Teacup_R2C2 FIRMWARE_URL:http%%3A//github.com/bitboxelectronics/R2C2 PROTOCOL_VERSION:1.0 MACHINE_TYPE:Mendel\r\n");
+      break;
+
+      // M116 - Wait for all temperatures and other slowly-changing variables to arrive at their set values.
+      case 116:
+      if (config.enable_extruder_1)
+      {
+        enqueue_wait();
+      }
       break;
 
       case 119:

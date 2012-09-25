@@ -51,6 +51,9 @@ uint16_t temp_get_target(uint8_t sensor_number);
 // true if last read temp is close to target temp, false otherwise
 uint8_t temp_achieved(uint8_t sensor_number);
 
+// true if last read temp is close to target temp, false otherwise -- works for extruder and bed temperatures
+uint8_t temps_achieved (void);
+
 // send current temperature to host
 void temp_print(void);
 

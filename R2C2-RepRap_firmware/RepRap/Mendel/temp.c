@@ -91,6 +91,14 @@ uint8_t	temp_achieved(uint8_t sensor_number)
   return 0;
 }
 
+uint8_t temps_achieved (void)
+{
+  if ((current_temp[EXTRUDER_0] >= (target_temp[EXTRUDER_0] - 2)) && (current_temp[HEATED_BED_0] >= (target_temp[HEATED_BED_0] - 2)))
+    return 255;
+
+  return 0;
+}
+
 void temp_print()
 {
   sersendf("ok T:%u.0 B:%u.0\r\n", current_temp[EXTRUDER_0], current_temp[HEATED_BED_0]); /* for RepRap software */

@@ -524,8 +524,17 @@ void st_interrupt (void)
         current_block = NULL;
         plan_discard_current_block();
       }
-    }  
-    
+    }
+    else if (current_block->action_type == AT_WAIT)
+    // Wait for all temperatures to rise to set value
+    {
+      step_bits_xyz = step_bits_e = 0;
+      if (temps_achieved ())
+      {
+        current_block = NULL;
+        plan_discard_current_block();
+      }
+    }
   } 
   else 
   {

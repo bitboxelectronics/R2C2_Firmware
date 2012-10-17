@@ -414,6 +414,7 @@ void plan_buffer_line (tActionRequest *pAction)
   double microseconds;
   double multiplier;
   double speed_factor;
+  static uint32_t direction_bits_old = 0;
   
   x = pAction->target.x;
   y = pAction->target.y;
@@ -440,12 +441,46 @@ void plan_buffer_line (tActionRequest *pAction)
   block->action_type = AT_MOVE;
   
   // Compute direction bits for this block
-  block->direction_bits = 0;
-  if (target[X_AXIS] < position[X_AXIS]) { block->direction_bits |= (1<<X_DIRECTION_BIT); }
-  if (target[Y_AXIS] < position[Y_AXIS]) { block->direction_bits |= (1<<Y_DIRECTION_BIT); }
-  if (target[Z_AXIS] < position[Z_AXIS]) { block->direction_bits |= (1<<Z_DIRECTION_BIT); }
-  if (target[E_AXIS] < position[E_AXIS]) { block->direction_bits |= (1<<E_DIRECTION_BIT); }
+  block->direction_bits = direction_bits_old;
+
+  if (target[X_AXIS] < position[X_AXIS])
+  {
+    block->direction_bits |= (1<<X_DIRECTION_BIT);
+  }
+  else if (target[X_AXIS] > position[X_AXIS])
+  {
+    block->direction_bits &= ~(1<<X_DIRECTION_BIT);
+  }
+
+  if (target[Y_AXIS] < position[Y_AXIS])
+  {
+    block->direction_bits |= (1<<Y_DIRECTION_BIT);
+  }
+  else if (target[Y_AXIS] > position[Y_AXIS])
+  {
+    block->direction_bits &= ~(1<<Y_DIRECTION_BIT);
+  }
+
+  if (target[Z_AXIS] < position[Z_AXIS])
+  {
+    block->direction_bits |= (1<<Z_DIRECTION_BIT);
+  }
+  else if (target[Z_AXIS] > position[Z_AXIS])
+  {
+    block->direction_bits &= ~(1<<Z_DIRECTION_BIT);
+  }
+
+  if (target[E_AXIS] < position[E_AXIS])
+  {
+    block->direction_bits |= (1<<E_DIRECTION_BIT);
+  }
+  else if (target[E_AXIS] > position[E_AXIS])
+  {
+    block->direction_bits &= ~(1<<E_DIRECTION_BIT);
+  }
   
+  direction_bits_old = block->direction_bits;
+
   // Number of steps for each axis
   block->steps_x = labs(target[X_AXIS]-position[X_AXIS]);
   block->steps_y = labs(target[Y_AXIS]-position[Y_AXIS]);

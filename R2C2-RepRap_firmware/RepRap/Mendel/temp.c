@@ -134,7 +134,8 @@ void temp_tick(void)
 /* Read and average the ADC input signal */
 static uint16_t read_temp(uint8_t sensor_number)
 {
-  int32_t raw = 0;
+  int32_t raw = 4095; // initialize raw with value equal to lowest temperature.
+  static int32_t raw_correct = 4095;
   int16_t celsius = 0;
   uint8_t i;
 
@@ -145,6 +146,19 @@ static uint16_t read_temp(uint8_t sensor_number)
   else if (sensor_number == HEATED_BED_0)
   {
     raw = analog_read(HEATED_BED_0_SENSOR_ADC_CHANNEL);
+
+    /* There is a problem with LPC1768 ADC being overdrive with > 3.3V on ADC extruder channel and that makes
+     * error readings on ADC bed channel (only when extruder is cold less than ~15ºC).
+     * Try to avoid the bad readings that usually are raw =< 300.
+     */
+    if (raw < 300) // error, assume last correct value
+    {
+      raw = raw_correct;
+    }
+    else // no error, save current raw
+    {
+      raw_correct = raw;
+    }
   }
   
   // filter the ADC values with simple IIR

@@ -1190,6 +1190,10 @@ eParseResult process_gcode_command()
       }
       break;
 
+      // M606 - wait for empty movement queue
+      case 606:
+      enqueue_wait();
+      break;
 
       // unknown mcode: spit an error
       default:

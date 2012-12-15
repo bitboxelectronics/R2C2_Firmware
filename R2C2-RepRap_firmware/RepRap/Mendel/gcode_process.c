@@ -792,7 +792,12 @@ eParseResult process_gcode_command()
       // M112- immediate stop
       case 112:
       disableHwTimer(0); // disable stepper ?
-      //TODO: queue_flush();
+      //queue_flush(); // error: " undefined reference to `queue_flush'" ??
+
+      // disable extruder and bed heaters
+      temp_set(0, EXTRUDER_0);
+      temp_set(0, HEATED_BED_0);
+
       power_off();
       break;
 
@@ -1165,19 +1170,19 @@ eParseResult process_gcode_command()
       {
         if (next_target.seen_X)
         {
-          config.home_pos_x = next_target.target.x;
+          config.home_pos_x -= next_target.target.x;
           axisSelected = 1;
         }//no need for else
 
         if (next_target.seen_Y)
         {
-          config.home_pos_y = next_target.target.y;
+          config.home_pos_y -= next_target.target.y;
           axisSelected = 1;
         }//no need for else
 
         if (next_target.seen_Z)
         {
-          config.home_pos_z = next_target.target.z;
+          config.home_pos_z -= next_target.target.z;
           axisSelected = 1;
         }//no need for else
 

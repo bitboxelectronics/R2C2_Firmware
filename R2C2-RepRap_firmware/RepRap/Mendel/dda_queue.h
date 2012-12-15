@@ -66,6 +66,6 @@ void next_move(void) __attribute__ ((hot));
 void print_queue(void);
 
 // flush the queue for eg; emergency stop
-void queue_flush(void);
+void queue_flush();
 
 #endif  /* _DDA_QUEUE */

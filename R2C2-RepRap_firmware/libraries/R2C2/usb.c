@@ -182,8 +182,8 @@ static const U8 abDescriptors[] = {
 
   12,
   DESC_STRING,
-  // Version 1.0.2
-  '1', 0, '.', 0, '0', 0, '.', 0, '2', 0,
+  // Version 1.0.3
+  '1', 0, '.', 0, '0', 0, '.', 0, '3', 0,
 
 // terminating zero
   0

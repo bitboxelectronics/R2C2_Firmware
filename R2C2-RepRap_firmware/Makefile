@@ -311,7 +311,7 @@ LPC21ISP_XTAL = 12000
 # -debug: verbose output
 # -control: enter bootloader via RS232 DTR/RTS (only if hardware 
 #           supports this feature - see NXP AppNote)
-LPC21ISP_OPTIONS = -control
+#LPC21ISP_OPTIONS = -control
 #LPC21ISP_OPTIONS += -debug
 # ---------------------------------------------------------------------------
 
@@ -547,14 +547,14 @@ end:
 	@echo $(MSG_END)
 
 # Display sizes of sections.
-ELFSIZE = $(SIZE) -A  $(OUTDIR)/$(TARGET).elf
+ELFSIZE = $(SIZE) -A $(OUTDIR)/$(TARGET).elf | egrep '^(section|Total|\.(text|data|bss|stack|heap))'
 sizebefore:
 #	@if [ -f  $(OUTDIR)/$(TARGET).elf ]; then echo; echo $(MSG_SIZE_BEFORE); $(ELFSIZE); echo; fi
 
 sizeafter:
 #	@if [ -f  $(OUTDIR)/$(TARGET).elf ]; then echo; echo $(MSG_SIZE_AFTER); $(ELFSIZE); echo; fi
 	@echo $(MSG_SIZE_AFTER)
-	$(ELFSIZE)
+	@$(ELFSIZE)
 
 # Display compiler version information.
 gccversion : 
@@ -584,43 +584,43 @@ endif
 
 # Create final output file in ihex format from ELF output file (.hex).
 %.hex: %.elf
-	@echo $(MSG_LOAD_FILE) $@
-	$(OBJCOPY) -O ihex $< $@
-	
+	@echo "  HEX   " $@
+	@$(OBJCOPY) -O ihex $< $@
+
 # Create final output file in raw binary format from ELF output file (.bin)
 %.bin: %.elf
-	@echo $(MSG_LOAD_FILE) $@
-	$(OBJCOPY) -O binary $< $@
+	@echo "  BIN   " $@
+	@$(OBJCOPY) -O binary $< $@
 
 # Create extended listing file/disassambly from ELF output file.
 # using objdump (testing: option -C)
 %.lss: %.elf
-	@echo $(MSG_EXTENDED_LISTING) $@
-	$(OBJDUMP) -h -S -C -r $< > $@
+	@echo "  LIST  " $@
+	@$(OBJDUMP) -h -S -C -r $< > $@
 
 # Create a symbol table from ELF output file.
 %.sym: %.elf
-	@echo $(MSG_SYMBOL_TABLE) $@
-	$(NM) -n $< > $@
+	@echo "  SYM   " $@
+	@$(NM) -n $< > $@
 
 # Link: create ELF output file from object files.
 .SECONDARY : $(TARGET).elf
 .PRECIOUS : $(ALLOBJ)
 %.elf:  $(ALLOBJ) $(BUILDONCHANGE)
-	@echo $(MSG_LINKING) $@
+	@echo "  LINK  " $@
 # use $(CC) for C-only projects or $(CPP) for C++-projects:
 ifeq "$(strip $(CPPSRC)$(CPPARM))" ""
-	$(CC) $(THUMB) $(CFLAGS) $(ALLOBJ) --output $@ -nostartfiles $(LDFLAGS)
+	@$(CC) $(THUMB) $(CFLAGS) $(ALLOBJ) --output $@ -nostartfiles $(LDFLAGS)
 else
-	$(CPP) $(THUMB) $(CFLAGS) $(ALLOBJ) --output $@ $(LDFLAGS)
+	@$(CPP) $(THUMB) $(CFLAGS) $(ALLOBJ) --output $@ $(LDFLAGS)
 endif
 
 
 # Assemble: create object files from assembler source files.
 define ASSEMBLE_TEMPLATE
 $(OUTDIR)/$(notdir $(basename $(1))).o : $(1) $(BUILDONCHANGE)
-	@echo $(MSG_ASSEMBLING) $$< to $$@
-	$(CC) -c $(THUMB) $$(ASFLAGS) $$< -o $$@ 
+	@echo "  AS    " $$@
+	@$(CC) -c $(THUMB) $$(ASFLAGS) $$< -o $$@
 endef
 $(foreach src, $(ASRC), $(eval $(call ASSEMBLE_TEMPLATE, $(src)))) 
 
@@ -636,8 +636,8 @@ $(foreach src, $(ASRCARM), $(eval $(call ASSEMBLE_ARM_TEMPLATE, $(src))))
 # Compile: create object files from C source files.
 define COMPILE_C_TEMPLATE
 $(OUTDIR)/$(notdir $(basename $(1))).o : $(1) $(BUILDONCHANGE)
-	@echo $(MSG_COMPILING) $$< to $$@
-	$(CC) -c $(THUMB) $$(CFLAGS) $$(CONLYFLAGS) $$< -o $$@ 
+	@echo "  CC    " $$@
+	@$(CC) -c $(THUMB) $$(CFLAGS) $$(CONLYFLAGS) $$< -o $$@
 endef
 $(foreach src, $(SRC), $(eval $(call COMPILE_C_TEMPLATE, $(src)))) 
 
@@ -701,4 +701,3 @@ clean_list :
 
 # Listing of phony targets.
 .PHONY : all begin end sizebefore sizeafter gccversion build elf hex bin lss sym clean clean_list program createdirs
-

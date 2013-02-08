@@ -682,22 +682,23 @@ clean: begin clean_list end
 
 clean_list :
 	@echo $(MSG_CLEANING)
-	$(REMOVE) $(OUTDIR)/$(TARGET).map
-	$(REMOVE) $(OUTDIR)/$(TARGET).elf
-	$(REMOVE) $(OUTDIR)/$(TARGET).hex
-	$(REMOVE) $(OUTDIR)/$(TARGET).bin
-	$(REMOVE) $(OUTDIR)/$(TARGET).sym
-	$(REMOVE) $(OUTDIR)/$(TARGET).lss
-	$(REMOVE) $(ALLOBJ)
-	$(REMOVE) $(LSTFILES)
-	$(REMOVE) $(DEPFILES)
-	$(REMOVE) $(SRC:.c=.s)
-	$(REMOVE) $(SRCARM:.c=.s)
-	$(REMOVE) $(CPPSRC:.cpp=.s)
-	$(REMOVE) $(CPPSRCARM:.cpp=.s)
+	@$(REMOVE) $(OUTDIR)/$(TARGET).map
+	@$(REMOVE) $(OUTDIR)/$(TARGET).elf
+	@$(REMOVE) $(OUTDIR)/$(TARGET).hex
+	@$(REMOVE) $(OUTDIR)/$(TARGET).bin
+	@$(REMOVE) $(OUTDIR)/$(TARGET).sym
+	@$(REMOVE) $(OUTDIR)/$(TARGET).lss
+	@$(REMOVE) $(ALLOBJ)
+	@$(REMOVE) $(LSTFILES)
+	@$(REMOVE) $(DEPFILES)
+	@$(REMOVE) $(SRC:.c=.s)
+	@$(REMOVE) $(SRCARM:.c=.s)
+	@$(REMOVE) $(CPPSRC:.cpp=.s)
+	@$(REMOVE) $(CPPSRCARM:.cpp=.s)
 
 # Include the dependency files.
 -include $(wildcard $(OUTDIR)/dep/*)
 
 # Listing of phony targets.
 .PHONY : all begin end sizebefore sizeafter gccversion build elf hex bin lss sym clean clean_list program createdirs
+
